@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "asttweaks",
+  "version": "${version}",
+  "name": "AST-Tweaks",
+  "description": "A collection of client-side tweaks and enhancements for Minecraft, including scoreboard improvements.",
+  "authors": [
+    "Astral"
+  ],
+  "contact": {
+    "homepage": "https://github.com/astral/ast-tweaks",
+    "sources": "https://github.com/astral/ast-tweaks"
+  },
+  "license": "MIT",
+  "icon": "assets/asttweaks/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.astral.asttweaks.ASTTweaks"
+    ],
+    "modmenu": [
+      "com.astral.asttweaks.config.ConfigScreen"
+    ]
+  },
+  "mixins": [
+    "asttweaks.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "fabric-api": "*",
+    "minecraft": "~1.19.4",
+    "java": ">=17"
+  },
+  "recommends": {
+    "modmenu": ">=6.0.0",
+    "cloth-config": ">=10.0.0"
+  }
+}

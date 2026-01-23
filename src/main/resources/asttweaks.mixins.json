@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.astral.asttweaks.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "InGameHudMixin",
+    "AutoEatMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,84 @@
+package com.astral.asttweaks.feature;
+
+import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
+import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Manages all features in AST-Tweaks.
+ * Handles registration, initialization, and tick updates.
+ */
+public class FeatureManager {
+    private static FeatureManager instance;
+    private final Map<String, Feature> features = new HashMap<>();
+
+    private FeatureManager() {}
+
+    public static FeatureManager getInstance() {
+        if (instance == null) {
+            instance = new FeatureManager();
+        }
+        return instance;
+    }
+
+    /**
+     * Initialize the feature manager and register all features.
+     */
+    public void init() {
+        // Register built-in features
+        registerFeature(new ScoreboardFeature());
+        registerFeature(new AutoEatFeature());
+
+        // Initialize all features
+        for (Feature feature : features.values()) {
+            feature.init();
+        }
+
+        // Register tick event
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            for (Feature feature : features.values()) {
+                if (feature.isEnabled()) {
+                    feature.tick();
+                }
+            }
+        });
+    }
+
+    /**
+     * Register a new feature.
+     */
+    public void registerFeature(Feature feature) {
+        features.put(feature.getId(), feature);
+    }
+
+    /**
+     * Get a feature by its ID.
+     */
+    public Feature getFeature(String id) {
+        return features.get(id);
+    }
+
+    /**
+     * Get all registered features.
+     */
+    public Map<String, Feature> getFeatures() {
+        return features;
+    }
+
+    /**
+     * Get the scoreboard feature.
+     */
+    public ScoreboardFeature getScoreboardFeature() {
+        return (ScoreboardFeature) getFeature("scoreboard");
+    }
+
+    /**
+     * Get the auto-eat feature.
+     */
+    public AutoEatFeature getAutoEatFeature() {
+        return (AutoEatFeature) getFeature("autoeat");
+    }
+}
