@@ -4,6 +4,7 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
+import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -185,6 +186,30 @@ public class ConfigScreen implements ModMenuApi {
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.blacklist.button"),
                 button -> MinecraftClient.getInstance().setScreen(new FoodListScreen(builder.build()))
         ));
+
+        // Auto-move category
+        ConfigCategory automove = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.automove"));
+
+        automove.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled"),
+                        config.autoMoveEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoMoveEnabled = value)
+                .build());
+
+        automove.addEntry(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction"),
+                        MoveDirection.class,
+                        config.autoMoveDirection)
+                .setDefaultValue(MoveDirection.FORWARD)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
+                .setEnumNameProvider(dir -> Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
+                .setSaveConsumer(value -> config.autoMoveDirection = value)
+                .build());
 
         builder.setSavingRunnable(config::save);
 

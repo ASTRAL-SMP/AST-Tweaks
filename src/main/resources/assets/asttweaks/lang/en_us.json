@@ -52,5 +52,22 @@
   "key.categories.asttweaks": "AST-Tweaks",
   "key.asttweaks.scoreboard.toggle": "Toggle Scoreboard",
   "key.asttweaks.scoreboard.pageUp": "Scoreboard Page Up",
-  "key.asttweaks.scoreboard.pageDown": "Scoreboard Page Down"
+  "key.asttweaks.scoreboard.pageDown": "Scoreboard Page Down",
+  "key.asttweaks.autoeat.toggle": "Toggle Auto Eat",
+  "key.asttweaks.automove.toggle": "Toggle Auto Move",
+
+  "message.asttweaks.autoeat.enabled": "Auto Eat: Enabled",
+  "message.asttweaks.autoeat.disabled": "Auto Eat: Disabled",
+  "message.asttweaks.automove.enabled": "Auto Move: Enabled",
+  "message.asttweaks.automove.disabled": "Auto Move: Disabled",
+
+  "config.asttweaks.category.automove": "Auto Move",
+  "config.asttweaks.automove.enabled": "Auto Move Function",
+  "config.asttweaks.automove.enabled.tooltip": "Toggle automatic movement key holding",
+  "config.asttweaks.automove.direction": "Move Direction",
+  "config.asttweaks.automove.direction.tooltip": "Select the direction for auto movement",
+  "config.asttweaks.automove.direction.forward": "Forward",
+  "config.asttweaks.automove.direction.backward": "Backward",
+  "config.asttweaks.automove.direction.left": "Left",
+  "config.asttweaks.automove.direction.right": "Right"
 }

@@ -52,5 +52,22 @@
   "key.categories.asttweaks": "AST-Tweaks",
   "key.asttweaks.scoreboard.toggle": "スコアボード表示切替",
   "key.asttweaks.scoreboard.pageUp": "スコアボード上スクロール",
-  "key.asttweaks.scoreboard.pageDown": "スコアボード下スクロール"
+  "key.asttweaks.scoreboard.pageDown": "スコアボード下スクロール",
+  "key.asttweaks.autoeat.toggle": "自動食事切替",
+  "key.asttweaks.automove.toggle": "オートムーブ切替",
+
+  "message.asttweaks.autoeat.enabled": "自動食事: 有効",
+  "message.asttweaks.autoeat.disabled": "自動食事: 無効",
+  "message.asttweaks.automove.enabled": "オートムーブ: 有効",
+  "message.asttweaks.automove.disabled": "オートムーブ: 無効",
+
+  "config.asttweaks.category.automove": "オートムーブ",
+  "config.asttweaks.automove.enabled": "オートムーブ機能",
+  "config.asttweaks.automove.enabled.tooltip": "自動で移動キーを押し続ける機能の有効/無効を切り替えます",
+  "config.asttweaks.automove.direction": "移動方向",
+  "config.asttweaks.automove.direction.tooltip": "自動移動の方向を選択します",
+  "config.asttweaks.automove.direction.forward": "前進",
+  "config.asttweaks.automove.direction.backward": "後退",
+  "config.asttweaks.automove.direction.left": "左",
+  "config.asttweaks.automove.direction.right": "右"
 }

@@ -1,6 +1,7 @@
 package com.astral.asttweaks.feature;
 
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
+import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
@@ -31,6 +32,7 @@ public class FeatureManager {
         // Register built-in features
         registerFeature(new ScoreboardFeature());
         registerFeature(new AutoEatFeature());
+        registerFeature(new AutoMoveFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -80,5 +82,12 @@ public class FeatureManager {
      */
     public AutoEatFeature getAutoEatFeature() {
         return (AutoEatFeature) getFeature("autoeat");
+    }
+
+    /**
+     * Get the auto-move feature.
+     */
+    public AutoMoveFeature getAutoMoveFeature() {
+        return (AutoMoveFeature) getFeature("automove");
     }
 }

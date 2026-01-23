@@ -1,6 +1,7 @@
 package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -47,6 +48,10 @@ public class ModConfig {
     public boolean autoEatWhileAction = false;
     public Set<String> autoEatBlacklist = new HashSet<>();
 
+    // Auto-move settings
+    public boolean autoMoveEnabled = true;
+    public MoveDirection autoMoveDirection = MoveDirection.FORWARD;
+
     private ModConfig() {
         // Default blacklist items
         autoEatBlacklist.add("minecraft:rotten_flesh");
@@ -87,6 +92,10 @@ public class ModConfig {
                     this.autoEatWhileAction = loaded.autoEatWhileAction;
                     if (loaded.autoEatBlacklist != null) {
                         this.autoEatBlacklist = new HashSet<>(loaded.autoEatBlacklist);
+                    }
+                    this.autoMoveEnabled = loaded.autoMoveEnabled;
+                    if (loaded.autoMoveDirection != null) {
+                        this.autoMoveDirection = loaded.autoMoveDirection;
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
