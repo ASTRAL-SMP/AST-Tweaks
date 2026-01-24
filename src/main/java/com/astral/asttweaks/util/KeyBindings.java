@@ -4,6 +4,8 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
+import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
+import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -22,6 +24,8 @@ public class KeyBindings {
     public static KeyBinding scoreboardPageDown;
     public static KeyBinding autoEatToggle;
     public static KeyBinding autoMoveToggle;
+    public static KeyBinding autoTotemToggle;
+    public static KeyBinding notepadOpen;
 
     public static void register() {
         // Toggle scoreboard visibility
@@ -59,6 +63,22 @@ public class KeyBindings {
         // Toggle auto-move
         autoMoveToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key." + ASTTweaks.MOD_ID + ".automove.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Toggle auto-totem
+        autoTotemToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".autototem.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Open notepad
+        notepadOpen = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".notepad.open",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
@@ -112,6 +132,31 @@ public class KeyBindings {
                             true
                         );
                     }
+                }
+            }
+
+            // Auto-totem toggle
+            AutoTotemFeature autoTotem = FeatureManager.getInstance().getAutoTotemFeature();
+            if (autoTotem != null) {
+                while (autoTotemToggle.wasPressed()) {
+                    boolean newState = !autoTotem.isEnabled();
+                    autoTotem.setEnabled(newState);
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            net.minecraft.text.Text.translatable(
+                                "message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")
+                            ),
+                            true
+                        );
+                    }
+                }
+            }
+
+            // Notepad open
+            NotepadFeature notepad = FeatureManager.getInstance().getNotepadFeature();
+            if (notepad != null) {
+                while (notepadOpen.wasPressed()) {
+                    notepad.openNotepad();
                 }
             }
         });

@@ -52,6 +52,29 @@ public class ModConfig {
     public boolean autoMoveEnabled = true;
     public MoveDirection autoMoveDirection = MoveDirection.FORWARD;
 
+    // Entity culling settings
+    public boolean entityCullingEnabled = true;
+    public boolean disableAllEntityRendering = false;
+    public boolean disableArmorStandRendering = false;
+    public boolean disableFallingBlockRendering = false;
+    public boolean disableDeadMobRendering = false;
+    public int itemRenderLimit = -1;  // -1 = unlimited
+    public int xpOrbRenderLimit = -1; // -1 = unlimited
+    public Set<String> entityBlacklist = new HashSet<>();
+
+    // Lava highlight settings
+    public boolean lavaHighlightEnabled = false;
+    public boolean lavaHighlightSource = true;
+    public boolean lavaHighlightFlowing = false;
+    public int lavaSourceColor = 0x8000FF00;      // Semi-transparent green
+    public int lavaFlowingColor = 0x80FF0000;     // Semi-transparent red
+
+    // Notepad settings
+    public boolean notepadEnabled = true;
+
+    // Auto totem settings
+    public boolean autoTotemEnabled = true;
+
     private ModConfig() {
         // Default blacklist items
         autoEatBlacklist.add("minecraft:rotten_flesh");
@@ -97,6 +120,23 @@ public class ModConfig {
                     if (loaded.autoMoveDirection != null) {
                         this.autoMoveDirection = loaded.autoMoveDirection;
                     }
+                    this.entityCullingEnabled = loaded.entityCullingEnabled;
+                    this.disableAllEntityRendering = loaded.disableAllEntityRendering;
+                    this.disableArmorStandRendering = loaded.disableArmorStandRendering;
+                    this.disableFallingBlockRendering = loaded.disableFallingBlockRendering;
+                    this.disableDeadMobRendering = loaded.disableDeadMobRendering;
+                    this.itemRenderLimit = loaded.itemRenderLimit;
+                    this.xpOrbRenderLimit = loaded.xpOrbRenderLimit;
+                    if (loaded.entityBlacklist != null) {
+                        this.entityBlacklist = new HashSet<>(loaded.entityBlacklist);
+                    }
+                    this.lavaHighlightEnabled = loaded.lavaHighlightEnabled;
+                    this.lavaHighlightSource = loaded.lavaHighlightSource;
+                    this.lavaHighlightFlowing = loaded.lavaHighlightFlowing;
+                    this.lavaSourceColor = loaded.lavaSourceColor;
+                    this.lavaFlowingColor = loaded.lavaFlowingColor;
+                    this.notepadEnabled = loaded.notepadEnabled;
+                    this.autoTotemEnabled = loaded.autoTotemEnabled;
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {

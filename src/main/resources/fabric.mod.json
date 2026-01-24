@@ -9,7 +9,7 @@
   ],
   "contact": {
     "homepage": "https://github.com/astral/ast-tweaks",
-    "sources": "https://github.com/astral/ast-tweaks"
+    "Twitter(X)": "https://x.com/Sim_999_256"
   },
   "license": "MIT",
   "icon": "assets/asttweaks/icon.png",
@@ -23,7 +23,8 @@
     ]
   },
   "mixins": [
-    "asttweaks.mixins.json"
+    "asttweaks.mixins.json",
+    "asttweaks.sodium.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.21",

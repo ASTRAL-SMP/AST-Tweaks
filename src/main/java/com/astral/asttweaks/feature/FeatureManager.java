@@ -2,6 +2,10 @@ package com.astral.asttweaks.feature;
 
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
+import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
+import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
+import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
+import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
@@ -33,6 +37,10 @@ public class FeatureManager {
         registerFeature(new ScoreboardFeature());
         registerFeature(new AutoEatFeature());
         registerFeature(new AutoMoveFeature());
+        registerFeature(new EntityCullingFeature());
+        registerFeature(new LavaHighlightFeature());
+        registerFeature(new NotepadFeature());
+        registerFeature(new AutoTotemFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -89,5 +97,33 @@ public class FeatureManager {
      */
     public AutoMoveFeature getAutoMoveFeature() {
         return (AutoMoveFeature) getFeature("automove");
+    }
+
+    /**
+     * Get the entity culling feature.
+     */
+    public EntityCullingFeature getEntityCullingFeature() {
+        return (EntityCullingFeature) getFeature("entityculling");
+    }
+
+    /**
+     * Get the lava highlight feature.
+     */
+    public LavaHighlightFeature getLavaHighlightFeature() {
+        return (LavaHighlightFeature) getFeature("lavahighlight");
+    }
+
+    /**
+     * Get the notepad feature.
+     */
+    public NotepadFeature getNotepadFeature() {
+        return (NotepadFeature) getFeature("notepad");
+    }
+
+    /**
+     * Get the auto totem feature.
+     */
+    public AutoTotemFeature getAutoTotemFeature() {
+        return (AutoTotemFeature) getFeature("autototem");
     }
 }

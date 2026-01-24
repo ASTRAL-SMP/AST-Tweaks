@@ -5,6 +5,7 @@ import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
 import com.astral.asttweaks.feature.automove.MoveDirection;
+import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -209,6 +210,155 @@ public class ConfigScreen implements ModMenuApi {
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
                 .setEnumNameProvider(dir -> Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
                 .setSaveConsumer(value -> config.autoMoveDirection = value)
+                .build());
+
+        // Entity culling category
+        ConfigCategory entityCulling = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.entityculling"));
+
+        entityCulling.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled"),
+                        config.entityCullingEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled.tooltip"))
+                .setSaveConsumer(value -> config.entityCullingEnabled = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll"),
+                        config.disableAllEntityRendering)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll.tooltip"))
+                .setSaveConsumer(value -> config.disableAllEntityRendering = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand"),
+                        config.disableArmorStandRendering)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand.tooltip"))
+                .setSaveConsumer(value -> config.disableArmorStandRendering = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock"),
+                        config.disableFallingBlockRendering)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock.tooltip"))
+                .setSaveConsumer(value -> config.disableFallingBlockRendering = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob"),
+                        config.disableDeadMobRendering)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob.tooltip"))
+                .setSaveConsumer(value -> config.disableDeadMobRendering = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit"),
+                        config.itemRenderLimit, -1, 100)
+                .setDefaultValue(-1)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit.tooltip"))
+                .setTextGetter(value -> value < 0 ? Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Text.literal(String.valueOf(value)))
+                .setSaveConsumer(value -> config.itemRenderLimit = value)
+                .build());
+
+        entityCulling.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit"),
+                        config.xpOrbRenderLimit, -1, 100)
+                .setDefaultValue(-1)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit.tooltip"))
+                .setTextGetter(value -> value < 0 ? Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Text.literal(String.valueOf(value)))
+                .setSaveConsumer(value -> config.xpOrbRenderLimit = value)
+                .build());
+
+        entityCulling.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.blacklist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new EntityListScreen(builder.build()))
+        ));
+
+        // Lava highlight category
+        ConfigCategory lavaHighlight = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.lavahighlight"));
+
+        lavaHighlight.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled"),
+                        config.lavaHighlightEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled.tooltip"))
+                .setSaveConsumer(value -> config.lavaHighlightEnabled = value)
+                .build());
+
+        lavaHighlight.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source"),
+                        config.lavaHighlightSource)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source.tooltip"))
+                .setSaveConsumer(value -> config.lavaHighlightSource = value)
+                .build());
+
+        lavaHighlight.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing"),
+                        config.lavaHighlightFlowing)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing.tooltip"))
+                .setSaveConsumer(value -> config.lavaHighlightFlowing = value)
+                .build());
+
+        lavaHighlight.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor"),
+                        config.lavaSourceColor)
+                .setDefaultValue(0x8000FF00)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor.tooltip"))
+                .setSaveConsumer(value -> config.lavaSourceColor = value)
+                .build());
+
+        lavaHighlight.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor"),
+                        config.lavaFlowingColor)
+                .setDefaultValue(0x80FF0000)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor.tooltip"))
+                .setSaveConsumer(value -> config.lavaFlowingColor = value)
+                .build());
+
+        // Notepad category
+        ConfigCategory notepad = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.notepad"));
+
+        notepad.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled"),
+                        config.notepadEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled.tooltip"))
+                .setSaveConsumer(value -> config.notepadEnabled = value)
+                .build());
+
+        // Auto totem category
+        ConfigCategory autoTotem = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autototem"));
+
+        autoTotem.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled"),
+                        config.autoTotemEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoTotemEnabled = value)
                 .build());
 
         builder.setSavingRunnable(config::save);

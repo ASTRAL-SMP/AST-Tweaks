@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.astral.asttweaks.mixin.sodium",
+  "compatibilityLevel": "JAVA_17",
+  "plugin": "com.astral.asttweaks.mixin.sodium.SodiumMixinPlugin",
+  "client": [
+    "SodiumFluidRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
