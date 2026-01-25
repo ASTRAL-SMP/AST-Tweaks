@@ -1,5 +1,6 @@
 package com.astral.asttweaks.feature.entityculling.gui;
 
+import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.entityculling.EntityCullingConfig;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
@@ -7,12 +8,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,9 @@ public class EntityListScreen extends Screen {
     private final Screen parent;
     private EntityListWidget entityListWidget;
     private final EntityCullingConfig config;
+    private TextFieldWidget searchField;
+    private String searchText = "";
+    private List<EntityType<?>> allEntityTypes;
 
     public EntityListScreen(Screen parent) {
         super(Text.translatable("config.asttweaks.entityculling.blacklist.title"));
@@ -35,11 +41,65 @@ public class EntityListScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.entityListWidget = new EntityListWidget(this.client, this.width, this.height, 32, this.height - 32, 24);
+        // Initialize list widget first (before search field, as setText triggers listener)
+        this.entityListWidget = new EntityListWidget(this.client, this.width, this.height, 54, this.height - 32, 24);
         this.addSelectableChild(this.entityListWidget);
 
-        // Get all entity types, sorted by blacklist status then name
-        List<EntityType<?>> entityTypes = Registries.ENTITY_TYPE.stream()
+        // Cache all entity types
+        this.allEntityTypes = new ArrayList<>(Registries.ENTITY_TYPE.stream().collect(Collectors.toList()));
+
+        // Search field
+        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 32, 200, 18,
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setPlaceholder(Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setChangedListener(text -> {
+            this.searchText = text;
+            rebuildList();
+        });
+        this.searchField.setText(this.searchText);
+        this.addSelectableChild(this.searchField);
+
+        rebuildList();
+
+        // "Hide All" button
+        this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("config.asttweaks.entityculling.hideAll"),
+                        button -> {
+                            if (config != null) {
+                                config.hideAllEntities(allEntityTypes);
+                                rebuildList();
+                            }
+                        })
+                .dimensions(this.width / 2 - 110, this.height - 27, 70, 20)
+                .build());
+
+        // "Show All" button
+        this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("config.asttweaks.entityculling.showAll"),
+                        button -> {
+                            if (config != null) {
+                                config.showAllEntities();
+                                rebuildList();
+                            }
+                        })
+                .dimensions(this.width / 2 - 35, this.height - 27, 70, 20)
+                .build());
+
+        // "Done" button
+        this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.done"),
+                        button -> this.client.setScreen(parent))
+                .dimensions(this.width / 2 + 40, this.height - 27, 70, 20)
+                .build());
+    }
+
+    private void rebuildList() {
+        this.entityListWidget.children().clear();
+        String lowerSearch = searchText.toLowerCase();
+
+        allEntityTypes.stream()
+                .filter(e -> searchText.isEmpty() ||
+                        e.getName().getString().toLowerCase().contains(lowerSearch))
                 .sorted((a, b) -> {
                     boolean aBlacklisted = config != null && config.isEntityBlacklisted(a);
                     boolean bBlacklisted = config != null && config.isEntityBlacklisted(b);
@@ -48,17 +108,7 @@ public class EntityListScreen extends Screen {
                     }
                     return a.getName().getString().compareTo(b.getName().getString());
                 })
-                .collect(Collectors.toList());
-
-        for (EntityType<?> entityType : entityTypes) {
-            this.entityListWidget.addEntry(new EntityEntry(entityType));
-        }
-
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
-                .build());
+                .forEach(e -> entityListWidget.addEntry(new EntityEntry(e)));
     }
 
     @Override
@@ -72,6 +122,8 @@ public class EntityListScreen extends Screen {
         Text helpText = Text.translatable("config.asttweaks.entityculling.blacklist.help");
         int helpWidth = this.textRenderer.getWidth(helpText);
         this.textRenderer.drawWithShadow(matrices, helpText, this.width / 2 - helpWidth / 2, 20, 10526880);
+
+        this.searchField.render(matrices, mouseX, mouseY, delta);
 
         super.render(matrices, mouseX, mouseY, delta);
     }

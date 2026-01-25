@@ -7,7 +7,8 @@
     "InGameHudMixin",
     "AutoEatMixin",
     "EntityRenderDispatcherMixin",
-    "ClientPlayerTotemMixin"
+    "ClientPlayerTotemMixin",
+    "HandledScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

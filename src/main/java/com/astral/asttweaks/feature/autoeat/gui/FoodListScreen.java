@@ -1,5 +1,6 @@
 package com.astral.asttweaks.feature.autoeat.gui;
 
+import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatConfig;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
@@ -7,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,6 +16,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,9 @@ public class FoodListScreen extends Screen {
     private final Screen parent;
     private FoodListWidget foodListWidget;
     private final AutoEatConfig config;
+    private TextFieldWidget searchField;
+    private String searchText = "";
+    private List<Item> allFoodItems;
 
     public FoodListScreen(Screen parent) {
         super(Text.translatable("config.asttweaks.autoeat.blacklist.title"));
@@ -36,11 +42,42 @@ public class FoodListScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.foodListWidget = new FoodListWidget(this.client, this.width, this.height, 32, this.height - 32, 36);
+        // Initialize list widget first (before search field, as setText triggers listener)
+        this.foodListWidget = new FoodListWidget(this.client, this.width, this.height, 54, this.height - 32, 36);
         this.addSelectableChild(this.foodListWidget);
 
-        List<Item> foodItems = Registries.ITEM.stream()
+        // Cache all food items
+        this.allFoodItems = new ArrayList<>(Registries.ITEM.stream()
                 .filter(item -> item.getFoodComponent() != null)
+                .collect(Collectors.toList()));
+
+        // Search field
+        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 32, 200, 18,
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setPlaceholder(Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setChangedListener(text -> {
+            this.searchText = text;
+            rebuildList();
+        });
+        this.searchField.setText(this.searchText);
+        this.addSelectableChild(this.searchField);
+
+        rebuildList();
+
+        this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.done"),
+                        button -> this.client.setScreen(parent))
+                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
+                .build());
+    }
+
+    private void rebuildList() {
+        this.foodListWidget.children().clear();
+        String lowerSearch = searchText.toLowerCase();
+
+        allFoodItems.stream()
+                .filter(item -> searchText.isEmpty() ||
+                        item.getName().getString().toLowerCase().contains(lowerSearch))
                 .sorted((a, b) -> {
                     boolean aBlacklisted = config != null && config.isBlacklisted(a);
                     boolean bBlacklisted = config != null && config.isBlacklisted(b);
@@ -49,17 +86,7 @@ public class FoodListScreen extends Screen {
                     }
                     return a.getName().getString().compareTo(b.getName().getString());
                 })
-                .collect(Collectors.toList());
-
-        for (Item item : foodItems) {
-            this.foodListWidget.addEntry(new FoodEntry(item));
-        }
-
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
-                .build());
+                .forEach(item -> foodListWidget.addEntry(new FoodEntry(item)));
     }
 
     @Override
@@ -73,6 +100,8 @@ public class FoodListScreen extends Screen {
         Text helpText = Text.translatable("config.asttweaks.autoeat.blacklist.help");
         int helpWidth = this.textRenderer.getWidth(helpText);
         this.textRenderer.drawWithShadow(matrices, helpText, this.width / 2 - helpWidth / 2, 20, 10526880);
+
+        this.searchField.render(matrices, mouseX, mouseY, delta);
 
         super.render(matrices, mouseX, mouseY, delta);
     }

@@ -30,6 +30,7 @@ public class KeyBindings {
     public static KeyBinding autoRepairToggle;
     public static KeyBinding notepadOpen;
     public static KeyBinding massGrindstoneExecute;
+    public static KeyBinding inventorySortExecute;
 
     public static void register() {
         // Toggle scoreboard visibility
@@ -101,6 +102,14 @@ public class KeyBindings {
                 "key." + ASTTweaks.MOD_ID + ".massgrindstone.execute",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Inventory sort execute
+        inventorySortExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".inventorysort.execute",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_R,
                 CATEGORY
         ));
 
@@ -200,6 +209,9 @@ public class KeyBindings {
             // Note: Mass grindstone key handling is done in MassGrindstoneFeature
             // because wasPressed() doesn't work while GUI screens are open.
             // We use InputUtil.isKeyPressed() directly in the feature class.
+
+            // Note: Inventory sort key handling is done in InventorySortFeature
+            // because wasPressed() doesn't work while GUI screens are open.
         });
     }
 }

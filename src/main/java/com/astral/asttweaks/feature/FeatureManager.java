@@ -6,6 +6,7 @@ import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
+import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
@@ -47,6 +48,7 @@ public class FeatureManager {
         registerFeature(new AutoRepairFeature());
         registerFeature(new MassGrindstoneFeature());
         registerFeature(new UpdateCheckerFeature());
+        registerFeature(new InventorySortFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -152,5 +154,12 @@ public class FeatureManager {
      */
     public MassGrindstoneFeature getMassGrindstoneFeature() {
         return (MassGrindstoneFeature) getFeature("massgrindstone");
+    }
+
+    /**
+     * Get the inventory sort feature.
+     */
+    public InventorySortFeature getInventorySortFeature() {
+        return (InventorySortFeature) getFeature("inventorysort");
     }
 }

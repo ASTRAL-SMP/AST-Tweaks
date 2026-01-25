@@ -6,6 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -143,5 +144,33 @@ public class EntityCullingConfig {
 
     public Set<String> getBlacklistedItems() {
         return ModConfig.getInstance().itemEntityBlacklist;
+    }
+
+    // Bulk entity operations
+    public void hideAllEntities(Collection<EntityType<?>> entityTypes) {
+        for (EntityType<?> type : entityTypes) {
+            Identifier id = Registries.ENTITY_TYPE.getId(type);
+            ModConfig.getInstance().entityBlacklist.add(id.toString());
+        }
+        ModConfig.getInstance().save();
+    }
+
+    public void showAllEntities() {
+        ModConfig.getInstance().entityBlacklist.clear();
+        ModConfig.getInstance().save();
+    }
+
+    // Bulk item operations
+    public void hideAllItems(Collection<Item> items) {
+        for (Item item : items) {
+            Identifier id = Registries.ITEM.getId(item);
+            ModConfig.getInstance().itemEntityBlacklist.add(id.toString());
+        }
+        ModConfig.getInstance().save();
+    }
+
+    public void showAllItems() {
+        ModConfig.getInstance().itemEntityBlacklist.clear();
+        ModConfig.getInstance().save();
     }
 }

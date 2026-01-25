@@ -2,6 +2,8 @@ package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.automove.MoveDirection;
+import com.astral.asttweaks.feature.inventorysort.SortMode;
+import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -98,6 +100,13 @@ public class ModConfig {
     public long updateCheckerLastCheck = 0;
     public boolean updateCheckerShowNotification = true;
 
+    // Inventory sort settings
+    public boolean inventorySortEnabled = true;
+    public SortMode inventorySortMode = SortMode.ITEM_ID;
+    public Set<Integer> inventorySortExcludedSlots = new HashSet<>();
+    public SortTarget inventorySortTarget = SortTarget.PLAYER_ONLY;
+    public boolean inventorySortShowButton = true;
+
     private ModConfig() {
         // Default blacklist items
         autoEatBlacklist.add("minecraft:rotten_flesh");
@@ -186,6 +195,17 @@ public class ModConfig {
                     }
                     this.updateCheckerLastCheck = loaded.updateCheckerLastCheck;
                     this.updateCheckerShowNotification = loaded.updateCheckerShowNotification;
+                    this.inventorySortEnabled = loaded.inventorySortEnabled;
+                    if (loaded.inventorySortMode != null) {
+                        this.inventorySortMode = loaded.inventorySortMode;
+                    }
+                    if (loaded.inventorySortExcludedSlots != null) {
+                        this.inventorySortExcludedSlots = new HashSet<>(loaded.inventorySortExcludedSlots);
+                    }
+                    if (loaded.inventorySortTarget != null) {
+                        this.inventorySortTarget = loaded.inventorySortTarget;
+                    }
+                    this.inventorySortShowButton = loaded.inventorySortShowButton;
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {

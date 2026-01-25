@@ -8,6 +8,9 @@ import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autorepair.gui.RepairItemListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.ItemEntityListScreen;
+import com.astral.asttweaks.feature.inventorysort.SortMode;
+import com.astral.asttweaks.feature.inventorysort.SortTarget;
+import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -188,7 +191,7 @@ public class ConfigScreen implements ModMenuApi {
 
         autoeat.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.blacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new FoodListScreen(builder.build()))
+                button -> MinecraftClient.getInstance().setScreen(new FoodListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         // Auto-move category
@@ -286,12 +289,12 @@ public class ConfigScreen implements ModMenuApi {
 
         entityCulling.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.blacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new EntityListScreen(builder.build()))
+                button -> MinecraftClient.getInstance().setScreen(new EntityListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         entityCulling.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemblacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new ItemEntityListScreen(builder.build()))
+                button -> MinecraftClient.getInstance().setScreen(new ItemEntityListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         // Lava highlight category
@@ -413,7 +416,7 @@ public class ConfigScreen implements ModMenuApi {
 
         autoRepair.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(builder.build()))
+                button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         // Mass grindstone category
@@ -459,7 +462,56 @@ public class ConfigScreen implements ModMenuApi {
 
         massGrindstone.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new GrindstoneItemListScreen(builder.build()))
+                button -> MinecraftClient.getInstance().setScreen(new GrindstoneItemListScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        // Inventory sort category
+        ConfigCategory inventorySort = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.inventorysort"));
+
+        inventorySort.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled"),
+                        config.inventorySortEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled.tooltip"))
+                .setSaveConsumer(value -> config.inventorySortEnabled = value)
+                .build());
+
+        inventorySort.addEntry(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode"),
+                        SortMode.class,
+                        config.inventorySortMode)
+                .setDefaultValue(SortMode.ITEM_ID)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode.tooltip"))
+                .setEnumNameProvider(mode -> Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode." + ((SortMode)mode).getId()))
+                .setSaveConsumer(value -> config.inventorySortMode = value)
+                .build());
+
+        inventorySort.addEntry(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target"),
+                        SortTarget.class,
+                        config.inventorySortTarget)
+                .setDefaultValue(SortTarget.PLAYER_ONLY)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target.tooltip"))
+                .setEnumNameProvider(target -> Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target." + ((SortTarget)target).getId()))
+                .setSaveConsumer(value -> config.inventorySortTarget = value)
+                .build());
+
+        inventorySort.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton"),
+                        config.inventorySortShowButton)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton.tooltip"))
+                .setSaveConsumer(value -> config.inventorySortShowButton = value)
+                .build());
+
+        inventorySort.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.button"),
+                button -> MinecraftClient.getInstance().setScreen(new ExcludedSlotScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         builder.setSavingRunnable(config::save);
