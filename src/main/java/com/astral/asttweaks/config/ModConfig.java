@@ -75,6 +75,13 @@ public class ModConfig {
     // Auto totem settings
     public boolean autoTotemEnabled = true;
 
+    // Auto repair settings (Fast repair mode - Tweakeroo style)
+    public boolean autoRepairEnabled = true;
+    public int autoRepairClicksPerTick = 10;          // Number of clicks per tick (fast use)
+    public boolean autoRepairWhitelistMode = false;   // false = blacklist mode
+    public Set<String> autoRepairItemList = new HashSet<>();
+    public int autoRepairTargetSlot = 0;              // Hotbar slot to use for repairing items (0-8)
+
     private ModConfig() {
         // Default blacklist items
         autoEatBlacklist.add("minecraft:rotten_flesh");
@@ -137,6 +144,13 @@ public class ModConfig {
                     this.lavaFlowingColor = loaded.lavaFlowingColor;
                     this.notepadEnabled = loaded.notepadEnabled;
                     this.autoTotemEnabled = loaded.autoTotemEnabled;
+                    this.autoRepairEnabled = loaded.autoRepairEnabled;
+                    this.autoRepairClicksPerTick = loaded.autoRepairClicksPerTick;
+                    this.autoRepairWhitelistMode = loaded.autoRepairWhitelistMode;
+                    if (loaded.autoRepairItemList != null) {
+                        this.autoRepairItemList = new HashSet<>(loaded.autoRepairItemList);
+                    }
+                    this.autoRepairTargetSlot = loaded.autoRepairTargetSlot;
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {

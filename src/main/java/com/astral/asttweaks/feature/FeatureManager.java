@@ -2,6 +2,7 @@ package com.astral.asttweaks.feature;
 
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
+import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
@@ -41,6 +42,7 @@ public class FeatureManager {
         registerFeature(new LavaHighlightFeature());
         registerFeature(new NotepadFeature());
         registerFeature(new AutoTotemFeature());
+        registerFeature(new AutoRepairFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -125,5 +127,12 @@ public class FeatureManager {
      */
     public AutoTotemFeature getAutoTotemFeature() {
         return (AutoTotemFeature) getFeature("autototem");
+    }
+
+    /**
+     * Get the auto repair feature.
+     */
+    public AutoRepairFeature getAutoRepairFeature() {
+        return (AutoRepairFeature) getFeature("autorepair");
     }
 }

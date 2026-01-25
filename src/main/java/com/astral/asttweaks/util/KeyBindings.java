@@ -4,6 +4,7 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
+import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
@@ -25,6 +26,7 @@ public class KeyBindings {
     public static KeyBinding autoEatToggle;
     public static KeyBinding autoMoveToggle;
     public static KeyBinding autoTotemToggle;
+    public static KeyBinding autoRepairToggle;
     public static KeyBinding notepadOpen;
 
     public static void register() {
@@ -71,6 +73,14 @@ public class KeyBindings {
         // Toggle auto-totem
         autoTotemToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key." + ASTTweaks.MOD_ID + ".autototem.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Toggle auto-repair
+        autoRepairToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".autorepair.toggle",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
@@ -145,6 +155,23 @@ public class KeyBindings {
                         client.player.sendMessage(
                             net.minecraft.text.Text.translatable(
                                 "message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")
+                            ),
+                            true
+                        );
+                    }
+                }
+            }
+
+            // Auto-repair toggle
+            AutoRepairFeature autoRepair = FeatureManager.getInstance().getAutoRepairFeature();
+            if (autoRepair != null) {
+                while (autoRepairToggle.wasPressed()) {
+                    boolean newState = !autoRepair.isEnabled();
+                    autoRepair.setEnabled(newState);
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            net.minecraft.text.Text.translatable(
+                                "message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")
                             ),
                             true
                         );

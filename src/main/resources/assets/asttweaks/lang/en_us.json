@@ -121,5 +121,26 @@
 
   "config.asttweaks.category.autototem": "Auto Totem",
   "config.asttweaks.autototem.enabled": "Auto Totem Restock",
-  "config.asttweaks.autototem.enabled.tooltip": "Automatically move a totem to offhand after one is used"
+  "config.asttweaks.autototem.enabled.tooltip": "Automatically move a totem to offhand after one is used",
+
+  "config.asttweaks.category.autorepair": "Auto Repair",
+  "config.asttweaks.autorepair.enabled": "Fast Auto Repair",
+  "config.asttweaks.autorepair.enabled.tooltip": "Fast repair Mending items using experience bottles from offhand (Tweakeroo style)",
+  "config.asttweaks.autorepair.clicksPerTick": "Clicks Per Tick",
+  "config.asttweaks.autorepair.clicksPerTick.tooltip": "Number of times to use experience bottles per tick (higher = faster repair)",
+  "config.asttweaks.autorepair.whitelistMode": "Whitelist Mode",
+  "config.asttweaks.autorepair.whitelistMode.tooltip": "When enabled, only items in the list will be repaired. When disabled, all items except those in the list will be repaired.",
+  "config.asttweaks.autorepair.targetSlot": "Target Slot",
+  "config.asttweaks.autorepair.targetSlot.tooltip": "Hotbar slot to use for repairing items (1-9)",
+  "config.asttweaks.autorepair.itemlist.title": "Repair Item Settings",
+  "config.asttweaks.autorepair.itemlist.help.whitelist": "Click to add/remove items from the whitelist",
+  "config.asttweaks.autorepair.itemlist.help.blacklist": "Click to add/remove items from the blacklist",
+  "config.asttweaks.autorepair.itemlist.button": "Open Item Settings",
+  "config.asttweaks.autorepair.willrepair": "Will Repair",
+  "config.asttweaks.autorepair.wontrepair": "Won't Repair",
+
+  "key.asttweaks.autorepair.toggle": "Toggle Auto Repair",
+
+  "message.asttweaks.autorepair.enabled": "Auto Repair: Enabled",
+  "message.asttweaks.autorepair.disabled": "Auto Repair: Disabled"
 }

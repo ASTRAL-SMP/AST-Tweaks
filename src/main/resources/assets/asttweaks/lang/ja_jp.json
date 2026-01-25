@@ -121,5 +121,26 @@
 
   "config.asttweaks.category.autototem": "オートトーテム",
   "config.asttweaks.autototem.enabled": "オートトーテム補充",
-  "config.asttweaks.autototem.enabled.tooltip": "トーテムが発動した後、自動的にオフハンドにトーテムを補充します"
+  "config.asttweaks.autototem.enabled.tooltip": "トーテムが発動した後、自動的にオフハンドにトーテムを補充します",
+
+  "config.asttweaks.category.autorepair": "高速オートリペア",
+  "config.asttweaks.autorepair.enabled": "高速オートリペア機能",
+  "config.asttweaks.autorepair.enabled.tooltip": "オフハンドの経験値瓶を高速使用してMending付きアイテムを爆速で修繕します（Tweakeroo風）",
+  "config.asttweaks.autorepair.clicksPerTick": "1tickあたりのクリック数",
+  "config.asttweaks.autorepair.clicksPerTick.tooltip": "1tickごとに経験値瓶を使用する回数（大きいほど高速）",
+  "config.asttweaks.autorepair.whitelistMode": "ホワイトリストモード",
+  "config.asttweaks.autorepair.whitelistMode.tooltip": "有効時はリスト内のアイテムのみ修復します。無効時はリスト内のアイテム以外を修復します。",
+  "config.asttweaks.autorepair.targetSlot": "修繕スロット",
+  "config.asttweaks.autorepair.targetSlot.tooltip": "修繕アイテムを配置するホットバースロット（1-9）",
+  "config.asttweaks.autorepair.itemlist.title": "修復アイテム設定",
+  "config.asttweaks.autorepair.itemlist.help.whitelist": "クリックしてホワイトリストにアイテムを追加/削除します",
+  "config.asttweaks.autorepair.itemlist.help.blacklist": "クリックしてブラックリストにアイテムを追加/削除します",
+  "config.asttweaks.autorepair.itemlist.button": "アイテム設定を開く",
+  "config.asttweaks.autorepair.willrepair": "修復する",
+  "config.asttweaks.autorepair.wontrepair": "修復しない",
+
+  "key.asttweaks.autorepair.toggle": "オートリペア切替",
+
+  "message.asttweaks.autorepair.enabled": "オートリペア: 有効",
+  "message.asttweaks.autorepair.disabled": "オートリペア: 無効"
 }

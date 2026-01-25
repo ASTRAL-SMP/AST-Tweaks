@@ -5,6 +5,7 @@ import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
 import com.astral.asttweaks.feature.automove.MoveDirection;
+import com.astral.asttweaks.feature.autorepair.gui.RepairItemListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -360,6 +361,53 @@ public class ConfigScreen implements ModMenuApi {
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoTotemEnabled = value)
                 .build());
+
+        // Auto repair category
+        ConfigCategory autoRepair = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autorepair"));
+
+        autoRepair.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled"),
+                        config.autoRepairEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoRepairEnabled = value)
+                .build());
+
+        autoRepair.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick"),
+                        config.autoRepairClicksPerTick, 1, 20)
+                .setDefaultValue(10)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick.tooltip"))
+                .setTextGetter(value -> Text.literal(value + " clicks"))
+                .setSaveConsumer(value -> config.autoRepairClicksPerTick = value)
+                .build());
+
+        autoRepair.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode"),
+                        config.autoRepairWhitelistMode)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode.tooltip"))
+                .setSaveConsumer(value -> config.autoRepairWhitelistMode = value)
+                .build());
+
+        autoRepair.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot"),
+                        config.autoRepairTargetSlot, 0, 8)
+                .setDefaultValue(0)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot.tooltip"))
+                .setTextGetter(value -> Text.literal("Slot " + (value + 1)))
+                .setSaveConsumer(value -> config.autoRepairTargetSlot = value)
+                .build());
+
+        autoRepair.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(builder.build()))
+        ));
 
         builder.setSavingRunnable(config::save);
 
