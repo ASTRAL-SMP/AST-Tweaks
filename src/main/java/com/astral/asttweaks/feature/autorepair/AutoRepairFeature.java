@@ -1,6 +1,7 @@
 package com.astral.asttweaks.feature.autorepair;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -73,6 +74,7 @@ public class AutoRepairFeature implements Feature {
     public void setEnabled(boolean enabled) {
         config.setEnabled(enabled);
         if (!enabled) {
+            TweakerooCompat.ensureRestored();
             resetState();
         }
     }
@@ -114,6 +116,8 @@ public class AutoRepairFeature implements Feature {
                 // Check if we have experience bottles and items needing repair
                 if (hasExperienceBottle(player) && findNextRepairItem(player) != -1) {
                     previousMainhandSlot = player.getInventory().selectedSlot;
+                    // Disable Tweakeroo's AlmostBrokenTools to prevent interference
+                    TweakerooCompat.disableAlmostBrokenTools();
                     currentState = State.SETUP_OFFHAND;
                     ASTTweaks.LOGGER.info("Starting fast repair sequence, previousSlot: {}", previousMainhandSlot);
                 }
@@ -438,11 +442,15 @@ public class AutoRepairFeature implements Feature {
         if (previousMainhandSlot != -1 && previousMainhandSlot != player.getInventory().selectedSlot) {
             player.getInventory().selectedSlot = previousMainhandSlot;
         }
+        // Restore Tweakeroo AlmostBrokenTools if it was disabled
+        TweakerooCompat.restoreAlmostBrokenTools();
         ASTTweaks.LOGGER.info("Fast repair completed, repaired {} slots", repairedSlots.size());
         resetState();
     }
 
     private void resetState() {
+        // Ensure Tweakeroo setting is restored if we're resetting due to interruption
+        TweakerooCompat.ensureRestored();
         currentState = State.IDLE;
         delayTicks = 0;
         currentRepairSlot = -1;

@@ -1,0 +1,120 @@
+package com.astral.asttweaks.compat;
+
+import com.astral.asttweaks.ASTTweaks;
+
+import java.lang.reflect.Method;
+
+/**
+ * Compatibility layer for Tweakeroo mod.
+ * Handles disabling/restoring AlmostBrokenTools feature during auto-repair.
+ * Uses reflection to avoid hard dependency on Tweakeroo.
+ */
+public class TweakerooCompat {
+    private static boolean tweakerooAvailable = false;
+    private static Object almostBrokenToolsToggle = null;
+    private static Method getBooleanValueMethod = null;
+    private static Method setBooleanValueMethod = null;
+
+    // Stored state for restoration
+    private static boolean previousState = false;
+    private static boolean stateModified = false;
+
+    /**
+     * Initialize Tweakeroo compatibility.
+     * Should be called during mod initialization.
+     */
+    public static void init() {
+        try {
+            // Try to load Tweakeroo's FeatureToggle class
+            Class<?> featureToggleClass = Class.forName("fi.dy.masa.tweakeroo.config.FeatureToggle");
+
+            // Get the TWEAK_SWAP_ALMOST_BROKEN_TOOLS enum constant
+            almostBrokenToolsToggle = Enum.valueOf(
+                (Class<Enum>) featureToggleClass,
+                "TWEAK_SWAP_ALMOST_BROKEN_TOOLS"
+            );
+
+            // Get the methods we need
+            // IConfigBoolean interface from maLiLib
+            getBooleanValueMethod = featureToggleClass.getMethod("getBooleanValue");
+            setBooleanValueMethod = featureToggleClass.getMethod("setBooleanValue", boolean.class);
+
+            tweakerooAvailable = true;
+            ASTTweaks.LOGGER.info("Tweakeroo compatibility initialized successfully");
+
+        } catch (ClassNotFoundException e) {
+            // Tweakeroo not installed - this is expected and fine
+            ASTTweaks.LOGGER.info("Tweakeroo not found - AlmostBrokenTools bypass disabled");
+            tweakerooAvailable = false;
+        } catch (NoSuchMethodException e) {
+            // API changed - warn but continue
+            ASTTweaks.LOGGER.warn("Tweakeroo API changed - AlmostBrokenTools bypass disabled: {}", e.getMessage());
+            tweakerooAvailable = false;
+        } catch (Exception e) {
+            // Unexpected error
+            ASTTweaks.LOGGER.warn("Failed to initialize Tweakeroo compatibility: {}", e.getMessage());
+            tweakerooAvailable = false;
+        }
+    }
+
+    /**
+     * Check if Tweakeroo is available.
+     */
+    public static boolean isTweakerooAvailable() {
+        return tweakerooAvailable;
+    }
+
+    /**
+     * Disable AlmostBrokenTools feature and save the previous state.
+     * Safe to call even if Tweakeroo is not installed.
+     */
+    public static void disableAlmostBrokenTools() {
+        if (!tweakerooAvailable || stateModified) {
+            return;
+        }
+
+        try {
+            // Get current state
+            previousState = (boolean) getBooleanValueMethod.invoke(almostBrokenToolsToggle);
+
+            if (previousState) {
+                // Disable the feature
+                setBooleanValueMethod.invoke(almostBrokenToolsToggle, false);
+                stateModified = true;
+                ASTTweaks.LOGGER.info("Disabled Tweakeroo AlmostBrokenTools for auto-repair");
+            }
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to disable AlmostBrokenTools: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Restore AlmostBrokenTools to its previous state.
+     * Safe to call even if Tweakeroo is not installed or state wasn't modified.
+     */
+    public static void restoreAlmostBrokenTools() {
+        if (!tweakerooAvailable || !stateModified) {
+            return;
+        }
+
+        try {
+            // Restore previous state
+            setBooleanValueMethod.invoke(almostBrokenToolsToggle, previousState);
+            stateModified = false;
+            ASTTweaks.LOGGER.info("Restored Tweakeroo AlmostBrokenTools to previous state: {}", previousState);
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to restore AlmostBrokenTools: {}", e.getMessage());
+            stateModified = false; // Reset flag even on error to prevent repeated attempts
+        }
+    }
+
+    /**
+     * Ensure AlmostBrokenTools is restored.
+     * Use this as a safety measure when repair is interrupted or feature is disabled.
+     */
+    public static void ensureRestored() {
+        if (stateModified) {
+            restoreAlmostBrokenTools();
+        }
+    }
+}

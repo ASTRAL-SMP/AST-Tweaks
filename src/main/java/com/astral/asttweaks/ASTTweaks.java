@@ -1,5 +1,6 @@
 package com.astral.asttweaks;
 
+import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.util.KeyBindings;
@@ -23,6 +24,9 @@ public class ASTTweaks implements ClientModInitializer {
 
         // Register keybindings
         KeyBindings.register();
+
+        // Initialize mod compatibility layers
+        TweakerooCompat.init();
 
         // Initialize feature manager
         FeatureManager.getInstance().init();
