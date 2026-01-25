@@ -95,6 +95,9 @@
   "config.asttweaks.entityculling.blacklist.button": "Open Entity Visibility Settings",
   "config.asttweaks.entityculling.hidden": "Hidden",
   "config.asttweaks.entityculling.visible": "Visible",
+  "config.asttweaks.entityculling.itemblacklist.title": "Item Entity Visibility Settings",
+  "config.asttweaks.entityculling.itemblacklist.help": "Click to toggle item entity visibility",
+  "config.asttweaks.entityculling.itemblacklist.button": "Open Item Visibility Settings",
 
   "config.asttweaks.category.lavahighlight": "Lava Highlight",
   "config.asttweaks.lavahighlight.enabled": "Lava Highlight Function",
@@ -142,5 +145,52 @@
   "key.asttweaks.autorepair.toggle": "Toggle Auto Repair",
 
   "message.asttweaks.autorepair.enabled": "Auto Repair: Enabled",
-  "message.asttweaks.autorepair.disabled": "Auto Repair: Disabled"
+  "message.asttweaks.autorepair.disabled": "Auto Repair: Disabled",
+
+  "config.asttweaks.category.massgrindstone": "Mass Grindstone",
+  "config.asttweaks.massgrindstone.enabled": "Mass Grindstone Function",
+  "config.asttweaks.massgrindstone.enabled.tooltip": "Fast enchantment removal from items using the grindstone (ItemScroller/MassCraft style)",
+  "config.asttweaks.massgrindstone.whitelistMode": "Whitelist Mode",
+  "config.asttweaks.massgrindstone.whitelistMode.tooltip": "When enabled, only items in the list will be processed. When disabled (blacklist mode), all items except those in the list will be processed. Whitelist mode is recommended for SMP to prevent accidental processing of valuable gear.",
+  "config.asttweaks.massgrindstone.operationsPerTick": "Operations Per Tick",
+  "config.asttweaks.massgrindstone.operationsPerTick.tooltip": "Number of operations to perform per game tick (higher = faster)",
+  "config.asttweaks.massgrindstone.dropResults": "Drop Results",
+  "config.asttweaks.massgrindstone.dropResults.tooltip": "Drop the disenchanted items instead of moving to inventory (MassCraft style, faster)",
+  "config.asttweaks.massgrindstone.itemlist.title": "Grindstone Item Settings",
+  "config.asttweaks.massgrindstone.itemlist.help.whitelist": "Click to add/remove items from the whitelist",
+  "config.asttweaks.massgrindstone.itemlist.help.blacklist": "Click to add/remove items from the blacklist",
+  "config.asttweaks.massgrindstone.itemlist.button": "Open Item Settings",
+  "config.asttweaks.massgrindstone.willprocess": "Will Process",
+  "config.asttweaks.massgrindstone.wontprocess": "Won't Process",
+  "config.asttweaks.massgrindstone.enchantedbook": "Enchanted Book",
+
+  "key.asttweaks.massgrindstone.execute": "Mass Grindstone Execute",
+
+  "message.asttweaks.massgrindstone.processing": "Mass Grindstone: Processing...",
+  "message.asttweaks.massgrindstone.completed": "Mass Grindstone: Completed (%d items)",
+
+  "config.asttweaks.category.updatechecker": "Update Checker",
+  "config.asttweaks.updatechecker.enabled": "Update Checker Function",
+  "config.asttweaks.updatechecker.enabled.tooltip": "Automatically check for mod updates via Modrinth API",
+  "config.asttweaks.updatechecker.projectId": "Modrinth Project ID",
+  "config.asttweaks.updatechecker.projectId.tooltip": "The project ID or slug from Modrinth (e.g., 'my-mod' or 'ABCD1234')",
+  "config.asttweaks.updatechecker.frequency": "Check Frequency",
+  "config.asttweaks.updatechecker.frequency.tooltip": "How often to check for updates",
+  "config.asttweaks.updatechecker.frequency.startup_only": "On Startup",
+  "config.asttweaks.updatechecker.frequency.daily": "Daily",
+  "config.asttweaks.updatechecker.frequency.weekly": "Weekly",
+  "config.asttweaks.updatechecker.showNotification": "Show Notification",
+  "config.asttweaks.updatechecker.showNotification.tooltip": "Display a toast notification when an update is available",
+
+  "message.asttweaks.updatechecker.title": "AST-Tweaks Update",
+  "message.asttweaks.updatechecker.available": "New version %s is available!",
+  "message.asttweaks.updatechecker.available_named": "%s version %s is available!",
+  "message.asttweaks.updatechecker.uptodate": "You are running the latest version",
+  "message.asttweaks.updatechecker.error": "Failed to check for updates",
+
+  "message.asttweaks.updatechecker.chat.current": "§e[AST-Tweaks]§r Running version §b%s§r",
+  "message.asttweaks.updatechecker.chat.available": "§e[AST-Tweaks]§r New version §a%s§r is available!",
+  "message.asttweaks.updatechecker.chat.available_named": "§e[AST-Tweaks]§r §a%s§r version §a%s§r is available!",
+  "message.asttweaks.updatechecker.chat.uptodate": "§e[AST-Tweaks]§r You are running the latest version",
+  "message.asttweaks.updatechecker.chat.error": "§e[AST-Tweaks]§r §cFailed to check for updates§r"
 }

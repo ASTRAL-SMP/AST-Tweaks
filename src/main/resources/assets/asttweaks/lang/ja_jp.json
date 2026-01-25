@@ -95,6 +95,9 @@
   "config.asttweaks.entityculling.blacklist.button": "エンティティ表示設定を開く",
   "config.asttweaks.entityculling.hidden": "非表示",
   "config.asttweaks.entityculling.visible": "表示",
+  "config.asttweaks.entityculling.itemblacklist.title": "アイテムエンティティ表示設定",
+  "config.asttweaks.entityculling.itemblacklist.help": "クリックしてアイテムの表示/非表示を切り替えます",
+  "config.asttweaks.entityculling.itemblacklist.button": "アイテム表示設定を開く",
 
   "config.asttweaks.category.lavahighlight": "溶岩ハイライト",
   "config.asttweaks.lavahighlight.enabled": "溶岩ハイライト機能",
@@ -142,5 +145,52 @@
   "key.asttweaks.autorepair.toggle": "オートリペア切替",
 
   "message.asttweaks.autorepair.enabled": "オートリペア: 有効",
-  "message.asttweaks.autorepair.disabled": "オートリペア: 無効"
+  "message.asttweaks.autorepair.disabled": "オートリペア: 無効",
+
+  "config.asttweaks.category.massgrindstone": "高速砥石",
+  "config.asttweaks.massgrindstone.enabled": "高速砥石機能",
+  "config.asttweaks.massgrindstone.enabled.tooltip": "砥石を使用してアイテムからエンチャントを高速で除去します（ItemScroller/MassCraft風）",
+  "config.asttweaks.massgrindstone.whitelistMode": "ホワイトリストモード",
+  "config.asttweaks.massgrindstone.whitelistMode.tooltip": "有効時はリスト内のアイテムのみ処理します。無効時（ブラックリストモード）はリスト内のアイテム以外を処理します。SMPでの誤操作防止のためホワイトリストモードを推奨します。",
+  "config.asttweaks.massgrindstone.operationsPerTick": "1tickあたりの処理回数",
+  "config.asttweaks.massgrindstone.operationsPerTick.tooltip": "1tickごとに実行する処理回数（大きいほど高速）",
+  "config.asttweaks.massgrindstone.dropResults": "結果をドロップ",
+  "config.asttweaks.massgrindstone.dropResults.tooltip": "エンチャント除去したアイテムをインベントリに戻す代わりにドロップします（MassCraft風、より高速）",
+  "config.asttweaks.massgrindstone.itemlist.title": "砥石アイテム設定",
+  "config.asttweaks.massgrindstone.itemlist.help.whitelist": "クリックしてホワイトリストにアイテムを追加/削除します",
+  "config.asttweaks.massgrindstone.itemlist.help.blacklist": "クリックしてブラックリストにアイテムを追加/削除します",
+  "config.asttweaks.massgrindstone.itemlist.button": "アイテム設定を開く",
+  "config.asttweaks.massgrindstone.willprocess": "処理する",
+  "config.asttweaks.massgrindstone.wontprocess": "処理しない",
+  "config.asttweaks.massgrindstone.enchantedbook": "エンチャントの本",
+
+  "key.asttweaks.massgrindstone.execute": "高速砥石実行",
+
+  "message.asttweaks.massgrindstone.processing": "高速砥石: 処理中...",
+  "message.asttweaks.massgrindstone.completed": "高速砥石: 完了（%d個のアイテム）",
+
+  "config.asttweaks.category.updatechecker": "アップデートチェッカー",
+  "config.asttweaks.updatechecker.enabled": "アップデートチェック機能",
+  "config.asttweaks.updatechecker.enabled.tooltip": "Modrinth APIを使用してModの更新を自動チェックします",
+  "config.asttweaks.updatechecker.projectId": "ModrinthプロジェクトID",
+  "config.asttweaks.updatechecker.projectId.tooltip": "ModrinthのプロジェクトIDまたはスラッグ（例: 'my-mod' または 'ABCD1234'）",
+  "config.asttweaks.updatechecker.frequency": "チェック頻度",
+  "config.asttweaks.updatechecker.frequency.tooltip": "更新チェックの実行頻度",
+  "config.asttweaks.updatechecker.frequency.startup_only": "起動時のみ",
+  "config.asttweaks.updatechecker.frequency.daily": "毎日",
+  "config.asttweaks.updatechecker.frequency.weekly": "毎週",
+  "config.asttweaks.updatechecker.showNotification": "通知を表示",
+  "config.asttweaks.updatechecker.showNotification.tooltip": "アップデートがある場合にトースト通知を表示します",
+
+  "message.asttweaks.updatechecker.title": "AST-Tweaks アップデート",
+  "message.asttweaks.updatechecker.available": "新バージョン %s が利用可能です！",
+  "message.asttweaks.updatechecker.available_named": "%s バージョン %s が利用可能です！",
+  "message.asttweaks.updatechecker.uptodate": "最新バージョンを使用しています",
+  "message.asttweaks.updatechecker.error": "アップデートの確認に失敗しました",
+
+  "message.asttweaks.updatechecker.chat.current": "§e[AST-Tweaks]§r 現在バージョン §b%s§r を使用中",
+  "message.asttweaks.updatechecker.chat.available": "§e[AST-Tweaks]§r 新バージョン §a%s§r が利用可能です！",
+  "message.asttweaks.updatechecker.chat.available_named": "§e[AST-Tweaks]§r §a%s§r バージョン §a%s§r が利用可能です！",
+  "message.asttweaks.updatechecker.chat.uptodate": "§e[AST-Tweaks]§r 最新バージョンを使用しています",
+  "message.asttweaks.updatechecker.chat.error": "§e[AST-Tweaks]§r §cアップデートの確認に失敗しました§r"
 }

@@ -37,7 +37,7 @@ public class AutoRepairFeature implements Feature {
     private int currentRepairSlot = -1;      // Original slot of item being repaired
     private int previousMainhandSlot = -1;   // Player's original selected slot before repair
     private Set<Integer> repairedSlots = new HashSet<>();  // Slots that have been repaired this session
-    private static final int SYNC_DELAY_TICKS = 5;  // Increased for better server sync
+    private static final int SYNC_DELAY_TICKS = 1;  // Minimal delay for fast swapping
 
     public AutoRepairFeature() {
         this.config = new AutoRepairConfig();

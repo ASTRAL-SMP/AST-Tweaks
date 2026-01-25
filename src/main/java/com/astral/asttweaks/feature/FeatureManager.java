@@ -4,10 +4,12 @@ import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
+import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
+import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import java.util.HashMap;
@@ -43,6 +45,8 @@ public class FeatureManager {
         registerFeature(new NotepadFeature());
         registerFeature(new AutoTotemFeature());
         registerFeature(new AutoRepairFeature());
+        registerFeature(new MassGrindstoneFeature());
+        registerFeature(new UpdateCheckerFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -134,5 +138,19 @@ public class FeatureManager {
      */
     public AutoRepairFeature getAutoRepairFeature() {
         return (AutoRepairFeature) getFeature("autorepair");
+    }
+
+    /**
+     * Get the update checker feature.
+     */
+    public UpdateCheckerFeature getUpdateCheckerFeature() {
+        return (UpdateCheckerFeature) getFeature("updatechecker");
+    }
+
+    /**
+     * Get the mass grindstone feature.
+     */
+    public MassGrindstoneFeature getMassGrindstoneFeature() {
+        return (MassGrindstoneFeature) getFeature("massgrindstone");
     }
 }

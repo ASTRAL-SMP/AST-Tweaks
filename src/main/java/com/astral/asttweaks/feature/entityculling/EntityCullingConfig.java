@@ -2,6 +2,7 @@ package com.astral.asttweaks.feature.entityculling;
 
 import com.astral.asttweaks.config.ModConfig;
 import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
@@ -108,5 +109,39 @@ public class EntityCullingConfig {
 
     public Set<String> getBlacklistedEntities() {
         return ModConfig.getInstance().entityBlacklist;
+    }
+
+    // Item entity blacklist methods
+    public boolean isItemBlacklisted(Item item) {
+        Identifier id = Registries.ITEM.getId(item);
+        return ModConfig.getInstance().itemEntityBlacklist.contains(id.toString());
+    }
+
+    public boolean isItemBlacklisted(String itemId) {
+        return ModConfig.getInstance().itemEntityBlacklist.contains(itemId);
+    }
+
+    public void addToItemBlacklist(Item item) {
+        Identifier id = Registries.ITEM.getId(item);
+        ModConfig.getInstance().itemEntityBlacklist.add(id.toString());
+        ModConfig.getInstance().save();
+    }
+
+    public void removeFromItemBlacklist(Item item) {
+        Identifier id = Registries.ITEM.getId(item);
+        ModConfig.getInstance().itemEntityBlacklist.remove(id.toString());
+        ModConfig.getInstance().save();
+    }
+
+    public void toggleItemBlacklist(Item item) {
+        if (isItemBlacklisted(item)) {
+            removeFromItemBlacklist(item);
+        } else {
+            addToItemBlacklist(item);
+        }
+    }
+
+    public Set<String> getBlacklistedItems() {
+        return ModConfig.getInstance().itemEntityBlacklist;
     }
 }

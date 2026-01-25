@@ -2,6 +2,7 @@ package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.automove.MoveDirection;
+import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -61,6 +62,7 @@ public class ModConfig {
     public int itemRenderLimit = -1;  // -1 = unlimited
     public int xpOrbRenderLimit = -1; // -1 = unlimited
     public Set<String> entityBlacklist = new HashSet<>();
+    public Set<String> itemEntityBlacklist = new HashSet<>();  // アイテム種類ごとのブラックリスト
 
     // Lava highlight settings
     public boolean lavaHighlightEnabled = false;
@@ -81,6 +83,20 @@ public class ModConfig {
     public boolean autoRepairWhitelistMode = false;   // false = blacklist mode
     public Set<String> autoRepairItemList = new HashSet<>();
     public int autoRepairTargetSlot = 0;              // Hotbar slot to use for repairing items (0-8)
+
+    // Mass grindstone settings
+    public boolean massGrindstoneEnabled = true;
+    public boolean massGrindstoneWhitelistMode = true;  // Default to whitelist for SMP safety
+    public Set<String> massGrindstoneItemList = new HashSet<>();
+    public int massGrindstoneOperationsPerTick = 10;    // Number of operations per tick
+    public boolean massGrindstoneDropResults = true;    // Drop results for maximum efficiency
+
+    // Update checker settings
+    public boolean updateCheckerEnabled = true;
+    public String updateCheckerProjectId = "";
+    public CheckFrequency updateCheckerFrequency = CheckFrequency.STARTUP_ONLY;
+    public long updateCheckerLastCheck = 0;
+    public boolean updateCheckerShowNotification = true;
 
     private ModConfig() {
         // Default blacklist items
@@ -137,6 +153,9 @@ public class ModConfig {
                     if (loaded.entityBlacklist != null) {
                         this.entityBlacklist = new HashSet<>(loaded.entityBlacklist);
                     }
+                    if (loaded.itemEntityBlacklist != null) {
+                        this.itemEntityBlacklist = new HashSet<>(loaded.itemEntityBlacklist);
+                    }
                     this.lavaHighlightEnabled = loaded.lavaHighlightEnabled;
                     this.lavaHighlightSource = loaded.lavaHighlightSource;
                     this.lavaHighlightFlowing = loaded.lavaHighlightFlowing;
@@ -151,6 +170,22 @@ public class ModConfig {
                         this.autoRepairItemList = new HashSet<>(loaded.autoRepairItemList);
                     }
                     this.autoRepairTargetSlot = loaded.autoRepairTargetSlot;
+                    this.massGrindstoneEnabled = loaded.massGrindstoneEnabled;
+                    this.massGrindstoneWhitelistMode = loaded.massGrindstoneWhitelistMode;
+                    if (loaded.massGrindstoneItemList != null) {
+                        this.massGrindstoneItemList = new HashSet<>(loaded.massGrindstoneItemList);
+                    }
+                    this.massGrindstoneOperationsPerTick = loaded.massGrindstoneOperationsPerTick;
+                    this.massGrindstoneDropResults = loaded.massGrindstoneDropResults;
+                    this.updateCheckerEnabled = loaded.updateCheckerEnabled;
+                    if (loaded.updateCheckerProjectId != null) {
+                        this.updateCheckerProjectId = loaded.updateCheckerProjectId;
+                    }
+                    if (loaded.updateCheckerFrequency != null) {
+                        this.updateCheckerFrequency = loaded.updateCheckerFrequency;
+                    }
+                    this.updateCheckerLastCheck = loaded.updateCheckerLastCheck;
+                    this.updateCheckerShowNotification = loaded.updateCheckerShowNotification;
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {

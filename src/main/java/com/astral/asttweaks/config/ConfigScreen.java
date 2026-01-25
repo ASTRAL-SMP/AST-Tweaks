@@ -7,6 +7,8 @@ import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autorepair.gui.RepairItemListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
+import com.astral.asttweaks.feature.entityculling.gui.ItemEntityListScreen;
+import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -287,6 +289,11 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new EntityListScreen(builder.build()))
         ));
 
+        entityCulling.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemblacklist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new ItemEntityListScreen(builder.build()))
+        ));
+
         // Lava highlight category
         ConfigCategory lavaHighlight = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.lavahighlight"));
@@ -407,6 +414,52 @@ public class ConfigScreen implements ModMenuApi {
         autoRepair.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
                 button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(builder.build()))
+        ));
+
+        // Mass grindstone category
+        ConfigCategory massGrindstone = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.massgrindstone"));
+
+        massGrindstone.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled"),
+                        config.massGrindstoneEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled.tooltip"))
+                .setSaveConsumer(value -> config.massGrindstoneEnabled = value)
+                .build());
+
+        massGrindstone.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode"),
+                        config.massGrindstoneWhitelistMode)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode.tooltip"))
+                .setSaveConsumer(value -> config.massGrindstoneWhitelistMode = value)
+                .build());
+
+        massGrindstone.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick"),
+                        config.massGrindstoneOperationsPerTick, 1, 20)
+                .setDefaultValue(10)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setSaveConsumer(value -> config.massGrindstoneOperationsPerTick = value)
+                .build());
+
+        massGrindstone.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults"),
+                        config.massGrindstoneDropResults)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults.tooltip"))
+                .setSaveConsumer(value -> config.massGrindstoneDropResults = value)
+                .build());
+
+        massGrindstone.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.itemlist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new GrindstoneItemListScreen(builder.build()))
         ));
 
         builder.setSavingRunnable(config::save);

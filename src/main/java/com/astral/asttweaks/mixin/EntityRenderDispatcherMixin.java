@@ -69,8 +69,14 @@ public abstract class EntityRenderDispatcherMixin {
             }
         }
 
-        // Limit item entity rendering
-        if (entity instanceof ItemEntity) {
+        // Item entity rendering control
+        if (entity instanceof ItemEntity itemEntity) {
+            // Check item type blacklist first
+            if (config.isItemBlacklisted(itemEntity.getStack().getItem())) {
+                cir.setReturnValue(false);
+                return;
+            }
+            // Then check render limit
             if (feature.shouldSkipItemRender()) {
                 cir.setReturnValue(false);
                 return;

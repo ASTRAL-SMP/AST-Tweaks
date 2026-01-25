@@ -6,6 +6,7 @@ import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
+import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -28,6 +29,7 @@ public class KeyBindings {
     public static KeyBinding autoTotemToggle;
     public static KeyBinding autoRepairToggle;
     public static KeyBinding notepadOpen;
+    public static KeyBinding massGrindstoneExecute;
 
     public static void register() {
         // Toggle scoreboard visibility
@@ -89,6 +91,14 @@ public class KeyBindings {
         // Open notepad
         notepadOpen = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key." + ASTTweaks.MOD_ID + ".notepad.open",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Mass grindstone execute
+        massGrindstoneExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".massgrindstone.execute",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
@@ -186,6 +196,10 @@ public class KeyBindings {
                     notepad.openNotepad();
                 }
             }
+
+            // Note: Mass grindstone key handling is done in MassGrindstoneFeature
+            // because wasPressed() doesn't work while GUI screens are open.
+            // We use InputUtil.isKeyPressed() directly in the feature class.
         });
     }
 }
