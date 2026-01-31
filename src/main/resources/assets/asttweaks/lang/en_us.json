@@ -219,6 +219,19 @@
   "gui.asttweaks.inventorysort.player": "Sort Player Inventory",
   "gui.asttweaks.inventorysort.container": "Sort Container",
   "key.asttweaks.inventorysort.execute": "Sort Inventory",
+  "key.asttweaks.inventorysort.container.execute": "Sort Container",
   "message.asttweaks.inventorysort.sorting": "Sorting...",
-  "message.asttweaks.inventorysort.completed": "Sort complete!"
+  "message.asttweaks.inventorysort.completed": "Sort complete!",
+
+  "config.asttweaks.category.bonemealfilter": "Bone Meal Filter",
+  "config.asttweaks.bonemealfilter.enabled": "Bone Meal Filter",
+  "config.asttweaks.bonemealfilter.enabled.tooltip": "Restrict bone meal usage to whitelisted blocks only",
+  "config.asttweaks.bonemealfilter.whitelist.title": "Bone Meal Whitelist",
+  "config.asttweaks.bonemealfilter.whitelist.help": "Click to allow/deny bone meal usage on blocks",
+  "config.asttweaks.bonemealfilter.whitelist.button": "Open Whitelist Settings",
+  "config.asttweaks.bonemealfilter.allowed": "Allowed",
+  "config.asttweaks.bonemealfilter.notallowed": "Not Allowed",
+  "key.asttweaks.bonemealfilter.toggle": "Toggle Bone Meal Filter",
+  "message.asttweaks.bonemealfilter.enabled": "Bone Meal Filter: Enabled",
+  "message.asttweaks.bonemealfilter.disabled": "Bone Meal Filter: Disabled"
 }

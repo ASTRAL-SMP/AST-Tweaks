@@ -100,6 +100,10 @@ public class ModConfig {
     public long updateCheckerLastCheck = 0;
     public boolean updateCheckerShowNotification = true;
 
+    // Bone meal filter settings
+    public boolean boneMealFilterEnabled = false;
+    public Set<String> boneMealFilterWhitelist = new HashSet<>();
+
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
     public SortMode inventorySortMode = SortMode.ITEM_ID;
@@ -195,6 +199,10 @@ public class ModConfig {
                     }
                     this.updateCheckerLastCheck = loaded.updateCheckerLastCheck;
                     this.updateCheckerShowNotification = loaded.updateCheckerShowNotification;
+                    this.boneMealFilterEnabled = loaded.boneMealFilterEnabled;
+                    if (loaded.boneMealFilterWhitelist != null) {
+                        this.boneMealFilterWhitelist = new HashSet<>(loaded.boneMealFilterWhitelist);
+                    }
                     this.inventorySortEnabled = loaded.inventorySortEnabled;
                     if (loaded.inventorySortMode != null) {
                         this.inventorySortMode = loaded.inventorySortMode;

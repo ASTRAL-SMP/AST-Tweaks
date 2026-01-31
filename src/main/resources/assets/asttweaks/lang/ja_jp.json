@@ -219,6 +219,19 @@
   "gui.asttweaks.inventorysort.player": "プレイヤーインベントリをソート",
   "gui.asttweaks.inventorysort.container": "コンテナをソート",
   "key.asttweaks.inventorysort.execute": "インベントリをソート",
+  "key.asttweaks.inventorysort.container.execute": "コンテナをソート",
   "message.asttweaks.inventorysort.sorting": "ソート中...",
-  "message.asttweaks.inventorysort.completed": "ソート完了！"
+  "message.asttweaks.inventorysort.completed": "ソート完了！",
+
+  "config.asttweaks.category.bonemealfilter": "骨粉フィルター",
+  "config.asttweaks.bonemealfilter.enabled": "骨粉フィルター機能",
+  "config.asttweaks.bonemealfilter.enabled.tooltip": "骨粉の使用をホワイトリストのブロックのみに制限します",
+  "config.asttweaks.bonemealfilter.whitelist.title": "骨粉ホワイトリスト",
+  "config.asttweaks.bonemealfilter.whitelist.help": "クリックしてブロックへの骨粉使用を許可/禁止します",
+  "config.asttweaks.bonemealfilter.whitelist.button": "ホワイトリスト設定を開く",
+  "config.asttweaks.bonemealfilter.allowed": "許可",
+  "config.asttweaks.bonemealfilter.notallowed": "不許可",
+  "key.asttweaks.bonemealfilter.toggle": "骨粉フィルター切替",
+  "message.asttweaks.bonemealfilter.enabled": "骨粉フィルター: 有効",
+  "message.asttweaks.bonemealfilter.disabled": "骨粉フィルター: 無効"
 }

@@ -23,6 +23,7 @@ import java.util.*;
 public class InventorySortFeature implements Feature {
     private final InventorySortConfig config;
     private boolean keyWasPressed = false;
+    private boolean containerKeyWasPressed = false;
 
     public InventorySortFeature() {
         this.config = new InventorySortConfig();
@@ -50,14 +51,28 @@ public class InventorySortFeature implements Feature {
                 performSort();
             }
             keyWasPressed = keyPressed;
+
+            boolean containerKeyPressed = isContainerKeyPressed(client);
+            if (containerKeyPressed && !containerKeyWasPressed) {
+                performContainerSort();
+            }
+            containerKeyWasPressed = containerKeyPressed;
         } else {
             keyWasPressed = false;
+            containerKeyWasPressed = false;
         }
     }
 
     private boolean isKeyPressed(MinecraftClient client) {
         if (client.getWindow() == null) return false;
         InputUtil.Key key = KeyBindings.inventorySortExecute.boundKey;
+        if (key.getCode() == InputUtil.UNKNOWN_KEY.getCode()) return false;
+        return InputUtil.isKeyPressed(client.getWindow().getHandle(), key.getCode());
+    }
+
+    private boolean isContainerKeyPressed(MinecraftClient client) {
+        if (client.getWindow() == null) return false;
+        InputUtil.Key key = KeyBindings.inventorySortContainerExecute.boundKey;
         if (key.getCode() == InputUtil.UNKNOWN_KEY.getCode()) return false;
         return InputUtil.isKeyPressed(client.getWindow().getHandle(), key.getCode());
     }
@@ -209,10 +224,13 @@ public class InventorySortFeature implements Feature {
         SortMode mode = config.getSortMode();
 
         Comparator<SortEntry> cmp = switch (mode) {
-            case ITEM_ID -> Comparator.comparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString());
-            case ITEM_NAME -> Comparator.comparing(e -> e.stack.getName().getString());
+            case ITEM_ID -> Comparator.<SortEntry, String>comparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+                    .thenComparingInt(e -> -e.stack.getCount());
+            case ITEM_NAME -> Comparator.<SortEntry, String>comparing(e -> e.stack.getName().getString())
+                    .thenComparingInt(e -> -e.stack.getCount());
             case CATEGORY -> Comparator.<SortEntry>comparingInt(e -> getCategory(e.stack.getItem()))
-                    .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString());
+                    .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+                    .thenComparingInt(e -> -e.stack.getCount());
             case STACK_COUNT -> Comparator.<SortEntry>comparingInt(e -> -e.stack.getCount())
                     .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString());
         };

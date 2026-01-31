@@ -6,6 +6,7 @@ import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autorepair.gui.RepairItemListScreen;
+import com.astral.asttweaks.feature.bonemealfilter.gui.BlockListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.ItemEntityListScreen;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
@@ -512,6 +513,24 @@ public class ConfigScreen implements ModMenuApi {
         inventorySort.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.button"),
                 button -> MinecraftClient.getInstance().setScreen(new ExcludedSlotScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        // Bone meal filter category
+        ConfigCategory boneMealFilter = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.bonemealfilter"));
+
+        boneMealFilter.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled"),
+                        config.boneMealFilterEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled.tooltip"))
+                .setSaveConsumer(value -> config.boneMealFilterEnabled = value)
+                .build());
+
+        boneMealFilter.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.whitelist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new BlockListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         builder.setSavingRunnable(config::save);

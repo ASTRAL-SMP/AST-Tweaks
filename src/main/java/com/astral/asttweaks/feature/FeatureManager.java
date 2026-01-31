@@ -1,6 +1,7 @@
 package com.astral.asttweaks.feature;
 
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
+import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
@@ -49,6 +50,7 @@ public class FeatureManager {
         registerFeature(new MassGrindstoneFeature());
         registerFeature(new UpdateCheckerFeature());
         registerFeature(new InventorySortFeature());
+        registerFeature(new BoneMealFilterFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -161,5 +163,12 @@ public class FeatureManager {
      */
     public InventorySortFeature getInventorySortFeature() {
         return (InventorySortFeature) getFeature("inventorysort");
+    }
+
+    /**
+     * Get the bone meal filter feature.
+     */
+    public BoneMealFilterFeature getBoneMealFilterFeature() {
+        return (BoneMealFilterFeature) getFeature("bonemealfilter");
     }
 }

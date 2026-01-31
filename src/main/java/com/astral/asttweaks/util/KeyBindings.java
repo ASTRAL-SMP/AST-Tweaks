@@ -7,6 +7,7 @@ import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
+import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -30,7 +31,9 @@ public class KeyBindings {
     public static KeyBinding autoRepairToggle;
     public static KeyBinding notepadOpen;
     public static KeyBinding massGrindstoneExecute;
+    public static KeyBinding boneMealFilterToggle;
     public static KeyBinding inventorySortExecute;
+    public static KeyBinding inventorySortContainerExecute;
 
     public static void register() {
         // Toggle scoreboard visibility
@@ -105,11 +108,27 @@ public class KeyBindings {
                 CATEGORY
         ));
 
+        // Toggle bone meal filter
+        boneMealFilterToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".bonemealfilter.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
         // Inventory sort execute
         inventorySortExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key." + ASTTweaks.MOD_ID + ".inventorysort.execute",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_R,
+                CATEGORY
+        ));
+
+        // Inventory sort container execute
+        inventorySortContainerExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".inventorysort.container.execute",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
         ));
 
@@ -203,6 +222,23 @@ public class KeyBindings {
             if (notepad != null) {
                 while (notepadOpen.wasPressed()) {
                     notepad.openNotepad();
+                }
+            }
+
+            // Bone meal filter toggle
+            BoneMealFilterFeature boneMealFilter = FeatureManager.getInstance().getBoneMealFilterFeature();
+            if (boneMealFilter != null) {
+                while (boneMealFilterToggle.wasPressed()) {
+                    boolean newState = !boneMealFilter.isEnabled();
+                    boneMealFilter.setEnabled(newState);
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            net.minecraft.text.Text.translatable(
+                                "message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")
+                            ),
+                            true
+                        );
+                    }
                 }
             }
 
