@@ -233,5 +233,17 @@
   "config.asttweaks.bonemealfilter.notallowed": "不許可",
   "key.asttweaks.bonemealfilter.toggle": "骨粉フィルター切替",
   "message.asttweaks.bonemealfilter.enabled": "骨粉フィルター: 有効",
-  "message.asttweaks.bonemealfilter.disabled": "骨粉フィルター: 無効"
+  "message.asttweaks.bonemealfilter.disabled": "骨粉フィルター: 無効",
+
+  "config.asttweaks.category.silktouchswitch": "シルクタッチスイッチ",
+  "config.asttweaks.silktouchswitch.enabled": "シルクタッチスイッチ機能",
+  "config.asttweaks.silktouchswitch.enabled.tooltip": "対象リストのブロックを破壊する際、自動的にシルクタッチ付きツールに切り替えます（Tweakeroo toolSwitch必須）",
+  "config.asttweaks.silktouchswitch.blocklist.title": "シルクタッチ対象ブロック",
+  "config.asttweaks.silktouchswitch.blocklist.help": "クリックしてシルクタッチ自動切替の対象を設定します",
+  "config.asttweaks.silktouchswitch.blocklist.button": "ブロックリスト設定を開く",
+  "config.asttweaks.silktouchswitch.target": "対象",
+  "config.asttweaks.silktouchswitch.nottarget": "非対象",
+  "key.asttweaks.silktouchswitch.toggle": "シルクタッチスイッチ切替",
+  "message.asttweaks.silktouchswitch.enabled": "シルクタッチスイッチ: 有効",
+  "message.asttweaks.silktouchswitch.disabled": "シルクタッチスイッチ: 無効"
 }

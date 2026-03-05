@@ -11,6 +11,7 @@ import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
+import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
@@ -51,6 +52,7 @@ public class FeatureManager {
         registerFeature(new UpdateCheckerFeature());
         registerFeature(new InventorySortFeature());
         registerFeature(new BoneMealFilterFeature());
+        registerFeature(new SilkTouchSwitchFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -170,5 +172,12 @@ public class FeatureManager {
      */
     public BoneMealFilterFeature getBoneMealFilterFeature() {
         return (BoneMealFilterFeature) getFeature("bonemealfilter");
+    }
+
+    /**
+     * Get the silk touch switch feature.
+     */
+    public SilkTouchSwitchFeature getSilkTouchSwitchFeature() {
+        return (SilkTouchSwitchFeature) getFeature("silktouchswitch");
     }
 }

@@ -7,6 +7,7 @@ import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autorepair.gui.RepairItemListScreen;
 import com.astral.asttweaks.feature.bonemealfilter.gui.BlockListScreen;
+import com.astral.asttweaks.feature.silktouchswitch.gui.SilkTouchBlockListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.EntityListScreen;
 import com.astral.asttweaks.feature.entityculling.gui.ItemEntityListScreen;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
@@ -531,6 +532,24 @@ public class ConfigScreen implements ModMenuApi {
         boneMealFilter.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.whitelist.button"),
                 button -> MinecraftClient.getInstance().setScreen(new BlockListScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        // Silk touch switch category
+        ConfigCategory silkTouchSwitch = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.silktouchswitch"));
+
+        silkTouchSwitch.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled"),
+                        config.silkTouchSwitchEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled.tooltip"))
+                .setSaveConsumer(value -> config.silkTouchSwitchEnabled = value)
+                .build());
+
+        silkTouchSwitch.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.blocklist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new SilkTouchBlockListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
         builder.setSavingRunnable(config::save);

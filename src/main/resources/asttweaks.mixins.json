@@ -8,7 +8,8 @@
     "AutoEatMixin",
     "EntityRenderDispatcherMixin",
     "ClientPlayerTotemMixin",
-    "HandledScreenMixin"
+    "HandledScreenMixin",
+    "SilkTouchToolSwitchMixin"
   ],
   "injectors": {
     "defaultRequire": 1

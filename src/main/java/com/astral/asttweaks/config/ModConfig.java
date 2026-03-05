@@ -104,6 +104,10 @@ public class ModConfig {
     public boolean boneMealFilterEnabled = false;
     public Set<String> boneMealFilterWhitelist = new HashSet<>();
 
+    // Silk touch switch settings
+    public boolean silkTouchSwitchEnabled = true;
+    public Set<String> silkTouchSwitchBlockList = new HashSet<>();
+
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
     public SortMode inventorySortMode = SortMode.ITEM_ID;
@@ -111,12 +115,26 @@ public class ModConfig {
     public SortTarget inventorySortTarget = SortTarget.PLAYER_ONLY;
     public boolean inventorySortShowButton = true;
 
+    // 16色の染料色名
+    private static final String[] DYE_COLORS = {
+        "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+    };
+
     private ModConfig() {
         // Default blacklist items
         autoEatBlacklist.add("minecraft:rotten_flesh");
         autoEatBlacklist.add("minecraft:spider_eye");
         autoEatBlacklist.add("minecraft:poisonous_potato");
         autoEatBlacklist.add("minecraft:pufferfish");
+
+        // デフォルトのシルクタッチ対象ブロック（ガラス系）
+        silkTouchSwitchBlockList.add("minecraft:glass");
+        silkTouchSwitchBlockList.add("minecraft:glass_pane");
+        for (String color : DYE_COLORS) {
+            silkTouchSwitchBlockList.add("minecraft:" + color + "_stained_glass");
+            silkTouchSwitchBlockList.add("minecraft:" + color + "_stained_glass_pane");
+        }
     }
 
     public static ModConfig getInstance() {
@@ -214,6 +232,10 @@ public class ModConfig {
                         this.inventorySortTarget = loaded.inventorySortTarget;
                     }
                     this.inventorySortShowButton = loaded.inventorySortShowButton;
+                    this.silkTouchSwitchEnabled = loaded.silkTouchSwitchEnabled;
+                    if (loaded.silkTouchSwitchBlockList != null) {
+                        this.silkTouchSwitchBlockList = new HashSet<>(loaded.silkTouchSwitchBlockList);
+                    }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {

@@ -233,5 +233,17 @@
   "config.asttweaks.bonemealfilter.notallowed": "Not Allowed",
   "key.asttweaks.bonemealfilter.toggle": "Toggle Bone Meal Filter",
   "message.asttweaks.bonemealfilter.enabled": "Bone Meal Filter: Enabled",
-  "message.asttweaks.bonemealfilter.disabled": "Bone Meal Filter: Disabled"
+  "message.asttweaks.bonemealfilter.disabled": "Bone Meal Filter: Disabled",
+
+  "config.asttweaks.category.silktouchswitch": "Silk Touch Switch",
+  "config.asttweaks.silktouchswitch.enabled": "Silk Touch Switch Function",
+  "config.asttweaks.silktouchswitch.enabled.tooltip": "Automatically switch to a Silk Touch tool when mining blocks in the target list (requires Tweakeroo toolSwitch)",
+  "config.asttweaks.silktouchswitch.blocklist.title": "Silk Touch Target Blocks",
+  "config.asttweaks.silktouchswitch.blocklist.help": "Click to toggle blocks for Silk Touch auto-switch",
+  "config.asttweaks.silktouchswitch.blocklist.button": "Open Block List Settings",
+  "config.asttweaks.silktouchswitch.target": "Target",
+  "config.asttweaks.silktouchswitch.nottarget": "Not Target",
+  "key.asttweaks.silktouchswitch.toggle": "Toggle Silk Touch Switch",
+  "message.asttweaks.silktouchswitch.enabled": "Silk Touch Switch: Enabled",
+  "message.asttweaks.silktouchswitch.disabled": "Silk Touch Switch: Disabled"
 }

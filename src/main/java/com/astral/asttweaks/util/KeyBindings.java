@@ -10,6 +10,7 @@ import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
+import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
@@ -34,6 +35,7 @@ public class KeyBindings {
     public static KeyBinding boneMealFilterToggle;
     public static KeyBinding inventorySortExecute;
     public static KeyBinding inventorySortContainerExecute;
+    public static KeyBinding silkTouchSwitchToggle;
 
     public static void register() {
         // Toggle scoreboard visibility
@@ -127,6 +129,14 @@ public class KeyBindings {
         // Inventory sort container execute
         inventorySortContainerExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key." + ASTTweaks.MOD_ID + ".inventorysort.container.execute",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY
+        ));
+
+        // Toggle silk touch switch
+        silkTouchSwitchToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key." + ASTTweaks.MOD_ID + ".silktouchswitch.toggle",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY
@@ -235,6 +245,23 @@ public class KeyBindings {
                         client.player.sendMessage(
                             net.minecraft.text.Text.translatable(
                                 "message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")
+                            ),
+                            true
+                        );
+                    }
+                }
+            }
+
+            // Silk touch switch toggle
+            SilkTouchSwitchFeature silkTouchSwitch = FeatureManager.getInstance().getSilkTouchSwitchFeature();
+            if (silkTouchSwitch != null) {
+                while (silkTouchSwitchToggle.wasPressed()) {
+                    boolean newState = !silkTouchSwitch.isEnabled();
+                    silkTouchSwitch.setEnabled(newState);
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            net.minecraft.text.Text.translatable(
+                                "message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")
                             ),
                             true
                         );

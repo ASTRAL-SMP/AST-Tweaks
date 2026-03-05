@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 public class TweakerooCompat {
     private static boolean tweakerooAvailable = false;
     private static Object almostBrokenToolsToggle = null;
+    private static Object toolSwitchToggle = null;
     private static Method getBooleanValueMethod = null;
     private static Method setBooleanValueMethod = null;
 
@@ -33,6 +34,16 @@ public class TweakerooCompat {
                 (Class<Enum>) featureToggleClass,
                 "TWEAK_SWAP_ALMOST_BROKEN_TOOLS"
             );
+
+            // Get the TWEAK_TOOL_SWITCH enum constant
+            try {
+                toolSwitchToggle = Enum.valueOf(
+                    (Class<Enum>) featureToggleClass,
+                    "TWEAK_TOOL_SWITCH"
+                );
+            } catch (IllegalArgumentException e) {
+                ASTTweaks.LOGGER.warn("Tweakeroo TWEAK_TOOL_SWITCH not found: {}", e.getMessage());
+            }
 
             // Get the methods we need
             // IConfigBoolean interface from maLiLib
@@ -115,6 +126,18 @@ public class TweakerooCompat {
     public static void ensureRestored() {
         if (stateModified) {
             restoreAlmostBrokenTools();
+        }
+    }
+
+    /**
+     * Check if Tweakeroo's Tool Switch feature is currently enabled.
+     */
+    public static boolean isToolSwitchEnabled() {
+        if (!tweakerooAvailable || toolSwitchToggle == null) return false;
+        try {
+            return (boolean) getBooleanValueMethod.invoke(toolSwitchToggle);
+        } catch (Exception e) {
+            return false;
         }
     }
 }
