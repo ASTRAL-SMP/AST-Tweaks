@@ -8,6 +8,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 
 /**
  * Auto-eat feature that automatically consumes food when hunger is low.
@@ -19,7 +21,6 @@ public class AutoEatFeature implements Feature {
     private enum AutoEatState {
         MONITORING,      // 満腹度監視中
         EATING,          // 食事実行中
-        WAIT_FOR_SERVER, // サーバー反映待ち
         COMPLETING       // 食事完了確認中
     }
 
@@ -35,9 +36,6 @@ public class AutoEatFeature implements Feature {
     private int itemCountBeforeEating = -1;
     private boolean hasStartedEating = false;
     private static final int MAX_EATING_TICKS = 200; // 最大10秒間食事を待機
-    private int waitForServerTicks = 0;
-    private static final int MAX_WAIT_FOR_SERVER_TICKS = 3;
-    private boolean isHoldingUseKey = false;
 
     public AutoEatFeature() {
         this.config = new AutoEatConfig();
@@ -109,9 +107,6 @@ public class AutoEatFeature implements Feature {
             case EATING:
                 handleEating(client, player);
                 break;
-            case WAIT_FOR_SERVER:
-                handleWaitForServer(client, player);
-                break;
             case COMPLETING:
                 handleCompleting(client, player);
                 break;
@@ -155,17 +150,29 @@ public class AutoEatFeature implements Feature {
     private void handleEating(MinecraftClient client, PlayerEntity player) {
         eatingTicks++;
 
-        if (!isHoldingUseKey) {
-            client.options.useKey.setPressed(true);
-            isHoldingUseKey = true;
-        }
+        player.getInventory().selectedSlot = eatingSlot;
 
         ItemStack currentStack = player.getInventory().getStack(eatingSlot);
+        if (!canEat(currentStack, player)) {
+            resetToMonitoring();
+            return;
+        }
+
+        if (!player.isUsingItem()) {
+            if (!hasStartedEating) {
+                if (!tryStartEating(client, player)) {
+                    resetToMonitoring();
+                }
+                return;
+            }
+
+            currentState = AutoEatState.COMPLETING;
+            eatingTicks = 0;
+            return;
+        }
         int currentHunger = player.getHungerManager().getFoodLevel();
         if ((itemCountBeforeEating != -1 && currentStack.getCount() < itemCountBeforeEating)
                 || (currentHunger > hungerBeforeEating)) {
-            client.options.useKey.setPressed(false);
-            isHoldingUseKey = false;
             currentState = AutoEatState.COMPLETING;
             eatingTicks = 0;
             return;
@@ -173,26 +180,7 @@ public class AutoEatFeature implements Feature {
 
         if (eatingTicks >= MAX_EATING_TICKS) {
             ASTTweaks.LOGGER.warn("Eating timed out");
-            client.options.useKey.setPressed(false);
-            isHoldingUseKey = false;
             resetToMonitoring();
-        }
-    }
-
-    private void handleWaitForServer(MinecraftClient client, PlayerEntity player) {
-        waitForServerTicks++;
-        ItemStack currentStack = player.getInventory().getStack(eatingSlot);
-        int currentHunger = player.getHungerManager().getFoodLevel();
-
-        if ((itemCountBeforeEating != -1 && currentStack.getCount() < itemCountBeforeEating)
-                || (currentHunger > hungerBeforeEating)) {
-            currentState = AutoEatState.COMPLETING;
-            eatingTicks = 0;
-            return;
-        }
-        if (waitForServerTicks > MAX_WAIT_FOR_SERVER_TICKS) {
-            hasStartedEating = false;
-            currentState = AutoEatState.EATING;
         }
     }
 
@@ -231,12 +219,25 @@ public class AutoEatFeature implements Feature {
         player.getInventory().selectedSlot = slot;
     }
 
+
+    private boolean tryStartEating(MinecraftClient client, PlayerEntity player) {
+        if (client.interactionManager == null) {
+            return false;
+        }
+
+        ActionResult result = client.interactionManager.interactItem(player, Hand.MAIN_HAND);
+        if (result.isAccepted()) {
+            hasStartedEating = true;
+            return true;
+        }
+
+        return false;
+    }
+
     private void finishEating(MinecraftClient client) {
         if (client.player != null && originalHotbarSlot != -1) {
             client.player.getInventory().selectedSlot = originalHotbarSlot;
         }
-        client.options.useKey.setPressed(false);
-        isHoldingUseKey = false;
         resetToMonitoring();
         eatCooldown = 60;
     }
@@ -249,7 +250,6 @@ public class AutoEatFeature implements Feature {
         itemCountBeforeEating = -1;
         eatingTicks = 0;
         hasStartedEating = false;
-        isHoldingUseKey = false;
     }
 
     private boolean canEat(ItemStack stack, PlayerEntity player) {
