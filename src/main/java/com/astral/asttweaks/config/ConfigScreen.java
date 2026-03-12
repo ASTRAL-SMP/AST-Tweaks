@@ -14,15 +14,19 @@ import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
+import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.util.KeyCombo;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
+import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * ModMenu integration and configuration screen using Cloth Config.
@@ -45,7 +49,145 @@ public class ConfigScreen implements ModMenuApi {
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        // ============================
+        // 一般カテゴリ（最初のタブ）
+        // ============================
+        ConfigCategory general = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.general"));
+
+        // --- Auto Totem サブカテゴリ ---
+        SubCategoryBuilder autoTotemSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autototem"));
+
+        autoTotemSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled"),
+                        config.autoTotemEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoTotemEnabled = value)
+                .build());
+
+        autoTotemSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoTotemToggle"),
+                config.autoTotemToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoTotemToggleKey.copyFrom(combo)));
+
+        general.addEntry(autoTotemSub.build());
+
+        // --- Notepad サブカテゴリ ---
+        SubCategoryBuilder notepadSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.notepad"));
+
+        notepadSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled"),
+                        config.notepadEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled.tooltip"))
+                .setSaveConsumer(value -> config.notepadEnabled = value)
+                .build());
+
+        notepadSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.notepadOpen"),
+                config.notepadOpenKey,
+                new KeyCombo(-1, -1),
+                combo -> config.notepadOpenKey.copyFrom(combo)));
+
+        general.addEntry(notepadSub.build());
+
+        // --- Auto Move サブカテゴリ ---
+        SubCategoryBuilder autoMoveSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.automove"));
+
+        autoMoveSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled"),
+                        config.autoMoveEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoMoveEnabled = value)
+                .build());
+
+        autoMoveSub.add(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction"),
+                        MoveDirection.class,
+                        config.autoMoveDirection)
+                .setDefaultValue(MoveDirection.FORWARD)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
+                .setEnumNameProvider(dir -> Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
+                .setSaveConsumer(value -> config.autoMoveDirection = value)
+                .build());
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveToggle"),
+                config.autoMoveToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveToggleKey.copyFrom(combo)));
+
+        general.addEntry(autoMoveSub.build());
+
+        // --- Update Checker サブカテゴリ ---
+        SubCategoryBuilder updateCheckerSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.updatechecker"));
+
+        updateCheckerSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled"),
+                        config.updateCheckerEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled.tooltip"))
+                .setSaveConsumer(value -> config.updateCheckerEnabled = value)
+                .build());
+
+        updateCheckerSub.add(entryBuilder
+                .startStrField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.projectId"),
+                        config.updateCheckerProjectId)
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.projectId.tooltip"))
+                .setSaveConsumer(value -> config.updateCheckerProjectId = value)
+                .build());
+
+        updateCheckerSub.add(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency"),
+                        CheckFrequency.class,
+                        config.updateCheckerFrequency)
+                .setDefaultValue(CheckFrequency.STARTUP_ONLY)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency.tooltip"))
+                .setEnumNameProvider(freq -> Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency." + ((CheckFrequency)freq).getId()))
+                .setSaveConsumer(value -> config.updateCheckerFrequency = value)
+                .build());
+
+        updateCheckerSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification"),
+                        config.updateCheckerShowNotification)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification.tooltip"))
+                .setSaveConsumer(value -> config.updateCheckerShowNotification = value)
+                .build());
+
+        general.addEntry(updateCheckerSub.build());
+
+        // --- キーバインド サブカテゴリ（一般のみ） ---
+        SubCategoryBuilder keyBindSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
+
+        keyBindSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.openGeneralScreen"),
+                config.openGeneralScreenKey,
+                new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K),
+                combo -> config.openGeneralScreenKey.copyFrom(combo)));
+
+        general.addEntry(keyBindSub.build());
+
+        // ============================
         // Scoreboard category
+        // ============================
         ConfigCategory scoreboard = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.scoreboard"));
 
@@ -157,7 +299,33 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.scoreboardTextColor = value)
                 .build());
 
+        // スコアボードキーバインド
+        SubCategoryBuilder scoreboardKeySub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
+
+        scoreboardKeySub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardToggle"),
+                config.scoreboardToggleKey,
+                new KeyCombo(GLFW.GLFW_KEY_O, -1),
+                combo -> config.scoreboardToggleKey.copyFrom(combo)));
+
+        scoreboardKeySub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageUp"),
+                config.scoreboardPageUpKey,
+                new KeyCombo(GLFW.GLFW_KEY_UP, -1),
+                combo -> config.scoreboardPageUpKey.copyFrom(combo)));
+
+        scoreboardKeySub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageDown"),
+                config.scoreboardPageDownKey,
+                new KeyCombo(GLFW.GLFW_KEY_DOWN, -1),
+                combo -> config.scoreboardPageDownKey.copyFrom(combo)));
+
+        scoreboard.addEntry(scoreboardKeySub.build());
+
+        // ============================
         // Auto-eat category
+        // ============================
         ConfigCategory autoeat = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autoeat"));
 
@@ -196,31 +364,15 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new FoodListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
-        // Auto-move category
-        ConfigCategory automove = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.automove"));
+        autoeat.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoEatToggle"),
+                config.autoEatToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoEatToggleKey.copyFrom(combo)));
 
-        automove.addEntry(entryBuilder
-                .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled"),
-                        config.autoMoveEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled.tooltip"))
-                .setSaveConsumer(value -> config.autoMoveEnabled = value)
-                .build());
-
-        automove.addEntry(entryBuilder
-                .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction"),
-                        MoveDirection.class,
-                        config.autoMoveDirection)
-                .setDefaultValue(MoveDirection.FORWARD)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
-                .setEnumNameProvider(dir -> Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
-                .setSaveConsumer(value -> config.autoMoveDirection = value)
-                .build());
-
+        // ============================
         // Entity culling category
+        // ============================
         ConfigCategory entityCulling = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.entityculling"));
 
@@ -299,7 +451,9 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new ItemEntityListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
+        // ============================
         // Lava highlight category
+        // ============================
         ConfigCategory lavaHighlight = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.lavahighlight"));
 
@@ -348,33 +502,9 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.lavaFlowingColor = value)
                 .build());
 
-        // Notepad category
-        ConfigCategory notepad = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.notepad"));
-
-        notepad.addEntry(entryBuilder
-                .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled"),
-                        config.notepadEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled.tooltip"))
-                .setSaveConsumer(value -> config.notepadEnabled = value)
-                .build());
-
-        // Auto totem category
-        ConfigCategory autoTotem = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autototem"));
-
-        autoTotem.addEntry(entryBuilder
-                .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled"),
-                        config.autoTotemEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
-                .setSaveConsumer(value -> config.autoTotemEnabled = value)
-                .build());
-
+        // ============================
         // Auto repair category
+        // ============================
         ConfigCategory autoRepair = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autorepair"));
 
@@ -421,7 +551,15 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
+        autoRepair.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRepairToggle"),
+                config.autoRepairToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoRepairToggleKey.copyFrom(combo)));
+
+        // ============================
         // Mass grindstone category
+        // ============================
         ConfigCategory massGrindstone = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.massgrindstone"));
 
@@ -467,7 +605,15 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new GrindstoneItemListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
+        massGrindstone.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.massGrindstoneExecute"),
+                config.massGrindstoneExecuteKey,
+                new KeyCombo(-1, -1),
+                combo -> config.massGrindstoneExecuteKey.copyFrom(combo)));
+
+        // ============================
         // Inventory sort category
+        // ============================
         ConfigCategory inventorySort = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.inventorysort"));
 
@@ -516,7 +662,21 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new ExcludedSlotScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
+        inventorySort.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortExecute"),
+                config.inventorySortExecuteKey,
+                new KeyCombo(GLFW.GLFW_KEY_R, -1),
+                combo -> config.inventorySortExecuteKey.copyFrom(combo)));
+
+        inventorySort.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortContainerExecute"),
+                config.inventorySortContainerExecuteKey,
+                new KeyCombo(-1, -1),
+                combo -> config.inventorySortContainerExecuteKey.copyFrom(combo)));
+
+        // ============================
         // Bone meal filter category
+        // ============================
         ConfigCategory boneMealFilter = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.bonemealfilter"));
 
@@ -534,7 +694,15 @@ public class ConfigScreen implements ModMenuApi {
                 button -> MinecraftClient.getInstance().setScreen(new BlockListScreen(MinecraftClient.getInstance().currentScreen))
         ));
 
+        boneMealFilter.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.boneMealFilterToggle"),
+                config.boneMealFilterToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.boneMealFilterToggleKey.copyFrom(combo)));
+
+        // ============================
         // Silk touch switch category
+        // ============================
         ConfigCategory silkTouchSwitch = builder.getOrCreateCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.silktouchswitch"));
 
@@ -551,6 +719,12 @@ public class ConfigScreen implements ModMenuApi {
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.blocklist.button"),
                 button -> MinecraftClient.getInstance().setScreen(new SilkTouchBlockListScreen(MinecraftClient.getInstance().currentScreen))
         ));
+
+        silkTouchSwitch.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.silkTouchSwitchToggle"),
+                config.silkTouchSwitchToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.silkTouchSwitchToggleKey.copyFrom(combo)));
 
         builder.setSavingRunnable(config::save);
 

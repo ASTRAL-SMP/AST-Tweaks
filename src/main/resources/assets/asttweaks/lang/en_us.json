@@ -36,6 +36,17 @@
   "config.asttweaks.scoreboard.textColor": "Text Color",
   "config.asttweaks.scoreboard.textColor.tooltip": "Text color for the scoreboard",
 
+  "config.asttweaks.category.general": "General",
+  "config.asttweaks.category.keybinds": "Key Bindings",
+  "config.asttweaks.keybind.scoreboardToggle": "Toggle Scoreboard",
+  "config.asttweaks.keybind.autoEatToggle": "Toggle Auto Eat",
+  "config.asttweaks.keybind.autoMoveToggle": "Toggle Auto Move",
+  "config.asttweaks.keybind.autoTotemToggle": "Toggle Auto Totem",
+  "config.asttweaks.keybind.autoRepairToggle": "Toggle Auto Repair",
+  "config.asttweaks.keybind.boneMealFilterToggle": "Toggle Bone Meal Filter",
+  "config.asttweaks.keybind.silkTouchSwitchToggle": "Toggle Silk Touch Switch",
+  "config.asttweaks.keybind.openGeneralScreen": "Open Settings",
+
   "config.asttweaks.category.autoeat": "Auto Eat",
   "config.asttweaks.autoeat.enabled": "Auto-eat Function",
   "config.asttweaks.autoeat.enabled.tooltip": "Toggle automatic eating when hunger is low",
@@ -49,13 +60,12 @@
   "config.asttweaks.autoeat.blacklisted": "Denied",
   "config.asttweaks.autoeat.allowed": "Allowed",
 
-  "key.categories.asttweaks": "AST-Tweaks",
-  "key.asttweaks.scoreboard.toggle": "Toggle Scoreboard",
-  "key.asttweaks.scoreboard.pageUp": "Scoreboard Page Up",
-  "key.asttweaks.scoreboard.pageDown": "Scoreboard Page Down",
-  "key.asttweaks.autoeat.toggle": "Toggle Auto Eat",
-  "key.asttweaks.automove.toggle": "Toggle Auto Move",
-  "key.asttweaks.autototem.toggle": "Toggle Auto Totem",
+  "config.asttweaks.keybind.scoreboardPageUp": "Scoreboard Page Up",
+  "config.asttweaks.keybind.scoreboardPageDown": "Scoreboard Page Down",
+  "config.asttweaks.keybind.notepadOpen": "Open Notepad",
+  "config.asttweaks.keybind.massGrindstoneExecute": "Mass Grindstone Execute",
+  "config.asttweaks.keybind.inventorySortExecute": "Sort Inventory",
+  "config.asttweaks.keybind.inventorySortContainerExecute": "Sort Container",
 
   "message.asttweaks.autoeat.enabled": "Auto Eat: Enabled",
   "message.asttweaks.autoeat.disabled": "Auto Eat: Disabled",
@@ -118,8 +128,6 @@
   "config.asttweaks.notepad.enabled": "Notepad Function",
   "config.asttweaks.notepad.enabled.tooltip": "Toggle the notepad feature for saving notes",
 
-  "key.asttweaks.notepad.open": "Open Notepad",
-
   "screen.asttweaks.notepad.title": "Notepad",
   "screen.asttweaks.notepad.placeholder": "Enter your notes here...",
   "screen.asttweaks.notepad.save": "Save",
@@ -145,8 +153,6 @@
   "config.asttweaks.autorepair.willrepair": "Will Repair",
   "config.asttweaks.autorepair.wontrepair": "Won't Repair",
 
-  "key.asttweaks.autorepair.toggle": "Toggle Auto Repair",
-
   "message.asttweaks.autorepair.enabled": "Auto Repair: Enabled",
   "message.asttweaks.autorepair.disabled": "Auto Repair: Disabled",
 
@@ -166,8 +172,6 @@
   "config.asttweaks.massgrindstone.willprocess": "Will Process",
   "config.asttweaks.massgrindstone.wontprocess": "Won't Process",
   "config.asttweaks.massgrindstone.enchantedbook": "Enchanted Book",
-
-  "key.asttweaks.massgrindstone.execute": "Mass Grindstone Execute",
 
   "message.asttweaks.massgrindstone.processing": "Mass Grindstone: Processing...",
   "message.asttweaks.massgrindstone.completed": "Mass Grindstone: Completed (%d items)",
@@ -218,8 +222,6 @@
   "config.asttweaks.inventorysort.showButton.tooltip": "Display sort buttons in inventory screens",
   "gui.asttweaks.inventorysort.player": "Sort Player Inventory",
   "gui.asttweaks.inventorysort.container": "Sort Container",
-  "key.asttweaks.inventorysort.execute": "Sort Inventory",
-  "key.asttweaks.inventorysort.container.execute": "Sort Container",
   "message.asttweaks.inventorysort.sorting": "Sorting...",
   "message.asttweaks.inventorysort.completed": "Sort complete!",
 
@@ -231,7 +233,6 @@
   "config.asttweaks.bonemealfilter.whitelist.button": "Open Whitelist Settings",
   "config.asttweaks.bonemealfilter.allowed": "Allowed",
   "config.asttweaks.bonemealfilter.notallowed": "Not Allowed",
-  "key.asttweaks.bonemealfilter.toggle": "Toggle Bone Meal Filter",
   "message.asttweaks.bonemealfilter.enabled": "Bone Meal Filter: Enabled",
   "message.asttweaks.bonemealfilter.disabled": "Bone Meal Filter: Disabled",
 
@@ -243,7 +244,6 @@
   "config.asttweaks.silktouchswitch.blocklist.button": "Open Block List Settings",
   "config.asttweaks.silktouchswitch.target": "Target",
   "config.asttweaks.silktouchswitch.nottarget": "Not Target",
-  "key.asttweaks.silktouchswitch.toggle": "Toggle Silk Touch Switch",
   "message.asttweaks.silktouchswitch.enabled": "Silk Touch Switch: Enabled",
   "message.asttweaks.silktouchswitch.disabled": "Silk Touch Switch: Disabled"
 }

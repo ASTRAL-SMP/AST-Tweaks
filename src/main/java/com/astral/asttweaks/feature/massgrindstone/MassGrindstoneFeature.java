@@ -2,11 +2,9 @@ package com.astral.asttweaks.feature.massgrindstone;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import com.astral.asttweaks.util.KeyBindings;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.GrindstoneScreen;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -176,14 +174,8 @@ public class MassGrindstoneFeature implements Feature {
             return false;
         }
 
-        // Get the bound key from KeyBindings
-        InputUtil.Key boundKey = KeyBindings.massGrindstoneExecute.boundKey;
-        if (boundKey.getCode() == InputUtil.UNKNOWN_KEY.getCode()) {
-            return false;  // Key not bound
-        }
-
         long windowHandle = client.getWindow().getHandle();
-        return InputUtil.isKeyPressed(windowHandle, boundKey.getCode());
+        return com.astral.asttweaks.config.ModConfig.getInstance().massGrindstoneExecuteKey.isPressed(windowHandle);
     }
 
     /**

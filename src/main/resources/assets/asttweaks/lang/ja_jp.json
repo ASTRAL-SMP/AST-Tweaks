@@ -36,6 +36,17 @@
   "config.asttweaks.scoreboard.textColor": "テキスト色",
   "config.asttweaks.scoreboard.textColor.tooltip": "スコアボードのテキスト色",
 
+  "config.asttweaks.category.general": "一般",
+  "config.asttweaks.category.keybinds": "キーバインド",
+  "config.asttweaks.keybind.scoreboardToggle": "スコアボード表示切替",
+  "config.asttweaks.keybind.autoEatToggle": "自動食事切替",
+  "config.asttweaks.keybind.autoMoveToggle": "自動移動切替",
+  "config.asttweaks.keybind.autoTotemToggle": "トーテム補充切替",
+  "config.asttweaks.keybind.autoRepairToggle": "自動修繕切替",
+  "config.asttweaks.keybind.boneMealFilterToggle": "骨粉フィルター切替",
+  "config.asttweaks.keybind.silkTouchSwitchToggle": "シルクタッチスイッチ切替",
+  "config.asttweaks.keybind.openGeneralScreen": "設定画面を開く",
+
   "config.asttweaks.category.autoeat": "自動食事",
   "config.asttweaks.autoeat.enabled": "自動食事機能",
   "config.asttweaks.autoeat.enabled.tooltip": "満腹度が低下したときに自動的に食料を食べる機能の有効/無効を切り替えます",
@@ -49,13 +60,12 @@
   "config.asttweaks.autoeat.blacklisted": "禁止",
   "config.asttweaks.autoeat.allowed": "許可",
 
-  "key.categories.asttweaks": "AST-Tweaks",
-  "key.asttweaks.scoreboard.toggle": "スコアボード表示切替",
-  "key.asttweaks.scoreboard.pageUp": "スコアボード上スクロール",
-  "key.asttweaks.scoreboard.pageDown": "スコアボード下スクロール",
-  "key.asttweaks.autoeat.toggle": "自動食事切替",
-  "key.asttweaks.automove.toggle": "自動移動切替",
-  "key.asttweaks.autototem.toggle": "トーテム補充切替",
+  "config.asttweaks.keybind.scoreboardPageUp": "スコアボード上スクロール",
+  "config.asttweaks.keybind.scoreboardPageDown": "スコアボード下スクロール",
+  "config.asttweaks.keybind.notepadOpen": "メモ帳を開く",
+  "config.asttweaks.keybind.massGrindstoneExecute": "高速砥石実行",
+  "config.asttweaks.keybind.inventorySortExecute": "インベントリをソート",
+  "config.asttweaks.keybind.inventorySortContainerExecute": "コンテナをソート",
 
   "message.asttweaks.autoeat.enabled": "自動食事: 有効",
   "message.asttweaks.autoeat.disabled": "自動食事: 無効",
@@ -118,8 +128,6 @@
   "config.asttweaks.notepad.enabled": "メモ帳機能",
   "config.asttweaks.notepad.enabled.tooltip": "メモを保存できるメモ帳機能の有効/無効を切り替えます",
 
-  "key.asttweaks.notepad.open": "メモ帳を開く",
-
   "screen.asttweaks.notepad.title": "メモ帳",
   "screen.asttweaks.notepad.placeholder": "ここにメモを入力...",
   "screen.asttweaks.notepad.save": "保存",
@@ -145,8 +153,6 @@
   "config.asttweaks.autorepair.willrepair": "修復する",
   "config.asttweaks.autorepair.wontrepair": "修復しない",
 
-  "key.asttweaks.autorepair.toggle": "自動修繕切替",
-
   "message.asttweaks.autorepair.enabled": "自動修繕: 有効",
   "message.asttweaks.autorepair.disabled": "自動修繕: 無効",
 
@@ -166,8 +172,6 @@
   "config.asttweaks.massgrindstone.willprocess": "処理する",
   "config.asttweaks.massgrindstone.wontprocess": "処理しない",
   "config.asttweaks.massgrindstone.enchantedbook": "エンチャントの本",
-
-  "key.asttweaks.massgrindstone.execute": "高速砥石実行",
 
   "message.asttweaks.massgrindstone.processing": "高速砥石: 処理中...",
   "message.asttweaks.massgrindstone.completed": "高速砥石: 完了（%d個のアイテム）",
@@ -218,8 +222,6 @@
   "config.asttweaks.inventorysort.showButton.tooltip": "インベントリ画面にソートボタンを表示",
   "gui.asttweaks.inventorysort.player": "プレイヤーインベントリをソート",
   "gui.asttweaks.inventorysort.container": "コンテナをソート",
-  "key.asttweaks.inventorysort.execute": "インベントリをソート",
-  "key.asttweaks.inventorysort.container.execute": "コンテナをソート",
   "message.asttweaks.inventorysort.sorting": "ソート中...",
   "message.asttweaks.inventorysort.completed": "ソート完了！",
 
@@ -231,7 +233,6 @@
   "config.asttweaks.bonemealfilter.whitelist.button": "ホワイトリスト設定を開く",
   "config.asttweaks.bonemealfilter.allowed": "許可",
   "config.asttweaks.bonemealfilter.notallowed": "不許可",
-  "key.asttweaks.bonemealfilter.toggle": "骨粉フィルター切替",
   "message.asttweaks.bonemealfilter.enabled": "骨粉フィルター: 有効",
   "message.asttweaks.bonemealfilter.disabled": "骨粉フィルター: 無効",
 
@@ -243,7 +244,6 @@
   "config.asttweaks.silktouchswitch.blocklist.button": "ブロックリスト設定を開く",
   "config.asttweaks.silktouchswitch.target": "対象",
   "config.asttweaks.silktouchswitch.nottarget": "非対象",
-  "key.asttweaks.silktouchswitch.toggle": "シルクタッチスイッチ切替",
   "message.asttweaks.silktouchswitch.enabled": "シルクタッチスイッチ: 有効",
   "message.asttweaks.silktouchswitch.disabled": "シルクタッチスイッチ: 無効"
 }

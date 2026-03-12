@@ -1,280 +1,187 @@
 package com.astral.asttweaks.util;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.config.ConfigScreen;
+import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
-import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
 
 /**
- * Manages keybindings for AST-Tweaks.
+ * キーバインド管理。
+ * 全キーバインドをmod menu内のカスタムKeyComboで管理。
+ * MC側のキー設定には一切登録しない。
  */
 public class KeyBindings {
-    private static final String CATEGORY = "key.categories." + ASTTweaks.MOD_ID;
 
-    public static KeyBinding scoreboardToggle;
-    public static KeyBinding scoreboardPageUp;
-    public static KeyBinding scoreboardPageDown;
-    public static KeyBinding autoEatToggle;
-    public static KeyBinding autoMoveToggle;
-    public static KeyBinding autoTotemToggle;
-    public static KeyBinding autoRepairToggle;
-    public static KeyBinding notepadOpen;
-    public static KeyBinding massGrindstoneExecute;
-    public static KeyBinding boneMealFilterToggle;
-    public static KeyBinding inventorySortExecute;
-    public static KeyBinding inventorySortContainerExecute;
-    public static KeyBinding silkTouchSwitchToggle;
+    // エッジ検出用の前フレーム状態
+    private static boolean wasScoreboardToggleDown = false;
+    private static boolean wasScoreboardPageUpDown = false;
+    private static boolean wasScoreboardPageDownDown = false;
+    private static boolean wasAutoEatToggleDown = false;
+    private static boolean wasAutoMoveToggleDown = false;
+    private static boolean wasAutoTotemToggleDown = false;
+    private static boolean wasAutoRepairToggleDown = false;
+    private static boolean wasBoneMealFilterToggleDown = false;
+    private static boolean wasSilkTouchSwitchToggleDown = false;
+    private static boolean wasNotepadOpenDown = false;
+    private static boolean wasOpenGeneralScreenDown = false;
 
     public static void register() {
-        // Toggle scoreboard visibility
-        scoreboardToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".scoreboard.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_O,
-                CATEGORY
-        ));
-
-        // Page up
-        scoreboardPageUp = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".scoreboard.pageUp",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UP,
-                CATEGORY
-        ));
-
-        // Page down
-        scoreboardPageDown = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".scoreboard.pageDown",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_DOWN,
-                CATEGORY
-        ));
-
-        // Toggle auto-eat
-        autoEatToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".autoeat.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Toggle auto-move
-        autoMoveToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".automove.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Toggle auto-totem
-        autoTotemToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".autototem.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Toggle auto-repair
-        autoRepairToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".autorepair.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Open notepad
-        notepadOpen = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".notepad.open",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Mass grindstone execute
-        massGrindstoneExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".massgrindstone.execute",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Toggle bone meal filter
-        boneMealFilterToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".bonemealfilter.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Inventory sort execute
-        inventorySortExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".inventorysort.execute",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_R,
-                CATEGORY
-        ));
-
-        // Inventory sort container execute
-        inventorySortContainerExecute = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".inventorysort.container.execute",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Toggle silk touch switch
-        silkTouchSwitchToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + ASTTweaks.MOD_ID + ".silktouchswitch.toggle",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY
-        ));
-
-        // Register tick handler for keybindings
+        // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
-            if (scoreboard == null) return;
+            if (client.player == null) return;
+            long window = client.getWindow().getHandle();
+            ModConfig config = ModConfig.getInstance();
 
-            while (scoreboardToggle.wasPressed()) {
-                scoreboard.toggleVisibility();
+            // GUI画面が開いているときはカスタムキーコンボを処理しない
+            // （massGrindstone, inventorySort は各Featureクラス内で直接処理）
+            if (client.currentScreen != null) return;
+
+            // スコアボードトグル
+            boolean scoreboardToggleDown = config.scoreboardToggleKey.isPressed(window);
+            if (scoreboardToggleDown && !wasScoreboardToggleDown) {
+                ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
+                if (scoreboard != null) {
+                    scoreboard.toggleVisibility();
+                }
             }
+            wasScoreboardToggleDown = scoreboardToggleDown;
 
-            while (scoreboardPageUp.wasPressed()) {
-                scoreboard.pageUp();
+            // スコアボード上スクロール
+            boolean pageUpDown = config.scoreboardPageUpKey.isPressed(window);
+            if (pageUpDown && !wasScoreboardPageUpDown) {
+                ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
+                if (scoreboard != null) {
+                    scoreboard.pageUp();
+                }
             }
+            wasScoreboardPageUpDown = pageUpDown;
 
-            while (scoreboardPageDown.wasPressed()) {
-                scoreboard.pageDown();
+            // スコアボード下スクロール
+            boolean pageDownDown = config.scoreboardPageDownKey.isPressed(window);
+            if (pageDownDown && !wasScoreboardPageDownDown) {
+                ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
+                if (scoreboard != null) {
+                    scoreboard.pageDown();
+                }
             }
+            wasScoreboardPageDownDown = pageDownDown;
 
-            // Auto-eat toggle
-            AutoEatFeature autoEat = FeatureManager.getInstance().getAutoEatFeature();
-            if (autoEat != null) {
-                while (autoEatToggle.wasPressed()) {
+            // 自動食事トグル
+            boolean autoEatDown = config.autoEatToggleKey.isPressed(window);
+            if (autoEatDown && !wasAutoEatToggleDown) {
+                AutoEatFeature autoEat = FeatureManager.getInstance().getAutoEatFeature();
+                if (autoEat != null) {
                     boolean newState = !autoEat.isEnabled();
                     autoEat.setEnabled(newState);
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")),
+                            true);
                 }
             }
+            wasAutoEatToggleDown = autoEatDown;
 
-            // Auto-move toggle
-            AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
-            if (autoMove != null) {
-                while (autoMoveToggle.wasPressed()) {
+            // 自動移動トグル
+            boolean autoMoveDown = config.autoMoveToggleKey.isPressed(window);
+            if (autoMoveDown && !wasAutoMoveToggleDown) {
+                AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
+                if (autoMove != null) {
                     autoMove.toggle();
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".automove." +
-                                (autoMove.isMoving() ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove." + (autoMove.isMoving() ? "enabled" : "disabled")),
+                            true);
                 }
             }
+            wasAutoMoveToggleDown = autoMoveDown;
 
-            // Auto-totem toggle
-            AutoTotemFeature autoTotem = FeatureManager.getInstance().getAutoTotemFeature();
-            if (autoTotem != null) {
-                while (autoTotemToggle.wasPressed()) {
+            // 自動トーテムトグル
+            boolean autoTotemDown = config.autoTotemToggleKey.isPressed(window);
+            if (autoTotemDown && !wasAutoTotemToggleDown) {
+                AutoTotemFeature autoTotem = FeatureManager.getInstance().getAutoTotemFeature();
+                if (autoTotem != null) {
                     boolean newState = !autoTotem.isEnabled();
                     autoTotem.setEnabled(newState);
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")),
+                            true);
                 }
             }
+            wasAutoTotemToggleDown = autoTotemDown;
 
-            // Auto-repair toggle
-            AutoRepairFeature autoRepair = FeatureManager.getInstance().getAutoRepairFeature();
-            if (autoRepair != null) {
-                while (autoRepairToggle.wasPressed()) {
+            // 自動修繕トグル
+            boolean autoRepairDown = config.autoRepairToggleKey.isPressed(window);
+            if (autoRepairDown && !wasAutoRepairToggleDown) {
+                AutoRepairFeature autoRepair = FeatureManager.getInstance().getAutoRepairFeature();
+                if (autoRepair != null) {
                     boolean newState = !autoRepair.isEnabled();
                     autoRepair.setEnabled(newState);
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")),
+                            true);
                 }
             }
+            wasAutoRepairToggleDown = autoRepairDown;
 
-            // Notepad open
-            NotepadFeature notepad = FeatureManager.getInstance().getNotepadFeature();
-            if (notepad != null) {
-                while (notepadOpen.wasPressed()) {
+            // 骨粉フィルタートグル
+            boolean boneMealDown = config.boneMealFilterToggleKey.isPressed(window);
+            if (boneMealDown && !wasBoneMealFilterToggleDown) {
+                BoneMealFilterFeature boneMealFilter = FeatureManager.getInstance().getBoneMealFilterFeature();
+                if (boneMealFilter != null) {
+                    boolean newState = !boneMealFilter.isEnabled();
+                    boneMealFilter.setEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasBoneMealFilterToggleDown = boneMealDown;
+
+            // シルクタッチスイッチトグル
+            boolean silkTouchDown = config.silkTouchSwitchToggleKey.isPressed(window);
+            if (silkTouchDown && !wasSilkTouchSwitchToggleDown) {
+                SilkTouchSwitchFeature silkTouchSwitch = FeatureManager.getInstance().getSilkTouchSwitchFeature();
+                if (silkTouchSwitch != null) {
+                    boolean newState = !silkTouchSwitch.isEnabled();
+                    silkTouchSwitch.setEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasSilkTouchSwitchToggleDown = silkTouchDown;
+
+            // メモ帳を開く
+            boolean notepadDown = config.notepadOpenKey.isPressed(window);
+            if (notepadDown && !wasNotepadOpenDown) {
+                NotepadFeature notepad = FeatureManager.getInstance().getNotepadFeature();
+                if (notepad != null) {
                     notepad.openNotepad();
                 }
             }
+            wasNotepadOpenDown = notepadDown;
 
-            // Bone meal filter toggle
-            BoneMealFilterFeature boneMealFilter = FeatureManager.getInstance().getBoneMealFilterFeature();
-            if (boneMealFilter != null) {
-                while (boneMealFilterToggle.wasPressed()) {
-                    boolean newState = !boneMealFilter.isEnabled();
-                    boneMealFilter.setEnabled(newState);
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
-                }
+            // 一般設定画面を開く（K+L デフォルト）
+            boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);
+            if (openGeneralDown && !wasOpenGeneralScreenDown) {
+                client.setScreen(ConfigScreen.createClothConfigScreen(null));
             }
-
-            // Silk touch switch toggle
-            SilkTouchSwitchFeature silkTouchSwitch = FeatureManager.getInstance().getSilkTouchSwitchFeature();
-            if (silkTouchSwitch != null) {
-                while (silkTouchSwitchToggle.wasPressed()) {
-                    boolean newState = !silkTouchSwitch.isEnabled();
-                    silkTouchSwitch.setEnabled(newState);
-                    if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                "message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")
-                            ),
-                            true
-                        );
-                    }
-                }
-            }
+            wasOpenGeneralScreenDown = openGeneralDown;
 
             // Note: Mass grindstone key handling is done in MassGrindstoneFeature
-            // because wasPressed() doesn't work while GUI screens are open.
-            // We use InputUtil.isKeyPressed() directly in the feature class.
+            // because it needs to work while GUI screens are open.
 
             // Note: Inventory sort key handling is done in InventorySortFeature
-            // because wasPressed() doesn't work while GUI screens are open.
+            // because it needs to work while GUI screens are open.
         });
     }
 }
