@@ -19,12 +19,67 @@ import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * シルクタッチスイッチ対象ブロックの設定画面。
  */
 public class SilkTouchBlockListScreen extends Screen {
+    // シルクタッチで挙動が変わるブロックのキュレーションリスト（Minecraft 1.19.4）
+    private static final Set<String> SILK_TOUCH_RELEVANT_BLOCKS = Set.of(
+            // ガラス系 (34)
+            "minecraft:glass", "minecraft:glass_pane",
+            "minecraft:white_stained_glass", "minecraft:orange_stained_glass",
+            "minecraft:magenta_stained_glass", "minecraft:light_blue_stained_glass",
+            "minecraft:yellow_stained_glass", "minecraft:lime_stained_glass",
+            "minecraft:pink_stained_glass", "minecraft:gray_stained_glass",
+            "minecraft:light_gray_stained_glass", "minecraft:cyan_stained_glass",
+            "minecraft:purple_stained_glass", "minecraft:blue_stained_glass",
+            "minecraft:brown_stained_glass", "minecraft:green_stained_glass",
+            "minecraft:red_stained_glass", "minecraft:black_stained_glass",
+            "minecraft:white_stained_glass_pane", "minecraft:orange_stained_glass_pane",
+            "minecraft:magenta_stained_glass_pane", "minecraft:light_blue_stained_glass_pane",
+            "minecraft:yellow_stained_glass_pane", "minecraft:lime_stained_glass_pane",
+            "minecraft:pink_stained_glass_pane", "minecraft:gray_stained_glass_pane",
+            "minecraft:light_gray_stained_glass_pane", "minecraft:cyan_stained_glass_pane",
+            "minecraft:purple_stained_glass_pane", "minecraft:blue_stained_glass_pane",
+            "minecraft:brown_stained_glass_pane", "minecraft:green_stained_glass_pane",
+            "minecraft:red_stained_glass_pane", "minecraft:black_stained_glass_pane",
+            // 鉱石系 (18)
+            "minecraft:coal_ore", "minecraft:deepslate_coal_ore",
+            "minecraft:diamond_ore", "minecraft:deepslate_diamond_ore",
+            "minecraft:emerald_ore", "minecraft:deepslate_emerald_ore",
+            "minecraft:lapis_ore", "minecraft:deepslate_lapis_ore",
+            "minecraft:redstone_ore", "minecraft:deepslate_redstone_ore",
+            "minecraft:nether_quartz_ore", "minecraft:nether_gold_ore",
+            "minecraft:copper_ore", "minecraft:deepslate_copper_ore",
+            "minecraft:iron_ore", "minecraft:deepslate_iron_ore",
+            "minecraft:gold_ore", "minecraft:deepslate_gold_ore",
+            // 自然ブロック
+            "minecraft:grass_block", "minecraft:mycelium", "minecraft:podzol",
+            "minecraft:ice", "minecraft:packed_ice", "minecraft:blue_ice",
+            "minecraft:snow_block", "minecraft:clay",
+            "minecraft:glowstone", "minecraft:sea_lantern",
+            "minecraft:melon",
+            "minecraft:campfire", "minecraft:soul_campfire",
+            "minecraft:turtle_egg",
+            "minecraft:amethyst_cluster", "minecraft:large_amethyst_bud",
+            "minecraft:medium_amethyst_bud", "minecraft:small_amethyst_bud",
+            // 構造物系
+            "minecraft:bookshelf", "minecraft:ender_chest",
+            "minecraft:bee_nest", "minecraft:beehive",
+            // サンゴ系 (5)
+            "minecraft:brain_coral_block", "minecraft:bubble_coral_block",
+            "minecraft:fire_coral_block", "minecraft:horn_coral_block",
+            "minecraft:tube_coral_block",
+            // 感染ブロック (7)
+            "minecraft:infested_stone", "minecraft:infested_cobblestone",
+            "minecraft:infested_stone_bricks", "minecraft:infested_mossy_stone_bricks",
+            "minecraft:infested_cracked_stone_bricks", "minecraft:infested_chiseled_stone_bricks",
+            "minecraft:infested_deepslate"
+    );
+
     private final Screen parent;
     private BlockListWidget blockListWidget;
     private final SilkTouchSwitchConfig config;
@@ -47,9 +102,10 @@ public class SilkTouchBlockListScreen extends Screen {
         this.blockListWidget = new BlockListWidget(this.client, this.width, this.height, 54, this.height - 32, 36);
         this.addSelectableChild(this.blockListWidget);
 
-        // 全ブロックをキャッシュ（AIR以外）
+        // シルクタッチ関連ブロックのみをキャッシュ
         this.allBlocks = new ArrayList<>(Registries.BLOCK.stream()
-                .filter(block -> !block.asItem().equals(Items.AIR))
+                .filter(block -> SILK_TOUCH_RELEVANT_BLOCKS.contains(
+                        Registries.BLOCK.getId(block).toString()))
                 .collect(Collectors.toList()));
 
         // 検索フィールド

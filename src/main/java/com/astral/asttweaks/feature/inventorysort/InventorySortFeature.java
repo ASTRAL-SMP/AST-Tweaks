@@ -2,11 +2,9 @@ package com.astral.asttweaks.feature.inventorysort;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import com.astral.asttweaks.util.KeyBindings;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
@@ -65,16 +63,14 @@ public class InventorySortFeature implements Feature {
 
     private boolean isKeyPressed(MinecraftClient client) {
         if (client.getWindow() == null) return false;
-        InputUtil.Key key = KeyBindings.inventorySortExecute.boundKey;
-        if (key.getCode() == InputUtil.UNKNOWN_KEY.getCode()) return false;
-        return InputUtil.isKeyPressed(client.getWindow().getHandle(), key.getCode());
+        long windowHandle = client.getWindow().getHandle();
+        return com.astral.asttweaks.config.ModConfig.getInstance().inventorySortExecuteKey.isPressed(windowHandle);
     }
 
     private boolean isContainerKeyPressed(MinecraftClient client) {
         if (client.getWindow() == null) return false;
-        InputUtil.Key key = KeyBindings.inventorySortContainerExecute.boundKey;
-        if (key.getCode() == InputUtil.UNKNOWN_KEY.getCode()) return false;
-        return InputUtil.isKeyPressed(client.getWindow().getHandle(), key.getCode());
+        long windowHandle = client.getWindow().getHandle();
+        return com.astral.asttweaks.config.ModConfig.getInstance().inventorySortContainerExecuteKey.isPressed(windowHandle);
     }
 
     @Override public void tick() {}

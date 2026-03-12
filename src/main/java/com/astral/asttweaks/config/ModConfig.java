@@ -5,8 +5,10 @@ import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.util.KeyCombo;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.lwjgl.glfw.GLFW;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -107,6 +109,22 @@ public class ModConfig {
     // Silk touch switch settings
     public boolean silkTouchSwitchEnabled = true;
     public Set<String> silkTouchSwitchBlockList = new HashSet<>();
+
+    // キーコンボ設定（全キーバインド）
+    public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
+    public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
+    public KeyCombo scoreboardPageDownKey = new KeyCombo(GLFW.GLFW_KEY_DOWN, -1);
+    public KeyCombo autoEatToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoTotemToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoRepairToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo boneMealFilterToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo silkTouchSwitchToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo notepadOpenKey = new KeyCombo(-1, -1);
+    public KeyCombo massGrindstoneExecuteKey = new KeyCombo(-1, -1);
+    public KeyCombo inventorySortExecuteKey = new KeyCombo(GLFW.GLFW_KEY_R, -1);
+    public KeyCombo inventorySortContainerExecuteKey = new KeyCombo(-1, -1);
+    public KeyCombo openGeneralScreenKey = new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -235,6 +253,49 @@ public class ModConfig {
                     this.silkTouchSwitchEnabled = loaded.silkTouchSwitchEnabled;
                     if (loaded.silkTouchSwitchBlockList != null) {
                         this.silkTouchSwitchBlockList = new HashSet<>(loaded.silkTouchSwitchBlockList);
+                    }
+                    // キーコンボ設定の読み込み
+                    if (loaded.scoreboardToggleKey != null) {
+                        this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
+                    }
+                    if (loaded.scoreboardPageUpKey != null) {
+                        this.scoreboardPageUpKey.copyFrom(loaded.scoreboardPageUpKey);
+                    }
+                    if (loaded.scoreboardPageDownKey != null) {
+                        this.scoreboardPageDownKey.copyFrom(loaded.scoreboardPageDownKey);
+                    }
+                    if (loaded.autoEatToggleKey != null) {
+                        this.autoEatToggleKey.copyFrom(loaded.autoEatToggleKey);
+                    }
+                    if (loaded.autoMoveToggleKey != null) {
+                        this.autoMoveToggleKey.copyFrom(loaded.autoMoveToggleKey);
+                    }
+                    if (loaded.autoTotemToggleKey != null) {
+                        this.autoTotemToggleKey.copyFrom(loaded.autoTotemToggleKey);
+                    }
+                    if (loaded.autoRepairToggleKey != null) {
+                        this.autoRepairToggleKey.copyFrom(loaded.autoRepairToggleKey);
+                    }
+                    if (loaded.boneMealFilterToggleKey != null) {
+                        this.boneMealFilterToggleKey.copyFrom(loaded.boneMealFilterToggleKey);
+                    }
+                    if (loaded.silkTouchSwitchToggleKey != null) {
+                        this.silkTouchSwitchToggleKey.copyFrom(loaded.silkTouchSwitchToggleKey);
+                    }
+                    if (loaded.notepadOpenKey != null) {
+                        this.notepadOpenKey.copyFrom(loaded.notepadOpenKey);
+                    }
+                    if (loaded.massGrindstoneExecuteKey != null) {
+                        this.massGrindstoneExecuteKey.copyFrom(loaded.massGrindstoneExecuteKey);
+                    }
+                    if (loaded.inventorySortExecuteKey != null) {
+                        this.inventorySortExecuteKey.copyFrom(loaded.inventorySortExecuteKey);
+                    }
+                    if (loaded.inventorySortContainerExecuteKey != null) {
+                        this.inventorySortContainerExecuteKey.copyFrom(loaded.inventorySortContainerExecuteKey);
+                    }
+                    if (loaded.openGeneralScreenKey != null) {
+                        this.openGeneralScreenKey.copyFrom(loaded.openGeneralScreenKey);
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
