@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     private final KeyCombo value;
     private final KeyCombo defaultValue;
+    private final KeyCombo originalValue; // 画面オープン時の値（isEdited比較用）
     private final Consumer<KeyCombo> saveConsumer;
     private final ButtonWidget bindButton;
     private final ButtonWidget resetButton;
@@ -40,6 +41,7 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
         super(fieldName, null);
         this.value = currentValue.copy();
         this.defaultValue = defaultValue.copy();
+        this.originalValue = currentValue.copy();
         this.saveConsumer = saveConsumer;
 
         this.bindButton = ButtonWidget.builder(Text.literal(value.getDisplayName()), button -> {
@@ -158,6 +160,12 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     @Override
     public List<ClickableWidget> narratables() {
         return List.of(this.bindButton, this.resetButton);
+    }
+
+    @Override
+    public boolean isEdited() {
+        return value.mainKey != originalValue.mainKey
+                || value.modifierKey != originalValue.modifierKey;
     }
 
     @Override
