@@ -215,6 +215,7 @@
   "config.asttweaks.inventorysort.mode.item_name": "Item Name",
   "config.asttweaks.inventorysort.mode.category": "Category",
   "config.asttweaks.inventorysort.mode.stack_count": "Stack Count",
+  "config.asttweaks.inventorysort.mode.total_count": "Total Count",
   "config.asttweaks.inventorysort.excludedslots.title": "Excluded Slot Settings",
   "config.asttweaks.inventorysort.excludedslots.help": "Click to exclude from sorting (red = excluded)",
   "config.asttweaks.inventorysort.excludedslots.button": "Open Excluded Slot Settings",

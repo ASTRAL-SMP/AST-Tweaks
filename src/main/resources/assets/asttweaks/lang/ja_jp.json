@@ -215,6 +215,7 @@
   "config.asttweaks.inventorysort.mode.item_name": "アイテム名順",
   "config.asttweaks.inventorysort.mode.category": "カテゴリ順",
   "config.asttweaks.inventorysort.mode.stack_count": "スタック数順",
+  "config.asttweaks.inventorysort.mode.total_count": "合計数順",
   "config.asttweaks.inventorysort.excludedslots.title": "除外スロット設定",
   "config.asttweaks.inventorysort.excludedslots.help": "クリックでソートから除外（赤=除外）",
   "config.asttweaks.inventorysort.excludedslots.button": "除外スロット設定を開く",

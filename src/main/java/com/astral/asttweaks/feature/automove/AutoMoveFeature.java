@@ -12,6 +12,7 @@ import net.minecraft.client.option.KeyBinding;
 public class AutoMoveFeature implements Feature {
     private final AutoMoveConfig config;
     private boolean isMoving = false;
+    private boolean wasFreecamActive = false;
 
     public AutoMoveFeature() {
         this.config = new AutoMoveConfig();
@@ -58,12 +59,38 @@ public class AutoMoveFeature implements Feature {
         }
 
         if (isEnabled() && isMoving) {
+            boolean freecam = isFreecamActive();
+            if (freecam) {
+                // freecam開始時のみKeyBindをリリースして残留状態をクリアする
+                // 以降は物理キー操作がそのまま反映される
+                // プレイヤー本体の移動はMixinで直接入力を注入する
+                if (!wasFreecamActive) {
+                    KeyBinding key = getKeyForDirection(client, config.getDirection());
+                    if (key != null) {
+                        key.setPressed(false);
+                    }
+                }
+                wasFreecamActive = true;
+                return;
+            }
+            wasFreecamActive = false;
             // 選択された方向のキーを押す
             KeyBinding key = getKeyForDirection(client, config.getDirection());
             if (key != null) {
                 key.setPressed(true);
             }
+        } else {
+            wasFreecamActive = false;
         }
+    }
+
+    /**
+     * freecamが有効かどうかを判定する。
+     * カメラエンティティがプレイヤーと異なる場合にfreecamとみなす。
+     */
+    public boolean isFreecamActive() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        return client.player != null && client.getCameraEntity() != client.player;
     }
 
     private KeyBinding getKeyForDirection(MinecraftClient client, MoveDirection dir) {

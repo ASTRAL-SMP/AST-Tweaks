@@ -229,6 +229,18 @@ public class InventorySortFeature implements Feature {
                     .thenComparingInt(e -> -e.stack.getCount());
             case STACK_COUNT -> Comparator.<SortEntry>comparingInt(e -> -e.stack.getCount())
                     .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString());
+            case TOTAL_COUNT -> {
+                Map<String, Integer> totalCounts = new HashMap<>();
+                for (SortEntry e : entries) {
+                    String key = Registries.ITEM.getId(e.stack.getItem()).toString();
+                    totalCounts.merge(key, e.stack.getCount(), Integer::sum);
+                }
+                yield Comparator.<SortEntry>comparingInt(
+                            e -> -totalCounts.getOrDefault(
+                                Registries.ITEM.getId(e.stack.getItem()).toString(), 0))
+                        .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+                        .thenComparingInt(e -> -e.stack.getCount());
+            }
         };
 
         entries.sort(cmp);

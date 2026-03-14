@@ -10,7 +10,8 @@
     "ClientPlayerTotemMixin",
     "HandledScreenMixin",
     "SilkTouchToolSwitchMixin",
-    "AutoEatStopUsingItemMixin"
+    "AutoEatStopUsingItemMixin",
+    "AutoMoveInputMixin"
   ],
   "injectors": {
     "defaultRequire": 1
