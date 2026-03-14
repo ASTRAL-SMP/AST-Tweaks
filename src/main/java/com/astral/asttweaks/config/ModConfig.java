@@ -116,6 +116,10 @@ public class ModConfig {
     public KeyCombo scoreboardPageDownKey = new KeyCombo(GLFW.GLFW_KEY_DOWN, -1);
     public KeyCombo autoEatToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoMoveToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveForwardKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveBackwardKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveLeftKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveRightKey = new KeyCombo(-1, -1);
     public KeyCombo autoTotemToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRepairToggleKey = new KeyCombo(-1, -1);
     public KeyCombo boneMealFilterToggleKey = new KeyCombo(-1, -1);
@@ -269,6 +273,18 @@ public class ModConfig {
                     }
                     if (loaded.autoMoveToggleKey != null) {
                         this.autoMoveToggleKey.copyFrom(loaded.autoMoveToggleKey);
+                    }
+                    if (loaded.autoMoveForwardKey != null) {
+                        this.autoMoveForwardKey.copyFrom(loaded.autoMoveForwardKey);
+                    }
+                    if (loaded.autoMoveBackwardKey != null) {
+                        this.autoMoveBackwardKey.copyFrom(loaded.autoMoveBackwardKey);
+                    }
+                    if (loaded.autoMoveLeftKey != null) {
+                        this.autoMoveLeftKey.copyFrom(loaded.autoMoveLeftKey);
+                    }
+                    if (loaded.autoMoveRightKey != null) {
+                        this.autoMoveRightKey.copyFrom(loaded.autoMoveRightKey);
                     }
                     if (loaded.autoTotemToggleKey != null) {
                         this.autoTotemToggleKey.copyFrom(loaded.autoTotemToggleKey);

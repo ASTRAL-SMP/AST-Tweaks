@@ -127,6 +127,30 @@ public class ConfigScreen implements ModMenuApi {
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveToggleKey.copyFrom(combo)));
 
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForward"),
+                config.autoMoveForwardKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveForwardKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackward"),
+                config.autoMoveBackwardKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveBackwardKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveLeft"),
+                config.autoMoveLeftKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveLeftKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveRight"),
+                config.autoMoveRightKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveRightKey.copyFrom(combo)));
+
         general.addEntry(autoMoveSub.build());
 
         // --- Update Checker サブカテゴリ ---

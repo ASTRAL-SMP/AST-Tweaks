@@ -6,6 +6,7 @@ import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
+import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
@@ -29,6 +30,10 @@ public class KeyBindings {
     private static boolean wasScoreboardPageDownDown = false;
     private static boolean wasAutoEatToggleDown = false;
     private static boolean wasAutoMoveToggleDown = false;
+    private static boolean wasAutoMoveForwardDown = false;
+    private static boolean wasAutoMoveBackwardDown = false;
+    private static boolean wasAutoMoveLeftDown = false;
+    private static boolean wasAutoMoveRightDown = false;
     private static boolean wasAutoTotemToggleDown = false;
     private static boolean wasAutoRepairToggleDown = false;
     private static boolean wasBoneMealFilterToggleDown = false;
@@ -103,6 +108,23 @@ public class KeyBindings {
                 }
             }
             wasAutoMoveToggleDown = autoMoveDown;
+
+            // 自動移動 方向別トグル
+            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD,
+                    config.autoMoveForwardKey, wasAutoMoveForwardDown);
+            wasAutoMoveForwardDown = config.autoMoveForwardKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD,
+                    config.autoMoveBackwardKey, wasAutoMoveBackwardDown);
+            wasAutoMoveBackwardDown = config.autoMoveBackwardKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.LEFT,
+                    config.autoMoveLeftKey, wasAutoMoveLeftDown);
+            wasAutoMoveLeftDown = config.autoMoveLeftKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.RIGHT,
+                    config.autoMoveRightKey, wasAutoMoveRightDown);
+            wasAutoMoveRightDown = config.autoMoveRightKey.isPressed(window);
 
             // 自動トーテムトグル
             boolean autoTotemDown = config.autoTotemToggleKey.isPressed(window);
@@ -183,5 +205,27 @@ public class KeyBindings {
             // Note: Inventory sort key handling is done in InventorySortFeature
             // because it needs to work while GUI screens are open.
         });
+    }
+
+    private static void handleAutoMoveDirection(MinecraftClient client, ModConfig config,
+            long window, MoveDirection direction, KeyCombo keyCombo, boolean wasDown) {
+        boolean isDown = keyCombo.isPressed(window);
+        if (isDown && !wasDown) {
+            AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
+            if (autoMove != null) {
+                autoMove.toggleWithDirection(direction);
+                String dirKey = "config." + ASTTweaks.MOD_ID + ".automove.direction." + direction.getId();
+                if (autoMove.isMoving()) {
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.enabled.direction",
+                                    Text.translatable(dirKey)),
+                            true);
+                } else {
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.disabled"),
+                            true);
+                }
+            }
+        }
     }
 }

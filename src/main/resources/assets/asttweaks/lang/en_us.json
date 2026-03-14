@@ -41,6 +41,10 @@
   "config.asttweaks.keybind.scoreboardToggle": "Toggle Scoreboard",
   "config.asttweaks.keybind.autoEatToggle": "Toggle Auto Eat",
   "config.asttweaks.keybind.autoMoveToggle": "Toggle Auto Move",
+  "config.asttweaks.keybind.autoMoveForward": "Auto Move Forward",
+  "config.asttweaks.keybind.autoMoveBackward": "Auto Move Backward",
+  "config.asttweaks.keybind.autoMoveLeft": "Auto Move Left",
+  "config.asttweaks.keybind.autoMoveRight": "Auto Move Right",
   "config.asttweaks.keybind.autoTotemToggle": "Toggle Auto Totem",
   "config.asttweaks.keybind.autoRepairToggle": "Toggle Auto Repair",
   "config.asttweaks.keybind.boneMealFilterToggle": "Toggle Bone Meal Filter",
@@ -70,6 +74,7 @@
   "message.asttweaks.autoeat.enabled": "Auto Eat: Enabled",
   "message.asttweaks.autoeat.disabled": "Auto Eat: Disabled",
   "message.asttweaks.automove.enabled": "Auto Move: Enabled",
+  "message.asttweaks.automove.enabled.direction": "Auto Move: %s",
   "message.asttweaks.automove.disabled": "Auto Move: Disabled",
   "message.asttweaks.autototem.enabled": "Auto Totem: Enabled",
   "message.asttweaks.autototem.disabled": "Auto Totem: Disabled",
@@ -245,5 +250,8 @@
   "config.asttweaks.silktouchswitch.target": "Target",
   "config.asttweaks.silktouchswitch.nottarget": "Not Target",
   "message.asttweaks.silktouchswitch.enabled": "Silk Touch Switch: Enabled",
-  "message.asttweaks.silktouchswitch.disabled": "Silk Touch Switch: Disabled"
+  "message.asttweaks.silktouchswitch.disabled": "Silk Touch Switch: Disabled",
+
+  "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
+  "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

@@ -9,7 +9,8 @@
     "EntityRenderDispatcherMixin",
     "ClientPlayerTotemMixin",
     "HandledScreenMixin",
-    "SilkTouchToolSwitchMixin"
+    "SilkTouchToolSwitchMixin",
+    "AutoEatStopUsingItemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

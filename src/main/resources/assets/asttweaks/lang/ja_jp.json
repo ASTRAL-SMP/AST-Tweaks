@@ -41,6 +41,10 @@
   "config.asttweaks.keybind.scoreboardToggle": "スコアボード表示切替",
   "config.asttweaks.keybind.autoEatToggle": "自動食事切替",
   "config.asttweaks.keybind.autoMoveToggle": "自動移動切替",
+  "config.asttweaks.keybind.autoMoveForward": "自動移動 前進",
+  "config.asttweaks.keybind.autoMoveBackward": "自動移動 後退",
+  "config.asttweaks.keybind.autoMoveLeft": "自動移動 左",
+  "config.asttweaks.keybind.autoMoveRight": "自動移動 右",
   "config.asttweaks.keybind.autoTotemToggle": "トーテム補充切替",
   "config.asttweaks.keybind.autoRepairToggle": "自動修繕切替",
   "config.asttweaks.keybind.boneMealFilterToggle": "骨粉フィルター切替",
@@ -70,6 +74,7 @@
   "message.asttweaks.autoeat.enabled": "自動食事: 有効",
   "message.asttweaks.autoeat.disabled": "自動食事: 無効",
   "message.asttweaks.automove.enabled": "自動移動: 有効",
+  "message.asttweaks.automove.enabled.direction": "自動移動: %s",
   "message.asttweaks.automove.disabled": "自動移動: 無効",
   "message.asttweaks.autototem.enabled": "トーテム補充: 有効",
   "message.asttweaks.autototem.disabled": "トーテム補充: 無効",
@@ -245,5 +250,8 @@
   "config.asttweaks.silktouchswitch.target": "対象",
   "config.asttweaks.silktouchswitch.nottarget": "非対象",
   "message.asttweaks.silktouchswitch.enabled": "シルクタッチスイッチ: 有効",
-  "message.asttweaks.silktouchswitch.disabled": "シルクタッチスイッチ: 無効"
+  "message.asttweaks.silktouchswitch.disabled": "シルクタッチスイッチ: 無効",
+
+  "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
+  "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

@@ -5,11 +5,19 @@
   "name": "AST-Tweaks",
   "description": "A collection of client-side tweaks and enhancements for Minecraft, including scoreboard improvements.",
   "authors": [
-    "Astral"
+    "ASTRAL-SMP Sim_999_256"
   ],
   "contact": {
-    "homepage": "https://github.com/astral/ast-tweaks",
-    "Twitter(X)": "https://x.com/Sim_999_256"
+    "homepage": "https://github.com/ASTRAL-SMP/AST-Tweaks",
+    "sources": "https://github.com/ASTRAL-SMP/AST-Tweaks"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.asttweaks.twitter": "https://x.com/Sim_999_256",
+        "modmenu.asttweaks.youtube": "https://www.youtube.com/@ASTRAL-SMP"
+      }
+    }
   },
   "license": "MIT",
   "icon": "assets/asttweaks/icon.png",

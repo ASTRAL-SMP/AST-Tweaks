@@ -96,6 +96,34 @@ public class AutoMoveFeature implements Feature {
     }
 
     /**
+     * 方向を指定してトグル。
+     * 同じ方向なら停止、別の方向なら切り替え、停止中なら開始。
+     */
+    public void toggleWithDirection(MoveDirection direction) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (isMoving && config.getDirection() == direction) {
+            // 同じ方向 → 停止
+            if (client != null) {
+                KeyBinding key = getKeyForDirection(client, direction);
+                if (key != null) {
+                    key.setPressed(false);
+                }
+            }
+            isMoving = false;
+        } else {
+            // 別の方向 or 停止中 → 現在の方向をリリースして新しい方向で開始
+            if (isMoving && client != null) {
+                KeyBinding key = getKeyForDirection(client, config.getDirection());
+                if (key != null) {
+                    key.setPressed(false);
+                }
+            }
+            config.setDirection(direction);
+            isMoving = true;
+        }
+    }
+
+    /**
      * Check if currently auto-moving.
      */
     public boolean isMoving() {
