@@ -37,6 +37,8 @@ public class AutoRepairFeature implements Feature {
     private int delayTicks = 0;
     private int currentRepairSlot = -1;      // Original slot of item being repaired
     private int previousMainhandSlot = -1;   // Player's original selected slot before repair
+    private int originalOffhandDisplacedSlot = -1;  // オフハンドアイテムの退避先スロット
+    private boolean hadOffhandItem = false;          // 修繕開始時にオフハンドにアイテムがあったか
     private Set<Integer> repairedSlots = new HashSet<>();  // Slots that have been repaired this session
     private static final int SYNC_DELAY_TICKS = 1;  // Minimal delay for fast swapping
 
@@ -148,7 +150,7 @@ public class AutoRepairFeature implements Feature {
                 int repairSlot = findNextRepairItem(player);
                 if (repairSlot == -1) {
                     // All items repaired
-                    finishRepair(player);
+                    finishRepair(client, player);
                     return;
                 }
 
@@ -184,7 +186,7 @@ public class AutoRepairFeature implements Feature {
                     // Try to refill offhand
                     if (!moveExperienceBottleToOffhand(client, player)) {
                         // No more bottles, finish
-                        finishRepair(player);
+                        finishRepair(client, player);
                         return;
                     }
                     delayTicks = SYNC_DELAY_TICKS;
@@ -280,6 +282,16 @@ public class AutoRepairFeature implements Feature {
 
         if (bottleSlot == -1) {
             return false;
+        }
+
+        // 最初の呼び出し時、オフハンドにアイテムがあれば退避先を記録
+        if (!hadOffhandItem) {
+            ItemStack offhandStack = inv.offHand.get(0);
+            if (!offhandStack.isEmpty() && offhandStack.getItem() != Items.EXPERIENCE_BOTTLE) {
+                hadOffhandItem = true;
+                originalOffhandDisplacedSlot = bottleSlot;
+                ASTTweaks.LOGGER.info("Recording offhand item displaced to slot {}", bottleSlot);
+            }
         }
 
         // Convert inventory slot to screen slot
@@ -437,11 +449,47 @@ public class AutoRepairFeature implements Feature {
     /**
      * Finish repair and restore player's original state.
      */
-    private void finishRepair(PlayerEntity player) {
+    private void finishRepair(MinecraftClient client, PlayerEntity player) {
         // Restore original selected slot
         if (previousMainhandSlot != -1 && previousMainhandSlot != player.getInventory().selectedSlot) {
             player.getInventory().selectedSlot = previousMainhandSlot;
         }
+
+        // オフハンドに退避されたアイテムを復元
+        if (hadOffhandItem && originalOffhandDisplacedSlot != -1 && client.interactionManager != null) {
+            int screenSlot = originalOffhandDisplacedSlot < 9
+                    ? originalOffhandDisplacedSlot + 36
+                    : originalOffhandDisplacedSlot;
+            int offhandScreenSlot = 45;
+
+            // 退避先スロットのアイテムを拾う
+            client.interactionManager.clickSlot(
+                    player.currentScreenHandler.syncId,
+                    screenSlot,
+                    0,
+                    SlotActionType.PICKUP,
+                    player
+            );
+            // オフハンドに置く
+            client.interactionManager.clickSlot(
+                    player.currentScreenHandler.syncId,
+                    offhandScreenSlot,
+                    0,
+                    SlotActionType.PICKUP,
+                    player
+            );
+            // オフハンドにあったもの（経験値ボトル等）を元のスロットに戻す
+            client.interactionManager.clickSlot(
+                    player.currentScreenHandler.syncId,
+                    screenSlot,
+                    0,
+                    SlotActionType.PICKUP,
+                    player
+            );
+
+            ASTTweaks.LOGGER.info("Restored offhand item from slot {}", originalOffhandDisplacedSlot);
+        }
+
         // Restore Tweakeroo AlmostBrokenTools if it was disabled
         TweakerooCompat.restoreAlmostBrokenTools();
         ASTTweaks.LOGGER.info("Fast repair completed, repaired {} slots", repairedSlots.size());
@@ -455,6 +503,8 @@ public class AutoRepairFeature implements Feature {
         delayTicks = 0;
         currentRepairSlot = -1;
         previousMainhandSlot = -1;
+        originalOffhandDisplacedSlot = -1;
+        hadOffhandItem = false;
         repairedSlots.clear();
     }
 }

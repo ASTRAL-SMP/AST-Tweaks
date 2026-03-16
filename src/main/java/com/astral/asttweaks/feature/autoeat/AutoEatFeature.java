@@ -318,14 +318,16 @@ public class AutoEatFeature implements Feature {
     }
 
     private void finishEating(MinecraftClient client) {
-        if (client.player != null && originalHotbarSlot != -1) {
-            client.player.getInventory().selectedSlot = originalHotbarSlot;
-        }
         resetToMonitoring();
         eatCooldown = 60;
     }
 
     private void resetToMonitoring() {
+        // スロット復元
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && originalHotbarSlot != -1) {
+            client.player.getInventory().selectedSlot = originalHotbarSlot;
+        }
         currentState = AutoEatState.MONITORING;
         originalHotbarSlot = -1;
         eatingSlot = -1;
