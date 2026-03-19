@@ -253,6 +253,15 @@
   "message.asttweaks.silktouchswitch.enabled": "シルクタッチスイッチ: 有効",
   "message.asttweaks.silktouchswitch.disabled": "シルクタッチスイッチ: 無効",
 
+  "config.asttweaks.category.mousesensitivity": "マウス感度",
+  "config.asttweaks.mousesensitivity.enabled": "マウス感度トグル",
+  "config.asttweaks.mousesensitivity.enabled.tooltip": "キーバインドでマウス感度を切り替える機能の有効/無効を設定します",
+  "config.asttweaks.mousesensitivity.targetValue": "目標感度",
+  "config.asttweaks.mousesensitivity.targetValue.tooltip": "トグル時に切り替える感度（0-200%）",
+  "config.asttweaks.keybind.mouseSensitivityToggle": "マウス感度切替",
+  "message.asttweaks.mousesensitivity.activated": "マウス感度: %d%%",
+  "message.asttweaks.mousesensitivity.deactivated": "マウス感度: 復元 (%d%%)",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

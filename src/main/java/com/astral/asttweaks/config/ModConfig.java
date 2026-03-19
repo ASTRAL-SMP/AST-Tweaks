@@ -106,6 +106,10 @@ public class ModConfig {
     public boolean boneMealFilterEnabled = false;
     public Set<String> boneMealFilterWhitelist = new HashSet<>();
 
+    // Mouse sensitivity settings
+    public boolean mouseSensitivityEnabled = true;
+    public int mouseSensitivityTargetValue = 10;  // 0-200（%表示）
+
     // Silk touch switch settings
     public boolean silkTouchSwitchEnabled = true;
     public Set<String> silkTouchSwitchBlockList = new HashSet<>();
@@ -124,6 +128,7 @@ public class ModConfig {
     public KeyCombo autoRepairToggleKey = new KeyCombo(-1, -1);
     public KeyCombo boneMealFilterToggleKey = new KeyCombo(-1, -1);
     public KeyCombo silkTouchSwitchToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo mouseSensitivityToggleKey = new KeyCombo(-1, -1);
     public KeyCombo notepadOpenKey = new KeyCombo(-1, -1);
     public KeyCombo massGrindstoneExecuteKey = new KeyCombo(-1, -1);
     public KeyCombo inventorySortExecuteKey = new KeyCombo(GLFW.GLFW_KEY_R, -1);
@@ -254,6 +259,8 @@ public class ModConfig {
                         this.inventorySortTarget = loaded.inventorySortTarget;
                     }
                     this.inventorySortShowButton = loaded.inventorySortShowButton;
+                    this.mouseSensitivityEnabled = loaded.mouseSensitivityEnabled;
+                    this.mouseSensitivityTargetValue = loaded.mouseSensitivityTargetValue;
                     this.silkTouchSwitchEnabled = loaded.silkTouchSwitchEnabled;
                     if (loaded.silkTouchSwitchBlockList != null) {
                         this.silkTouchSwitchBlockList = new HashSet<>(loaded.silkTouchSwitchBlockList);
@@ -297,6 +304,9 @@ public class ModConfig {
                     }
                     if (loaded.silkTouchSwitchToggleKey != null) {
                         this.silkTouchSwitchToggleKey.copyFrom(loaded.silkTouchSwitchToggleKey);
+                    }
+                    if (loaded.mouseSensitivityToggleKey != null) {
+                        this.mouseSensitivityToggleKey.copyFrom(loaded.mouseSensitivityToggleKey);
                     }
                     if (loaded.notepadOpenKey != null) {
                         this.notepadOpenKey.copyFrom(loaded.notepadOpenKey);

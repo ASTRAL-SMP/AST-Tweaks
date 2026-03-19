@@ -253,6 +253,15 @@
   "message.asttweaks.silktouchswitch.enabled": "Silk Touch Switch: Enabled",
   "message.asttweaks.silktouchswitch.disabled": "Silk Touch Switch: Disabled",
 
+  "config.asttweaks.category.mousesensitivity": "Mouse Sensitivity",
+  "config.asttweaks.mousesensitivity.enabled": "Mouse Sensitivity Toggle",
+  "config.asttweaks.mousesensitivity.enabled.tooltip": "Enable toggling mouse sensitivity with a keybind",
+  "config.asttweaks.mousesensitivity.targetValue": "Target Sensitivity",
+  "config.asttweaks.mousesensitivity.targetValue.tooltip": "The sensitivity to switch to when toggled (0-200%)",
+  "config.asttweaks.keybind.mouseSensitivityToggle": "Toggle Mouse Sensitivity",
+  "message.asttweaks.mousesensitivity.activated": "Mouse Sensitivity: %d%%",
+  "message.asttweaks.mousesensitivity.deactivated": "Mouse Sensitivity: Restored (%d%%)",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

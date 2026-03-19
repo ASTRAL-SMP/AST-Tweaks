@@ -12,6 +12,7 @@ import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
+import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -39,6 +40,7 @@ public class KeyBindings {
     private static boolean wasBoneMealFilterToggleDown = false;
     private static boolean wasSilkTouchSwitchToggleDown = false;
     private static boolean wasNotepadOpenDown = false;
+    private static boolean wasMouseSensitivityToggleDown = false;
     private static boolean wasOpenGeneralScreenDown = false;
 
     public static void register() {
@@ -191,6 +193,25 @@ public class KeyBindings {
                 }
             }
             wasNotepadOpenDown = notepadDown;
+
+            // マウス感度トグル
+            boolean mouseSensDown = config.mouseSensitivityToggleKey.isPressed(window);
+            if (mouseSensDown && !wasMouseSensitivityToggleDown) {
+                MouseSensitivityFeature mouseSens = FeatureManager.getInstance().getMouseSensitivityFeature();
+                if (mouseSens != null && mouseSens.isEnabled()) {
+                    int sensitivity = mouseSens.toggle();
+                    if (mouseSens.isToggled()) {
+                        client.player.sendMessage(
+                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.activated", sensitivity),
+                                true);
+                    } else {
+                        client.player.sendMessage(
+                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.deactivated", sensitivity),
+                                true);
+                    }
+                }
+            }
+            wasMouseSensitivityToggleDown = mouseSensDown;
 
             // 一般設定画面を開く（K+L デフォルト）
             boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);

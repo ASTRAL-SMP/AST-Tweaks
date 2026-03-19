@@ -153,6 +153,37 @@ public class ConfigScreen implements ModMenuApi {
 
         general.addEntry(autoMoveSub.build());
 
+        // --- Mouse Sensitivity サブカテゴリ ---
+        SubCategoryBuilder mouseSensSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.mousesensitivity"));
+
+        mouseSensSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled"),
+                        config.mouseSensitivityEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled.tooltip"))
+                .setSaveConsumer(value -> config.mouseSensitivityEnabled = value)
+                .build());
+
+        mouseSensSub.add(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue"),
+                        config.mouseSensitivityTargetValue, 0, 200)
+                .setDefaultValue(10)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue.tooltip"))
+                .setTextGetter(value -> Text.literal(value + "%"))
+                .setSaveConsumer(value -> config.mouseSensitivityTargetValue = value)
+                .build());
+
+        mouseSensSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.mouseSensitivityToggle"),
+                config.mouseSensitivityToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.mouseSensitivityToggleKey.copyFrom(combo)));
+
+        general.addEntry(mouseSensSub.build());
+
         // --- Update Checker サブカテゴリ ---
         SubCategoryBuilder updateCheckerSub = entryBuilder.startSubCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.updatechecker"));

@@ -9,6 +9,7 @@ import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
 import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
+import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
@@ -53,6 +54,7 @@ public class FeatureManager {
         registerFeature(new InventorySortFeature());
         registerFeature(new BoneMealFilterFeature());
         registerFeature(new SilkTouchSwitchFeature());
+        registerFeature(new MouseSensitivityFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -179,5 +181,12 @@ public class FeatureManager {
      */
     public SilkTouchSwitchFeature getSilkTouchSwitchFeature() {
         return (SilkTouchSwitchFeature) getFeature("silktouchswitch");
+    }
+
+    /**
+     * Get the mouse sensitivity feature.
+     */
+    public MouseSensitivityFeature getMouseSensitivityFeature() {
+        return (MouseSensitivityFeature) getFeature("mousesensitivity");
     }
 }
