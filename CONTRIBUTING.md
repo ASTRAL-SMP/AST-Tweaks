@@ -79,4 +79,4 @@ chore: ビルド・設定関連の変更
 
 ## ライセンス
 
-コントリビューションは [MIT License](LICENSE) の下で提供されます。
+コントリビューションは [Apache License 2.0](LICENSE) の下で提供されます。

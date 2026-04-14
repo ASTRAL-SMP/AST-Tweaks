@@ -19,7 +19,7 @@
       }
     }
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "icon": "assets/asttweaks/icon.png",
   "environment": "client",
   "entrypoints": {

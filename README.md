@@ -8,7 +8,7 @@
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.19.4-green?logo=mojang-studios)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Fabric-Loader_0.14.21-blue)](https://fabricmc.net/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-yellow)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange)](https://adoptium.net/)
 
 </div>
@@ -90,7 +90,7 @@ cd AST-Tweaks
 
 ## ライセンス
 
-[MIT License](LICENSE)
+[Apache License 2.0](LICENSE)
 
 ## リンク
 
