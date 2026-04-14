@@ -1,0 +1,111 @@
+name: Bug Report
+description: バグを報告する
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告ありがとうございます。以下の項目をできるだけ埋めてください。
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: AST-Tweaks バージョン
+      description: 使用している AST-Tweaks のバージョン
+      placeholder: "例: 1.0.9"
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft バージョン
+      description: 使用している Minecraft のバージョン
+      placeholder: "例: 1.19.4"
+    validations:
+      required: true
+
+  - type: input
+    id: fabric-loader-version
+    attributes:
+      label: Fabric Loader バージョン
+      placeholder: "例: 0.14.21"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature
+    attributes:
+      label: 関連する機能
+      description: バグが発生している機能を選択してください
+      options:
+        - Scoreboard Helper
+        - Auto Eat
+        - Auto Move
+        - Auto Totem
+        - Auto Repair
+        - Entity Culling
+        - Lava Highlight
+        - Inventory Sort
+        - Mass Grindstone
+        - Bone Meal Filter
+        - Silk Touch Switch
+        - Mouse Sensitivity
+        - Notepad
+        - Update Checker
+        - 設定画面 / Config
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明
+      description: 何が起きたか、期待される動作は何かを記述してください
+      placeholder: |
+        **発生した問題:**
+        Auto Eat が食事を開始した後、元のスロットに戻らない
+
+        **期待される動作:**
+        食事完了後に元のホットバースロットに復帰する
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順
+      placeholder: |
+        1. Auto Eat を有効化
+        2. ホットバーのスロット3を選択
+        3. 空腹度を閾値以下にする
+        4. 自動食事が発生
+        5. 食事後のスロットを確認
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: 導入している他のMod
+      description: 同時に使用しているModがあれば記載してください
+      placeholder: |
+        - Sodium 0.4.10
+        - Tweakeroo
+        - Litematica
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ / クラッシュレポート
+      description: 関連するログやクラッシュレポートがあれば貼り付けてください
+      render: text
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: 問題を説明するスクリーンショットがあれば添付してください

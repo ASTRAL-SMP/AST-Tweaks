@@ -1,0 +1,146 @@
+name: Code Review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed
+        run: |
+          FILES=$(gh pr diff ${{ github.event.pull_request.number }} --name-only)
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FILES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          JAVA_COUNT=$(echo "$FILES" | grep -c '\.java$' || true)
+          JSON_COUNT=$(echo "$FILES" | grep -c '\.json$' || true)
+          echo "java_count=$JAVA_COUNT" >> "$GITHUB_OUTPUT"
+          echo "json_count=$JSON_COUNT" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check Mixin registration
+        if: steps.changed.outputs.java_count > 0
+        run: |
+          ERRORS=""
+
+          # mixin/ 配下に新規Javaファイルが追加されているか確認
+          NEW_MIXINS=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep -E 'src/main/java/.*/mixin/.*\.java$' || true)
+
+          if [ -n "$NEW_MIXINS" ]; then
+            for FILE in $NEW_MIXINS; do
+              CLASS=$(basename "$FILE" .java)
+
+              # sodium mixin は別ファイルで管理
+              if echo "$FILE" | grep -q '/mixin/sodium/'; then
+                MIXIN_JSON="src/main/resources/asttweaks.sodium.mixins.json"
+              else
+                MIXIN_JSON="src/main/resources/asttweaks.mixins.json"
+              fi
+
+              if [ -f "$MIXIN_JSON" ] && ! grep -q "$CLASS" "$MIXIN_JSON"; then
+                ERRORS="${ERRORS}- \`${CLASS}\` が \`${MIXIN_JSON}\` に未登録\n"
+              fi
+            done
+          fi
+
+          if [ -n "$ERRORS" ]; then
+            echo "::warning::Mixin登録漏れの可能性があります"
+            printf "## Mixin Registration Warning\n\n以下のMixinクラスが設定ファイルに登録されていない可能性があります:\n\n${ERRORS}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check translation keys
+        if: steps.changed.outputs.json_count > 0
+        run: |
+          EN="src/main/resources/assets/asttweaks/lang/en_us.json"
+          JA="src/main/resources/assets/asttweaks/lang/ja_jp.json"
+
+          if [ -f "$EN" ] && [ -f "$JA" ]; then
+            EN_KEYS=$(python3 -c "import json; print('\n'.join(sorted(json.load(open('$EN')).keys())))")
+            JA_KEYS=$(python3 -c "import json; print('\n'.join(sorted(json.load(open('$JA')).keys())))")
+
+            MISSING_JA=$(comm -23 <(echo "$EN_KEYS") <(echo "$JA_KEYS"))
+            MISSING_EN=$(comm -23 <(echo "$JA_KEYS") <(echo "$EN_KEYS"))
+
+            REPORT=""
+            if [ -n "$MISSING_JA" ]; then
+              REPORT="${REPORT}### ja_jp.json に不足しているキー\n\n\`\`\`\n${MISSING_JA}\n\`\`\`\n\n"
+            fi
+            if [ -n "$MISSING_EN" ]; then
+              REPORT="${REPORT}### en_us.json に不足しているキー\n\n\`\`\`\n${MISSING_EN}\n\`\`\`\n\n"
+            fi
+
+            if [ -n "$REPORT" ]; then
+              echo "::warning::翻訳キーの不一致があります"
+              printf "## Translation Key Mismatch\n\n${REPORT}" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Check code quality
+        if: steps.changed.outputs.java_count > 0
+        run: |
+          WARNINGS=""
+
+          # PR差分のJavaファイルのみ対象
+          JAVA_FILES=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.java$' || true)
+
+          for FILE in $JAVA_FILES; do
+            [ -f "$FILE" ] || continue
+
+            # System.out.println の検出
+            if grep -n 'System\.out\.print' "$FILE" 2>/dev/null; then
+              WARNINGS="${WARNINGS}- \`${FILE}\`: \`System.out.println\` が残っています（ロガーを使用してください）\n"
+            fi
+
+            # System.err の検出
+            if grep -n 'System\.err\.print' "$FILE" 2>/dev/null; then
+              WARNINGS="${WARNINGS}- \`${FILE}\`: \`System.err.println\` が残っています\n"
+            fi
+
+            # TODO/FIXME の検出
+            TODOS=$(grep -cn 'TODO\|FIXME\|HACK\|XXX' "$FILE" 2>/dev/null || true)
+            if [ "$TODOS" -gt 0 ] 2>/dev/null; then
+              WARNINGS="${WARNINGS}- \`${FILE}\`: TODO/FIXME コメントが ${TODOS} 件あります\n"
+            fi
+
+            # ファイル行数チェック（800行超）
+            LINES=$(wc -l < "$FILE" 2>/dev/null || echo 0)
+            if [ "$LINES" -gt 800 ]; then
+              WARNINGS="${WARNINGS}- \`${FILE}\`: ${LINES} 行（800行超過 — 分割を検討してください）\n"
+            fi
+          done
+
+          if [ -n "$WARNINGS" ]; then
+            echo "::warning::コード品質の注意事項があります"
+            printf "## Code Quality Notes\n\n${WARNINGS}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Post review summary
+        if: always()
+        run: |
+          if [ -f "$GITHUB_STEP_SUMMARY" ] && [ -s "$GITHUB_STEP_SUMMARY" ]; then
+            BODY=$(cat "$GITHUB_STEP_SUMMARY")
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --body "$(printf '## Automated Code Review\n\n%s\n\n---\n*This review was generated automatically.*' "$BODY")"
+          else
+            echo "No issues found — skipping comment."
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
