@@ -114,6 +114,12 @@ public class ModConfig {
     public boolean silkTouchSwitchEnabled = true;
     public Set<String> silkTouchSwitchBlockList = new HashSet<>();
 
+    // Auto drop settings
+    public boolean autoDropEnabled = false;
+    public int autoDropOperationsPerTick = 8;
+    public Set<Integer> autoDropProtectedSlots = new HashSet<>();  // PlayerInventory indices (0-8 hotbar, 9-35 main, 40 offhand)
+    public Set<String> autoDropExcludedItems = new HashSet<>();
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -134,6 +140,7 @@ public class ModConfig {
     public KeyCombo inventorySortExecuteKey = new KeyCombo(GLFW.GLFW_KEY_R, -1);
     public KeyCombo inventorySortContainerExecuteKey = new KeyCombo(-1, -1);
     public KeyCombo openGeneralScreenKey = new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K);
+    public KeyCombo autoDropToggleKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -162,6 +169,12 @@ public class ModConfig {
             silkTouchSwitchBlockList.add("minecraft:" + color + "_stained_glass");
             silkTouchSwitchBlockList.add("minecraft:" + color + "_stained_glass_pane");
         }
+
+        // Auto Drop default protection: hotbar (0-8) + offhand (40)
+        for (int i = 0; i <= 8; i++) {
+            autoDropProtectedSlots.add(i);
+        }
+        autoDropProtectedSlots.add(40);
     }
 
     public static ModConfig getInstance() {
@@ -265,6 +278,14 @@ public class ModConfig {
                     if (loaded.silkTouchSwitchBlockList != null) {
                         this.silkTouchSwitchBlockList = new HashSet<>(loaded.silkTouchSwitchBlockList);
                     }
+                    this.autoDropEnabled = loaded.autoDropEnabled;
+                    this.autoDropOperationsPerTick = loaded.autoDropOperationsPerTick;
+                    if (loaded.autoDropProtectedSlots != null) {
+                        this.autoDropProtectedSlots = new HashSet<>(loaded.autoDropProtectedSlots);
+                    }
+                    if (loaded.autoDropExcludedItems != null) {
+                        this.autoDropExcludedItems = new HashSet<>(loaded.autoDropExcludedItems);
+                    }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
@@ -322,6 +343,9 @@ public class ModConfig {
                     }
                     if (loaded.openGeneralScreenKey != null) {
                         this.openGeneralScreenKey.copyFrom(loaded.openGeneralScreenKey);
+                    }
+                    if (loaded.autoDropToggleKey != null) {
+                        this.autoDropToggleKey.copyFrom(loaded.autoDropToggleKey);
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);

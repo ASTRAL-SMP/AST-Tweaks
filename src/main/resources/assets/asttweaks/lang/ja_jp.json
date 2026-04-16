@@ -262,6 +262,24 @@
   "message.asttweaks.mousesensitivity.activated": "マウス感度: %d%%",
   "message.asttweaks.mousesensitivity.deactivated": "マウス感度: 復元 (%d%%)",
 
+  "config.asttweaks.category.autodrop": "自動ドロップ",
+  "config.asttweaks.autodrop.enabled": "自動ドロップを有効化",
+  "config.asttweaks.autodrop.enabled.tooltip": "インベントリを開いた瞬間に保護対象外のアイテムを全てドロップします。アーマーは常に保護されます。",
+  "config.asttweaks.autodrop.operationsPerTick": "tick毎のドロップ数",
+  "config.asttweaks.autodrop.operationsPerTick.tooltip": "1 tickで処理するスロット数。値が大きいほど高速ですが、サーバーのアンチチートに引っかかる可能性があります。",
+  "config.asttweaks.autodrop.protectedslots.button": "保護スロット設定を開く",
+  "config.asttweaks.autodrop.protectedslots.title": "自動ドロップ: 保護スロット",
+  "config.asttweaks.autodrop.protectedslots.help": "赤=保護。アーマースロットは常に保護されます。",
+  "config.asttweaks.autodrop.itemlist.button": "除外アイテム設定を開く",
+  "config.asttweaks.autodrop.itemlist.title": "自動ドロップ: 除外アイテム",
+  "config.asttweaks.autodrop.itemlist.help": "「保護」に設定されたアイテムはドロップされません",
+  "config.asttweaks.autodrop.protected": "保護",
+  "config.asttweaks.autodrop.willdrop": "ドロップ対象",
+  "config.asttweaks.keybind.autoDropToggle": "自動ドロップ切替",
+  "message.asttweaks.autodrop.enabled": "自動ドロップ: 有効",
+  "message.asttweaks.autodrop.disabled": "自動ドロップ: 無効",
+  "message.asttweaks.autodrop.started": "自動ドロップ: %d個のアイテムを投棄中...",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

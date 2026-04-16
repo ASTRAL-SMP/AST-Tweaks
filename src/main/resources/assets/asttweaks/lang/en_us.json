@@ -262,6 +262,24 @@
   "message.asttweaks.mousesensitivity.activated": "Mouse Sensitivity: %d%%",
   "message.asttweaks.mousesensitivity.deactivated": "Mouse Sensitivity: Restored (%d%%)",
 
+  "config.asttweaks.category.autodrop": "Auto Drop",
+  "config.asttweaks.autodrop.enabled": "Enable Auto Drop",
+  "config.asttweaks.autodrop.enabled.tooltip": "Drops all non-protected items when the inventory is opened. Armor is always protected.",
+  "config.asttweaks.autodrop.operationsPerTick": "Operations Per Tick",
+  "config.asttweaks.autodrop.operationsPerTick.tooltip": "Number of slots to drop per tick. Higher = faster, but may trigger server anti-cheat.",
+  "config.asttweaks.autodrop.protectedslots.button": "Configure Protected Slots",
+  "config.asttweaks.autodrop.protectedslots.title": "Auto Drop: Protected Slots",
+  "config.asttweaks.autodrop.protectedslots.help": "Red = protected. Armor slots are always protected.",
+  "config.asttweaks.autodrop.itemlist.button": "Configure Excluded Items",
+  "config.asttweaks.autodrop.itemlist.title": "Auto Drop: Excluded Items",
+  "config.asttweaks.autodrop.itemlist.help": "Items marked Protected will NOT be dropped",
+  "config.asttweaks.autodrop.protected": "Protected",
+  "config.asttweaks.autodrop.willdrop": "Will Drop",
+  "config.asttweaks.keybind.autoDropToggle": "Toggle Auto Drop",
+  "message.asttweaks.autodrop.enabled": "Auto Drop: Enabled",
+  "message.asttweaks.autodrop.disabled": "Auto Drop: Disabled",
+  "message.asttweaks.autodrop.started": "Auto Drop: dropping %d items...",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

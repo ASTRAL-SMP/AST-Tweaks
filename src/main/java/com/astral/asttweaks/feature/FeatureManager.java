@@ -1,5 +1,6 @@
 package com.astral.asttweaks.feature;
 
+import com.astral.asttweaks.feature.autodrop.AutoDropFeature;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
@@ -55,6 +56,7 @@ public class FeatureManager {
         registerFeature(new BoneMealFilterFeature());
         registerFeature(new SilkTouchSwitchFeature());
         registerFeature(new MouseSensitivityFeature());
+        registerFeature(new AutoDropFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -188,5 +190,12 @@ public class FeatureManager {
      */
     public MouseSensitivityFeature getMouseSensitivityFeature() {
         return (MouseSensitivityFeature) getFeature("mousesensitivity");
+    }
+
+    /**
+     * Get the auto drop feature.
+     */
+    public AutoDropFeature getAutoDropFeature() {
+        return (AutoDropFeature) getFeature("autodrop");
     }
 }

@@ -1,6 +1,8 @@
 package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.feature.autodrop.gui.AutoDropItemListScreen;
+import com.astral.asttweaks.feature.autodrop.gui.AutoDropProtectedSlotScreen;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
@@ -780,6 +782,47 @@ public class ConfigScreen implements ModMenuApi {
                 config.silkTouchSwitchToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.silkTouchSwitchToggleKey.copyFrom(combo)));
+
+        // ============================
+        // Auto drop category
+        // ============================
+        ConfigCategory autoDrop = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autodrop"));
+
+        autoDrop.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled"),
+                        config.autoDropEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoDropEnabled = value)
+                .build());
+
+        autoDrop.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick"),
+                        config.autoDropOperationsPerTick, 1, 64)
+                .setDefaultValue(8)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setSaveConsumer(value -> config.autoDropOperationsPerTick = value)
+                .build());
+
+        autoDrop.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.button"),
+                button -> MinecraftClient.getInstance().setScreen(new AutoDropProtectedSlotScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        autoDrop.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.itemlist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new AutoDropItemListScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        autoDrop.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropToggle"),
+                config.autoDropToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoDropToggleKey.copyFrom(combo)));
 
         builder.setSavingRunnable(config::save);
 

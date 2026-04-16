@@ -7,6 +7,7 @@ import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
 import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.automove.MoveDirection;
+import com.astral.asttweaks.feature.autodrop.AutoDropFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
@@ -42,6 +43,7 @@ public class KeyBindings {
     private static boolean wasNotepadOpenDown = false;
     private static boolean wasMouseSensitivityToggleDown = false;
     private static boolean wasOpenGeneralScreenDown = false;
+    private static boolean wasAutoDropToggleDown = false;
 
     public static void register() {
         // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
@@ -212,6 +214,20 @@ public class KeyBindings {
                 }
             }
             wasMouseSensitivityToggleDown = mouseSensDown;
+
+            // 自動ドロップトグル
+            boolean autoDropDown = config.autoDropToggleKey.isPressed(window);
+            if (autoDropDown && !wasAutoDropToggleDown) {
+                AutoDropFeature autoDrop = FeatureManager.getInstance().getAutoDropFeature();
+                if (autoDrop != null) {
+                    boolean newState = !autoDrop.isEnabled();
+                    autoDrop.setEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autodrop." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasAutoDropToggleDown = autoDropDown;
 
             // 一般設定画面を開く（K+L デフォルト）
             boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);
