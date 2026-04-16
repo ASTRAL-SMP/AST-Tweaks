@@ -276,6 +276,7 @@
   "config.asttweaks.autodrop.protected": "保護",
   "config.asttweaks.autodrop.willdrop": "ドロップ対象",
   "config.asttweaks.keybind.autoDropToggle": "自動ドロップ切替",
+  "config.asttweaks.keybind.autoDropExecute": "自動ドロップ実行（インベントリ表示中）",
   "message.asttweaks.autodrop.enabled": "自動ドロップ: 有効",
   "message.asttweaks.autodrop.disabled": "自動ドロップ: 無効",
   "message.asttweaks.autodrop.started": "自動ドロップ: %d個のアイテムを投棄中...",

@@ -141,6 +141,7 @@ public class ModConfig {
     public KeyCombo inventorySortContainerExecuteKey = new KeyCombo(-1, -1);
     public KeyCombo openGeneralScreenKey = new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K);
     public KeyCombo autoDropToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoDropExecuteKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -346,6 +347,9 @@ public class ModConfig {
                     }
                     if (loaded.autoDropToggleKey != null) {
                         this.autoDropToggleKey.copyFrom(loaded.autoDropToggleKey);
+                    }
+                    if (loaded.autoDropExecuteKey != null) {
+                        this.autoDropExecuteKey.copyFrom(loaded.autoDropExecuteKey);
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);

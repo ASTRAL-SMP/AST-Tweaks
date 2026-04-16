@@ -276,6 +276,7 @@
   "config.asttweaks.autodrop.protected": "Protected",
   "config.asttweaks.autodrop.willdrop": "Will Drop",
   "config.asttweaks.keybind.autoDropToggle": "Toggle Auto Drop",
+  "config.asttweaks.keybind.autoDropExecute": "Execute Auto Drop (while inventory is open)",
   "message.asttweaks.autodrop.enabled": "Auto Drop: Enabled",
   "message.asttweaks.autodrop.disabled": "Auto Drop: Disabled",
   "message.asttweaks.autodrop.started": "Auto Drop: dropping %d items...",

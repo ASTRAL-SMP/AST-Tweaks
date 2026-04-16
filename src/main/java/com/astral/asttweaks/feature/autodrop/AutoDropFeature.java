@@ -1,6 +1,7 @@
 package com.astral.asttweaks.feature.autodrop;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -19,7 +20,7 @@ import java.util.Deque;
 
 /**
  * Auto Drop feature.
- * インベントリ画面が開かれた瞬間、保護対象外のアイテムを全てドロップする。
+ * インベントリ画面を開いた状態で実行キーを押すと、保護対象外のアイテムを全てドロップする。
  * - アーマー4スロット（PlayerInventory 36-39）は常に保護
  * - 保護対象スロット（Main/Hotbar/Offhand の個別スロット）はドロップしない
  * - 除外アイテムリストに含まれるアイテムはドロップしない
@@ -28,8 +29,7 @@ import java.util.Deque;
 public class AutoDropFeature implements Feature {
     private final AutoDropConfig config;
     private final Deque<Integer> dropQueue = new ArrayDeque<>();
-    private boolean wasInventoryOpen = false;
-    private boolean triggeredThisSession = false;
+    private boolean wasExecuteKeyDown = false;
 
     public AutoDropFeature() {
         this.config = new AutoDropConfig();
@@ -60,9 +60,15 @@ public class AutoDropFeature implements Feature {
         boolean isInventoryOpen = client.currentScreen instanceof InventoryScreen
                 && client.player.currentScreenHandler instanceof PlayerScreenHandler;
 
-        if (isInventoryOpen && !wasInventoryOpen && !triggeredThisSession) {
-            enqueueDrops(client);
-            triggeredThisSession = true;
+        if (isInventoryOpen && client.getWindow() != null) {
+            long window = client.getWindow().getHandle();
+            boolean executeDown = ModConfig.getInstance().autoDropExecuteKey.isPressed(window);
+            if (executeDown && !wasExecuteKeyDown) {
+                enqueueDrops(client);
+            }
+            wasExecuteKeyDown = executeDown;
+        } else {
+            wasExecuteKeyDown = false;
         }
 
         if (isInventoryOpen && !dropQueue.isEmpty()) {
@@ -71,16 +77,12 @@ public class AutoDropFeature implements Feature {
 
         if (!isInventoryOpen) {
             dropQueue.clear();
-            triggeredThisSession = false;
         }
-
-        wasInventoryOpen = isInventoryOpen;
     }
 
     private void reset() {
         dropQueue.clear();
-        wasInventoryOpen = false;
-        triggeredThisSession = false;
+        wasExecuteKeyDown = false;
     }
 
     private void enqueueDrops(MinecraftClient client) {

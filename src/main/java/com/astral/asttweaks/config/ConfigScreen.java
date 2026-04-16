@@ -824,6 +824,12 @@ public class ConfigScreen implements ModMenuApi {
                 new KeyCombo(-1, -1),
                 combo -> config.autoDropToggleKey.copyFrom(combo)));
 
+        autoDrop.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropExecute"),
+                config.autoDropExecuteKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoDropExecuteKey.copyFrom(combo)));
+
         builder.setSavingRunnable(config::save);
 
         return builder.build();
