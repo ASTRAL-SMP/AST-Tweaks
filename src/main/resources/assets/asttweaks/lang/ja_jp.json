@@ -264,7 +264,11 @@
 
   "config.asttweaks.category.autodrop": "自動ドロップ",
   "config.asttweaks.autodrop.enabled": "自動ドロップを有効化",
-  "config.asttweaks.autodrop.enabled.tooltip": "コンテナ画面（インベントリ/作業台/チェスト等）を開いている時に実行キーを押すと、保護対象外のアイテムを全てドロップします。アーマーは常に保護されます。",
+  "config.asttweaks.autodrop.enabled.tooltip": "保護対象外のアイテムを全てドロップします。アーマーは常に保護されます。発動方式は下のモードで切り替えてください。",
+  "config.asttweaks.autodrop.mode": "発動方式",
+  "config.asttweaks.autodrop.mode.tooltip": "自動ドロップをいつ発動するかを選択します。\n・実行キー押下: コンテナ画面を開いた状態で実行キーを押すとドロップ (v1.1.2 動作)\n・インベントリを開いた時: プレイヤーインベントリを開いた瞬間に自動ドロップ (v1.1.0 動作)",
+  "config.asttweaks.autodrop.mode.execute_key": "実行キー押下",
+  "config.asttweaks.autodrop.mode.on_inventory_open": "インベントリを開いた時",
   "config.asttweaks.autodrop.operationsPerTick": "tick毎のドロップ数",
   "config.asttweaks.autodrop.operationsPerTick.tooltip": "1 tickで処理するスロット数。値が大きいほど高速ですが、サーバーのアンチチートに引っかかる可能性があります。",
   "config.asttweaks.autodrop.protectedslots.button": "保護スロット設定を開く",
