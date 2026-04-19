@@ -5,11 +5,10 @@ import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -20,7 +19,8 @@ import java.util.Deque;
 
 /**
  * Auto Drop feature.
- * インベントリ画面を開いた状態で実行キーを押すと、保護対象外のアイテムを全てドロップする。
+ * 任意のコンテナ画面（プレイヤーインベントリ、作業台、チェスト等）を開いた状態で
+ * 実行キーを押すと、保護対象外のプレイヤーインベントリアイテムを全てドロップする。
  * - アーマー4スロット（PlayerInventory 36-39）は常に保護
  * - 保護対象スロット（Main/Hotbar/Offhand の個別スロット）はドロップしない
  * - 除外アイテムリストに含まれるアイテムはドロップしない
@@ -57,10 +57,9 @@ public class AutoDropFeature implements Feature {
             return;
         }
 
-        boolean isInventoryOpen = client.currentScreen instanceof InventoryScreen
-                && client.player.currentScreenHandler instanceof PlayerScreenHandler;
+        boolean isContainerOpen = client.currentScreen instanceof HandledScreen<?>;
 
-        if (isInventoryOpen && client.getWindow() != null) {
+        if (isContainerOpen && client.getWindow() != null) {
             long window = client.getWindow().getHandle();
             boolean executeDown = ModConfig.getInstance().autoDropExecuteKey.isPressed(window);
             if (executeDown && !wasExecuteKeyDown) {
@@ -71,11 +70,11 @@ public class AutoDropFeature implements Feature {
             wasExecuteKeyDown = false;
         }
 
-        if (isInventoryOpen && !dropQueue.isEmpty()) {
+        if (isContainerOpen && !dropQueue.isEmpty()) {
             processQueue(client);
         }
 
-        if (!isInventoryOpen) {
+        if (!isContainerOpen) {
             dropQueue.clear();
         }
     }
@@ -89,13 +88,10 @@ public class AutoDropFeature implements Feature {
         ScreenHandler handler = client.player.currentScreenHandler;
         dropQueue.clear();
 
-        // PlayerScreenHandler slot layout:
-        //   0: crafting output, 1-4: crafting grid (skip)
-        //   5-8: armor (always protected; skipped by invIndex check)
-        //   9-35: main inventory (PlayerInventory 9-35)
-        //   36-44: hotbar (PlayerInventory 0-8)
-        //   45: offhand (PlayerInventory 40)
-        for (int screenSlot = 9; screenSlot <= 45 && screenSlot < handler.slots.size(); screenSlot++) {
+        // ハンドラレイアウトに依存せず、PlayerInventory に属するスロットのみを対象にする。
+        // PlayerInventory index の意味は固定: 0-8=Hotbar, 9-35=Main, 36-39=Armor, 40=Offhand。
+        // コンテナ側スロット（Chest, Crafting grid 等）は slot.inventory が PlayerInventory ではないため除外される。
+        for (int screenSlot = 0; screenSlot < handler.slots.size(); screenSlot++) {
             Slot slot = handler.getSlot(screenSlot);
             if (!(slot.inventory instanceof PlayerInventory)) continue;
 
