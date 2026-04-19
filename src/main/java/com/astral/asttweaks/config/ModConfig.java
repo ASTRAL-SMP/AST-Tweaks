@@ -1,6 +1,7 @@
 package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
@@ -116,6 +117,7 @@ public class ModConfig {
 
     // Auto drop settings
     public boolean autoDropEnabled = false;
+    public AutoDropMode autoDropMode = AutoDropMode.EXECUTE_KEY;
     public int autoDropOperationsPerTick = 8;
     public Set<Integer> autoDropProtectedSlots = new HashSet<>();  // PlayerInventory indices (0-8 hotbar, 9-35 main, 40 offhand)
     public Set<String> autoDropExcludedItems = new HashSet<>();
@@ -280,6 +282,9 @@ public class ModConfig {
                         this.silkTouchSwitchBlockList = new HashSet<>(loaded.silkTouchSwitchBlockList);
                     }
                     this.autoDropEnabled = loaded.autoDropEnabled;
+                    if (loaded.autoDropMode != null) {
+                        this.autoDropMode = loaded.autoDropMode;
+                    }
                     this.autoDropOperationsPerTick = loaded.autoDropOperationsPerTick;
                     if (loaded.autoDropProtectedSlots != null) {
                         this.autoDropProtectedSlots = new HashSet<>(loaded.autoDropProtectedSlots);

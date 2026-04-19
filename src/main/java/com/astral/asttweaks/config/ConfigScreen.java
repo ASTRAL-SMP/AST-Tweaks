@@ -1,6 +1,7 @@
 package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropItemListScreen;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropProtectedSlotScreen;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
@@ -796,6 +797,17 @@ public class ConfigScreen implements ModMenuApi {
                 .setDefaultValue(false)
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoDropEnabled = value)
+                .build());
+
+        autoDrop.addEntry(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode"),
+                        AutoDropMode.class,
+                        config.autoDropMode)
+                .setDefaultValue(AutoDropMode.EXECUTE_KEY)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode.tooltip"))
+                .setEnumNameProvider(mode -> Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode." + ((AutoDropMode)mode).getId()))
+                .setSaveConsumer(value -> config.autoDropMode = value)
                 .build());
 
         autoDrop.addEntry(entryBuilder

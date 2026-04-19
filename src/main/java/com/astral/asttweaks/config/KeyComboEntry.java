@@ -34,8 +34,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     private final ButtonWidget bindButton;
     private final ButtonWidget resetButton;
     private boolean listening = false;
-    private int firstKey = -1;          // 1キー目（押して離した後に記録）
-    private boolean waitingRelease = false; // 1キー目の離しを待っている状態
+    private int firstKey = -1;               // 1キー目（押して離した後に記録）
+    private String firstKeyType = KeyCombo.TYPE_KEY; // 1キー目の種別 ("key" or "mouse")
+    private boolean waitingRelease = false;  // 1キー目の離しを待っている状態
 
     public KeyComboEntry(Text fieldName, KeyCombo currentValue, KeyCombo defaultValue, Consumer<KeyCombo> saveConsumer) {
         super(fieldName, null);
@@ -47,6 +48,7 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
         this.bindButton = ButtonWidget.builder(Text.literal(value.getDisplayName()), button -> {
             listening = true;
             firstKey = -1;
+            firstKeyType = KeyCombo.TYPE_KEY;
             waitingRelease = false;
             updateButtonText();
         }).build();
@@ -55,6 +57,7 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             value.copyFrom(defaultValue);
             listening = false;
             firstKey = -1;
+            firstKeyType = KeyCombo.TYPE_KEY;
             waitingRelease = false;
             updateButtonText();
         }).build();
@@ -67,7 +70,7 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             if (firstKey != -1) {
                 // 1キー目確定済み — 2キー目 or Enter 待ち
                 this.bindButton.setMessage(
-                        Text.literal(KeyCombo.getKeyName(firstKey) + " + ?")
+                        Text.literal(KeyCombo.getInputName(firstKey, firstKeyType) + " + ?")
                                 .formatted(Formatting.YELLOW));
             } else {
                 this.bindButton.setMessage(
@@ -84,16 +87,14 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             // ESCでキャンセル
-            listening = false;
-            firstKey = -1;
-            waitingRelease = false;
-            updateButtonText();
+            cancelListening();
             return true;
         }
 
         if (firstKey == -1) {
             // 1キー目を押した — まだ離していないので離しを待つ
             firstKey = keyCode;
+            firstKeyType = KeyCombo.TYPE_KEY;
             waitingRelease = true;
             updateButtonText();
             return true;
@@ -101,16 +102,17 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
                 // Enter → 単キーバインドとして確定
                 value.mainKey = firstKey;
+                value.mainKeyType = firstKeyType;
                 value.modifierKey = -1;
+                value.modifierKeyType = KeyCombo.TYPE_KEY;
             } else {
                 // 2キー目 → コンボ確定
                 value.modifierKey = firstKey;
+                value.modifierKeyType = firstKeyType;
                 value.mainKey = keyCode;
+                value.mainKeyType = KeyCombo.TYPE_KEY;
             }
-            listening = false;
-            firstKey = -1;
-            waitingRelease = false;
-            updateButtonText();
+            finishListening();
             return true;
         }
     }
@@ -121,11 +123,62 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
 
         // 1キー目の離しを検知 — waitingRelease を解除するだけ
         // （2キー目の入力を引き続き待つ）
-        if (waitingRelease && firstKey != -1 && keyCode == firstKey) {
+        if (waitingRelease && firstKey != -1 && KeyCombo.TYPE_KEY.equals(firstKeyType) && keyCode == firstKey) {
             waitingRelease = false;
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (listening) {
+            if (firstKey == -1) {
+                // 1キー目をマウスボタンとして記録
+                firstKey = button;
+                firstKeyType = KeyCombo.TYPE_MOUSE;
+                waitingRelease = true;
+                updateButtonText();
+            } else {
+                // 2キー目としてマウスボタンを記録
+                value.modifierKey = firstKey;
+                value.modifierKeyType = firstKeyType;
+                value.mainKey = button;
+                value.mainKeyType = KeyCombo.TYPE_MOUSE;
+                finishListening();
+            }
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (listening) {
+            // 1キー目がマウスだった場合の離し検知
+            if (waitingRelease && firstKey != -1 && KeyCombo.TYPE_MOUSE.equals(firstKeyType) && button == firstKey) {
+                waitingRelease = false;
+                return true;
+            }
+            return false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private void cancelListening() {
+        listening = false;
+        firstKey = -1;
+        firstKeyType = KeyCombo.TYPE_KEY;
+        waitingRelease = false;
+        updateButtonText();
+    }
+
+    private void finishListening() {
+        listening = false;
+        firstKey = -1;
+        firstKeyType = KeyCombo.TYPE_KEY;
+        waitingRelease = false;
+        updateButtonText();
     }
 
     @Override

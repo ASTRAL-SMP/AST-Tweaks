@@ -20,6 +20,11 @@ public class AutoDropConfig {
         ModConfig.getInstance().save();
     }
 
+    public AutoDropMode getMode() {
+        AutoDropMode mode = ModConfig.getInstance().autoDropMode;
+        return mode != null ? mode : AutoDropMode.EXECUTE_KEY;
+    }
+
     public int getOperationsPerTick() {
         return ModConfig.getInstance().autoDropOperationsPerTick;
     }
