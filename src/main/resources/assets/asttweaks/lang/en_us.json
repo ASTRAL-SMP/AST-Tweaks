@@ -266,7 +266,7 @@
   "config.asttweaks.autodrop.enabled": "Enable Auto Drop",
   "config.asttweaks.autodrop.enabled.tooltip": "Drops all non-protected items. Armor is always protected. Choose when Auto Drop triggers using the mode option below.",
   "config.asttweaks.autodrop.mode": "Trigger Mode",
-  "config.asttweaks.autodrop.mode.tooltip": "When to trigger Auto Drop.\n- Execute Key: drop when the execute key is pressed while any container screen is open (v1.1.2 behavior)\n- On Inventory Open: drop automatically the moment the player inventory is opened (v1.1.0 behavior)",
+  "config.asttweaks.autodrop.mode.tooltip": "When to trigger Auto Drop.\n- Execute Key: drop when the execute key is pressed while any container screen is open\n- On Inventory Open: drop automatically the moment any container screen (including the player inventory) is opened",
   "config.asttweaks.autodrop.mode.execute_key": "Execute Key",
   "config.asttweaks.autodrop.mode.on_inventory_open": "On Inventory Open",
   "config.asttweaks.autodrop.operationsPerTick": "Operations Per Tick",

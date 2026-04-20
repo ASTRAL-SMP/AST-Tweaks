@@ -6,11 +6,9 @@ import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -22,8 +20,8 @@ import java.util.Deque;
 /**
  * Auto Drop feature.
  * モードに応じて2通りの発動方式をサポート:
- *  - EXECUTE_KEY: 任意のコンテナ画面で実行キー押下時にドロップ (v1.1.2 動作)
- *  - ON_INVENTORY_OPEN: プレイヤーインベントリを開いた瞬間に自動ドロップ (v1.1.0 動作)
+ *  - EXECUTE_KEY: 任意のコンテナ画面で実行キー押下時にドロップ
+ *  - ON_INVENTORY_OPEN: 任意のコンテナ画面（プレイヤーインベントリ含む）を開いた瞬間に自動ドロップ
  * - アーマー4スロット（PlayerInventory 36-39）は常に保護
  * - 保護対象スロット（Main/Hotbar/Offhand の個別スロット）はドロップしない
  * - 除外アイテムリストに含まれるアイテムはドロップしない
@@ -33,7 +31,7 @@ public class AutoDropFeature implements Feature {
     private final AutoDropConfig config;
     private final Deque<Integer> dropQueue = new ArrayDeque<>();
     private boolean wasExecuteKeyDown = false;
-    private boolean wasInventoryOpen = false;
+    private boolean wasContainerOpen = false;
     private boolean triggeredThisSession = false;
 
     public AutoDropFeature() {
@@ -64,8 +62,6 @@ public class AutoDropFeature implements Feature {
 
         AutoDropMode mode = config.getMode();
         boolean isContainerOpen = client.currentScreen instanceof HandledScreen<?>;
-        boolean isInventoryOpen = client.currentScreen instanceof InventoryScreen
-                && client.player.currentScreenHandler instanceof PlayerScreenHandler;
 
         if (mode == AutoDropMode.EXECUTE_KEY) {
             if (isContainerOpen && client.getWindow() != null) {
@@ -79,14 +75,14 @@ public class AutoDropFeature implements Feature {
                 wasExecuteKeyDown = false;
             }
         } else { // ON_INVENTORY_OPEN
-            if (isInventoryOpen && !wasInventoryOpen && !triggeredThisSession) {
+            if (isContainerOpen && !wasContainerOpen && !triggeredThisSession) {
                 enqueueDrops(client);
                 triggeredThisSession = true;
             }
-            if (!isInventoryOpen) {
+            if (!isContainerOpen) {
                 triggeredThisSession = false;
             }
-            wasInventoryOpen = isInventoryOpen;
+            wasContainerOpen = isContainerOpen;
             wasExecuteKeyDown = false;
         }
 
@@ -102,7 +98,7 @@ public class AutoDropFeature implements Feature {
     private void reset() {
         dropQueue.clear();
         wasExecuteKeyDown = false;
-        wasInventoryOpen = false;
+        wasContainerOpen = false;
         triggeredThisSession = false;
     }
 
