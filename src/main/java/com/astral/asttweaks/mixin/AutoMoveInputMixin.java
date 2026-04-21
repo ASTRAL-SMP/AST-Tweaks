@@ -33,26 +33,16 @@ public class AutoMoveInputMixin {
         if (feature == null || !feature.isFreecamActive()) return;
 
         if (feature.isEnabled() && feature.isMoving()) {
-            // freecam中のAutoMove: プレイヤーの入力を直接注入
+            // freecam中のAutoMove: プレイヤーの入力を直接注入（斜めは2軸同時）
             MoveDirection dir = feature.getConfig().getDirection();
-            switch (dir) {
-                case FORWARD -> {
-                    this.input.pressingForward = true;
-                    this.input.movementForward = 1.0f;
-                }
-                case BACKWARD -> {
-                    this.input.pressingBack = true;
-                    this.input.movementForward = -1.0f;
-                }
-                case LEFT -> {
-                    this.input.pressingLeft = true;
-                    this.input.movementSideways = 1.0f;
-                }
-                case RIGHT -> {
-                    this.input.pressingRight = true;
-                    this.input.movementSideways = -1.0f;
-                }
-            }
+            int fwd = dir.getForwardAxis();
+            int side = dir.getSidewaysAxis();
+            this.input.pressingForward = fwd > 0;
+            this.input.pressingBack = fwd < 0;
+            this.input.pressingLeft = side > 0;
+            this.input.pressingRight = side < 0;
+            this.input.movementForward = fwd;
+            this.input.movementSideways = side;
         } else {
             // freecam中でAutoMove無効: 残留入力をクリアして停止させる
             this.input.pressingForward = false;

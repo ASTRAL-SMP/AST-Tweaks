@@ -6,6 +6,9 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Auto-move feature that automatically holds movement keys.
  */
@@ -65,20 +68,14 @@ public class AutoMoveFeature implements Feature {
                 // 以降は物理キー操作がそのまま反映される
                 // プレイヤー本体の移動はMixinで直接入力を注入する
                 if (!wasFreecamActive) {
-                    KeyBinding key = getKeyForDirection(client, config.getDirection());
-                    if (key != null) {
-                        key.setPressed(false);
-                    }
+                    releaseKeys(client, config.getDirection());
                 }
                 wasFreecamActive = true;
                 return;
             }
             wasFreecamActive = false;
-            // 選択された方向のキーを押す
-            KeyBinding key = getKeyForDirection(client, config.getDirection());
-            if (key != null) {
-                key.setPressed(true);
-            }
+            // 選択された方向のキーを押す（斜めは2キー同時）
+            pressKeys(client, config.getDirection());
         } else {
             wasFreecamActive = false;
         }
@@ -93,13 +90,27 @@ public class AutoMoveFeature implements Feature {
         return client.player != null && client.getCameraEntity() != client.player;
     }
 
-    private KeyBinding getKeyForDirection(MinecraftClient client, MoveDirection dir) {
-        return switch (dir) {
-            case FORWARD -> client.options.forwardKey;
-            case BACKWARD -> client.options.backKey;
-            case LEFT -> client.options.leftKey;
-            case RIGHT -> client.options.rightKey;
-        };
+    private List<KeyBinding> getKeysForDirection(MinecraftClient client, MoveDirection dir) {
+        List<KeyBinding> keys = new ArrayList<>(2);
+        int fwd = dir.getForwardAxis();
+        int side = dir.getSidewaysAxis();
+        if (fwd > 0) keys.add(client.options.forwardKey);
+        else if (fwd < 0) keys.add(client.options.backKey);
+        if (side > 0) keys.add(client.options.leftKey);
+        else if (side < 0) keys.add(client.options.rightKey);
+        return keys;
+    }
+
+    private void pressKeys(MinecraftClient client, MoveDirection dir) {
+        for (KeyBinding key : getKeysForDirection(client, dir)) {
+            key.setPressed(true);
+        }
+    }
+
+    private void releaseKeys(MinecraftClient client, MoveDirection dir) {
+        for (KeyBinding key : getKeysForDirection(client, dir)) {
+            key.setPressed(false);
+        }
     }
 
     /**
@@ -113,10 +124,7 @@ public class AutoMoveFeature implements Feature {
         } else {
             // オフにする前に現在の方向のキーをリリース
             if (client != null) {
-                KeyBinding key = getKeyForDirection(client, config.getDirection());
-                if (key != null) {
-                    key.setPressed(false);
-                }
+                releaseKeys(client, config.getDirection());
             }
             isMoving = false;
         }
@@ -131,19 +139,13 @@ public class AutoMoveFeature implements Feature {
         if (isMoving && config.getDirection() == direction) {
             // 同じ方向 → 停止
             if (client != null) {
-                KeyBinding key = getKeyForDirection(client, direction);
-                if (key != null) {
-                    key.setPressed(false);
-                }
+                releaseKeys(client, direction);
             }
             isMoving = false;
         } else {
             // 別の方向 or 停止中 → 現在の方向をリリースして新しい方向で開始
             if (isMoving && client != null) {
-                KeyBinding key = getKeyForDirection(client, config.getDirection());
-                if (key != null) {
-                    key.setPressed(false);
-                }
+                releaseKeys(client, config.getDirection());
             }
             config.setDirection(direction);
             isMoving = true;

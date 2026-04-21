@@ -36,6 +36,10 @@ public class KeyBindings {
     private static boolean wasAutoMoveBackwardDown = false;
     private static boolean wasAutoMoveLeftDown = false;
     private static boolean wasAutoMoveRightDown = false;
+    private static boolean wasAutoMoveForwardLeftDown = false;
+    private static boolean wasAutoMoveForwardRightDown = false;
+    private static boolean wasAutoMoveBackwardLeftDown = false;
+    private static boolean wasAutoMoveBackwardRightDown = false;
     private static boolean wasAutoTotemToggleDown = false;
     private static boolean wasAutoRepairToggleDown = false;
     private static boolean wasBoneMealFilterToggleDown = false;
@@ -129,6 +133,22 @@ public class KeyBindings {
             handleAutoMoveDirection(client, config, window, MoveDirection.RIGHT,
                     config.autoMoveRightKey, wasAutoMoveRightDown);
             wasAutoMoveRightDown = config.autoMoveRightKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD_LEFT,
+                    config.autoMoveForwardLeftKey, wasAutoMoveForwardLeftDown);
+            wasAutoMoveForwardLeftDown = config.autoMoveForwardLeftKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD_RIGHT,
+                    config.autoMoveForwardRightKey, wasAutoMoveForwardRightDown);
+            wasAutoMoveForwardRightDown = config.autoMoveForwardRightKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD_LEFT,
+                    config.autoMoveBackwardLeftKey, wasAutoMoveBackwardLeftDown);
+            wasAutoMoveBackwardLeftDown = config.autoMoveBackwardLeftKey.isPressed(window);
+
+            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD_RIGHT,
+                    config.autoMoveBackwardRightKey, wasAutoMoveBackwardRightDown);
+            wasAutoMoveBackwardRightDown = config.autoMoveBackwardRightKey.isPressed(window);
 
             // 自動トーテムトグル
             boolean autoTotemDown = config.autoTotemToggleKey.isPressed(window);

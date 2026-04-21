@@ -132,6 +132,10 @@ public class ModConfig {
     public KeyCombo autoMoveBackwardKey = new KeyCombo(-1, -1);
     public KeyCombo autoMoveLeftKey = new KeyCombo(-1, -1);
     public KeyCombo autoMoveRightKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveForwardLeftKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveForwardRightKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveBackwardLeftKey = new KeyCombo(-1, -1);
+    public KeyCombo autoMoveBackwardRightKey = new KeyCombo(-1, -1);
     public KeyCombo autoTotemToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRepairToggleKey = new KeyCombo(-1, -1);
     public KeyCombo boneMealFilterToggleKey = new KeyCombo(-1, -1);
@@ -319,6 +323,18 @@ public class ModConfig {
                     }
                     if (loaded.autoMoveRightKey != null) {
                         this.autoMoveRightKey.copyFrom(loaded.autoMoveRightKey);
+                    }
+                    if (loaded.autoMoveForwardLeftKey != null) {
+                        this.autoMoveForwardLeftKey.copyFrom(loaded.autoMoveForwardLeftKey);
+                    }
+                    if (loaded.autoMoveForwardRightKey != null) {
+                        this.autoMoveForwardRightKey.copyFrom(loaded.autoMoveForwardRightKey);
+                    }
+                    if (loaded.autoMoveBackwardLeftKey != null) {
+                        this.autoMoveBackwardLeftKey.copyFrom(loaded.autoMoveBackwardLeftKey);
+                    }
+                    if (loaded.autoMoveBackwardRightKey != null) {
+                        this.autoMoveBackwardRightKey.copyFrom(loaded.autoMoveBackwardRightKey);
                     }
                     if (loaded.autoTotemToggleKey != null) {
                         this.autoTotemToggleKey.copyFrom(loaded.autoTotemToggleKey);
