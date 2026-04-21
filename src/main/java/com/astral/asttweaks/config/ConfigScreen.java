@@ -154,6 +154,30 @@ public class ConfigScreen implements ModMenuApi {
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveRightKey.copyFrom(combo)));
 
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardLeft"),
+                config.autoMoveForwardLeftKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveForwardLeftKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardRight"),
+                config.autoMoveForwardRightKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveForwardRightKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardLeft"),
+                config.autoMoveBackwardLeftKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveBackwardLeftKey.copyFrom(combo)));
+
+        autoMoveSub.add(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardRight"),
+                config.autoMoveBackwardRightKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoMoveBackwardRightKey.copyFrom(combo)));
+
         general.addEntry(autoMoveSub.build());
 
         // --- Mouse Sensitivity サブカテゴリ ---
