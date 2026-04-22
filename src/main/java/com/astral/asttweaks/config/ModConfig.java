@@ -1,6 +1,7 @@
 package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.feature.autorestock.AutoRestockEntry;
 import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
@@ -15,7 +16,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -122,6 +125,13 @@ public class ModConfig {
     public Set<Integer> autoDropProtectedSlots = new HashSet<>();  // PlayerInventory indices (0-8 hotbar, 9-35 main, 40 offhand)
     public Set<String> autoDropExcludedItems = new HashSet<>();
 
+    // Auto restock settings
+    public boolean autoRestockEnabled = false;
+    public boolean autoRestockFromInventory = true;
+    public boolean autoRestockFromShulker = true;
+    public int autoRestockOperationsPerTick = 8;
+    public List<AutoRestockEntry> autoRestockEntries = new ArrayList<>();
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -148,6 +158,9 @@ public class ModConfig {
     public KeyCombo openGeneralScreenKey = new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K);
     public KeyCombo autoDropToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoDropExecuteKey = new KeyCombo(-1, -1);
+    public KeyCombo autoRestockToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoRestockInventoryToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo autoRestockShulkerToggleKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -296,6 +309,14 @@ public class ModConfig {
                     if (loaded.autoDropExcludedItems != null) {
                         this.autoDropExcludedItems = new HashSet<>(loaded.autoDropExcludedItems);
                     }
+                    this.autoRestockEnabled = loaded.autoRestockEnabled;
+                    boolean hasAutoRestockConfig = loaded.autoRestockOperationsPerTick > 0;
+                    this.autoRestockFromInventory = hasAutoRestockConfig ? loaded.autoRestockFromInventory : true;
+                    this.autoRestockFromShulker = hasAutoRestockConfig ? loaded.autoRestockFromShulker : true;
+                    this.autoRestockOperationsPerTick = hasAutoRestockConfig ? loaded.autoRestockOperationsPerTick : 8;
+                    if (loaded.autoRestockEntries != null) {
+                        this.autoRestockEntries = new ArrayList<>(loaded.autoRestockEntries);
+                    }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
@@ -371,6 +392,15 @@ public class ModConfig {
                     }
                     if (loaded.autoDropExecuteKey != null) {
                         this.autoDropExecuteKey.copyFrom(loaded.autoDropExecuteKey);
+                    }
+                    if (loaded.autoRestockToggleKey != null) {
+                        this.autoRestockToggleKey.copyFrom(loaded.autoRestockToggleKey);
+                    }
+                    if (loaded.autoRestockInventoryToggleKey != null) {
+                        this.autoRestockInventoryToggleKey.copyFrom(loaded.autoRestockInventoryToggleKey);
+                    }
+                    if (loaded.autoRestockShulkerToggleKey != null) {
+                        this.autoRestockShulkerToggleKey.copyFrom(loaded.autoRestockShulkerToggleKey);
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);

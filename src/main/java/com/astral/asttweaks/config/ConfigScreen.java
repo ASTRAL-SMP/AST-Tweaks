@@ -4,6 +4,7 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropItemListScreen;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropProtectedSlotScreen;
+import com.astral.asttweaks.feature.autorestock.gui.AutoRestockItemListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
@@ -865,6 +866,72 @@ public class ConfigScreen implements ModMenuApi {
                 config.autoDropExecuteKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoDropExecuteKey.copyFrom(combo)));
+
+        // ============================
+        // Auto restock category
+        // ============================
+        ConfigCategory autoRestock = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autorestock"));
+
+        autoRestock.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled"),
+                        config.autoRestockEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoRestockEnabled = value)
+                .build());
+
+        autoRestock.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled"),
+                        config.autoRestockFromInventory)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoRestockFromInventory = value)
+                .build());
+
+        autoRestock.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled"),
+                        config.autoRestockFromShulker)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoRestockFromShulker = value)
+                .build());
+
+        autoRestock.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick"),
+                        config.autoRestockOperationsPerTick, 1, 32)
+                .setDefaultValue(8)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setSaveConsumer(value -> config.autoRestockOperationsPerTick = value)
+                .build());
+
+        autoRestock.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.itemlist.button"),
+                button -> MinecraftClient.getInstance().setScreen(new AutoRestockItemListScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        autoRestock.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockToggle"),
+                config.autoRestockToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoRestockToggleKey.copyFrom(combo)));
+
+        autoRestock.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockInventoryToggle"),
+                config.autoRestockInventoryToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoRestockInventoryToggleKey.copyFrom(combo)));
+
+        autoRestock.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockShulkerToggle"),
+                config.autoRestockShulkerToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.autoRestockShulkerToggleKey.copyFrom(combo)));
 
         builder.setSavingRunnable(config::save);
 
