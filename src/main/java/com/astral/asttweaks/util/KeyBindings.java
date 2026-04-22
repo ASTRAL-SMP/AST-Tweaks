@@ -9,6 +9,7 @@ import com.astral.asttweaks.feature.automove.AutoMoveFeature;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.autodrop.AutoDropFeature;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
+import com.astral.asttweaks.feature.autorestock.AutoRestockFeature;
 import com.astral.asttweaks.feature.autototem.AutoTotemFeature;
 import com.astral.asttweaks.feature.bonemealfilter.BoneMealFilterFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
@@ -48,6 +49,9 @@ public class KeyBindings {
     private static boolean wasMouseSensitivityToggleDown = false;
     private static boolean wasOpenGeneralScreenDown = false;
     private static boolean wasAutoDropToggleDown = false;
+    private static boolean wasAutoRestockToggleDown = false;
+    private static boolean wasAutoRestockInventoryToggleDown = false;
+    private static boolean wasAutoRestockShulkerToggleDown = false;
 
     public static void register() {
         // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
@@ -248,6 +252,48 @@ public class KeyBindings {
                 }
             }
             wasAutoDropToggleDown = autoDropDown;
+
+            // 自動補充トグル
+            boolean autoRestockDown = config.autoRestockToggleKey.isPressed(window);
+            if (autoRestockDown && !wasAutoRestockToggleDown) {
+                AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
+                if (autoRestock != null) {
+                    boolean newState = !autoRestock.isEnabled();
+                    autoRestock.setEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasAutoRestockToggleDown = autoRestockDown;
+
+            // インベントリからの自動補充トグル
+            boolean autoRestockInventoryDown = config.autoRestockInventoryToggleKey.isPressed(window);
+            if (autoRestockInventoryDown && !wasAutoRestockInventoryToggleDown) {
+                AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
+                if (autoRestock != null) {
+                    boolean newState = !autoRestock.getConfig().isInventoryRestockEnabled();
+                    autoRestock.getConfig().setInventoryRestockEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.inventory." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasAutoRestockInventoryToggleDown = autoRestockInventoryDown;
+
+            // 開いているシュルカーからの自動補充トグル
+            boolean autoRestockShulkerDown = config.autoRestockShulkerToggleKey.isPressed(window);
+            if (autoRestockShulkerDown && !wasAutoRestockShulkerToggleDown) {
+                AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
+                if (autoRestock != null) {
+                    boolean newState = !autoRestock.getConfig().isShulkerRestockEnabled();
+                    autoRestock.getConfig().setShulkerRestockEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.shulker." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasAutoRestockShulkerToggleDown = autoRestockShulkerDown;
 
             // 一般設定画面を開く（K+L デフォルト）
             boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);
