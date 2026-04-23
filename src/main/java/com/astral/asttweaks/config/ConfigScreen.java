@@ -901,6 +901,15 @@ public class ConfigScreen implements ModMenuApi {
                 .build());
 
         autoRestock.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled"),
+                        config.autoRestockPreferOverExternalAutoCollect)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled.tooltip"))
+                .setSaveConsumer(value -> config.autoRestockPreferOverExternalAutoCollect = value)
+                .build());
+
+        autoRestock.addEntry(entryBuilder
                 .startIntSlider(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick"),
                         config.autoRestockOperationsPerTick, 1, 32)

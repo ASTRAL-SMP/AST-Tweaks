@@ -26,6 +26,9 @@ import java.util.Locale;
  * Screen for configuring per-stack auto restock rules.
  */
 public class AutoRestockItemListScreen extends Screen {
+    private static final int COUNT_FIELD_WIDTH = 58;
+    private static final int COUNT_FIELD_MAX_LENGTH = 10;
+
     private final Screen parent;
     private final AutoRestockConfig config;
     private ItemListWidget itemListWidget;
@@ -260,10 +263,10 @@ public class AutoRestockItemListScreen extends Screen {
                     .dimensions(0, 0, 88, 20)
                     .build();
             this.countField = new TextFieldWidget(
-                    AutoRestockItemListScreen.this.textRenderer, 0, 0, 40, 18,
+                    AutoRestockItemListScreen.this.textRenderer, 0, 0, COUNT_FIELD_WIDTH, 18,
                     Text.translatable("config.asttweaks.autorestock.itemlist.count"));
-            this.countField.setMaxLength(4);
-            this.countField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d{0,4}"));
+            this.countField.setMaxLength(COUNT_FIELD_MAX_LENGTH);
+            this.countField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d{0," + COUNT_FIELD_MAX_LENGTH + "}"));
             this.countField.setPlaceholder(Text.translatable("config.asttweaks.autorestock.itemlist.count"));
             this.countField.setChangedListener(text -> {
                 if (this.updatingCountField || config == null || !config.isStackConfigured(this.stack) || text.isEmpty()) {
@@ -271,8 +274,9 @@ public class AutoRestockItemListScreen extends Screen {
                 }
 
                 try {
-                    int savedValue = config.setDesiredCount(this.stack, Integer.parseInt(text));
-                    if (savedValue != Integer.parseInt(text)) {
+                    int parsedValue = parseDesiredCount(text);
+                    int savedValue = config.setDesiredCount(this.stack, parsedValue);
+                    if (savedValue != parsedValue) {
                         setCountFieldText(String.valueOf(savedValue));
                     }
                 } catch (NumberFormatException ignored) {
@@ -314,11 +318,16 @@ public class AutoRestockItemListScreen extends Screen {
             }
 
             try {
-                int savedValue = config.setDesiredCount(this.stack, Integer.parseInt(text));
+                int savedValue = config.setDesiredCount(this.stack, parseDesiredCount(text));
                 setCountFieldText(String.valueOf(savedValue));
             } catch (NumberFormatException ignored) {
                 setCountFieldText(String.valueOf(config.getDesiredCount(this.stack)));
             }
+        }
+
+        private int parseDesiredCount(String text) {
+            long parsed = Long.parseLong(text);
+            return (int) Math.min(Integer.MAX_VALUE, Math.max(1L, parsed));
         }
 
         @Override
@@ -341,7 +350,7 @@ public class AutoRestockItemListScreen extends Screen {
             this.addRemoveButton.render(matrices, mouseX, mouseY, delta);
 
             if (configured) {
-                int positionButtonX = addRemoveX - 136;
+                int positionButtonX = addRemoveX - 154;
                 this.positionButton.setPosition(positionButtonX, y + 7);
                 this.positionButton.render(matrices, mouseX, mouseY, delta);
 

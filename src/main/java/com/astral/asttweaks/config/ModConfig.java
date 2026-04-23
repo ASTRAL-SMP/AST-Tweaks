@@ -129,6 +129,7 @@ public class ModConfig {
     public boolean autoRestockEnabled = false;
     public boolean autoRestockFromInventory = true;
     public boolean autoRestockFromShulker = true;
+    public boolean autoRestockPreferOverExternalAutoCollect = false;
     public int autoRestockOperationsPerTick = 8;
     public List<AutoRestockEntry> autoRestockEntries = new ArrayList<>();
 
@@ -313,6 +314,7 @@ public class ModConfig {
                     boolean hasAutoRestockConfig = loaded.autoRestockOperationsPerTick > 0;
                     this.autoRestockFromInventory = hasAutoRestockConfig ? loaded.autoRestockFromInventory : true;
                     this.autoRestockFromShulker = hasAutoRestockConfig ? loaded.autoRestockFromShulker : true;
+                    this.autoRestockPreferOverExternalAutoCollect = loaded.autoRestockPreferOverExternalAutoCollect;
                     this.autoRestockOperationsPerTick = hasAutoRestockConfig ? loaded.autoRestockOperationsPerTick : 8;
                     if (loaded.autoRestockEntries != null) {
                         this.autoRestockEntries = new ArrayList<>(loaded.autoRestockEntries);

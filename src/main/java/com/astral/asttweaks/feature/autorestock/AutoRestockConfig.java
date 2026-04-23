@@ -51,6 +51,23 @@ public class AutoRestockConfig {
         ModConfig.getInstance().save();
     }
 
+    public boolean isContainerRestockEnabled() {
+        return isShulkerRestockEnabled();
+    }
+
+    public void setContainerRestockEnabled(boolean enabled) {
+        setShulkerRestockEnabled(enabled);
+    }
+
+    public boolean shouldPrioritizeOverExternalAutoCollect() {
+        return ModConfig.getInstance().autoRestockPreferOverExternalAutoCollect;
+    }
+
+    public void setPrioritizeOverExternalAutoCollect(boolean enabled) {
+        ModConfig.getInstance().autoRestockPreferOverExternalAutoCollect = enabled;
+        ModConfig.getInstance().save();
+    }
+
     public int getOperationsPerTick() {
         return Math.max(1, ModConfig.getInstance().autoRestockOperationsPerTick);
     }
@@ -256,8 +273,7 @@ public class AutoRestockConfig {
     }
 
     private int clampDesiredCount(ItemStack stack, int desiredCount) {
-        int maxCount = Math.max(1, stack.getMaxCount());
-        return Math.max(1, Math.min(desiredCount, maxCount));
+        return Math.max(1, desiredCount);
     }
 
     private static String normalizeNbt(ItemStack stack) {
