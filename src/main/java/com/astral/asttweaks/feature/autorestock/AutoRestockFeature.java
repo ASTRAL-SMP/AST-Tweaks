@@ -1,26 +1,37 @@
 package com.astral.asttweaks.feature.autorestock;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.Generic3x3ContainerScreen;
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.client.gui.screen.ingame.HopperScreen;
 import net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
- * Restocks configured inventory slots from the player's inventory or an opened shulker box.
+ * Restocks configured inventory slots from the player's inventory or opened storage containers.
  */
 public class AutoRestockFeature implements Feature {
     private final AutoRestockConfig config;
     private TransferTask activeTask;
+    private int hiddenContainerSyncId = -1;
 
     private enum TaskContext {
         PLAYER,
-        SHULKER
+        CONTAINER
     }
 
     private enum TaskStage {
@@ -92,6 +103,7 @@ public class AutoRestockFeature implements Feature {
     public void setEnabled(boolean enabled) {
         config.setEnabled(enabled);
         if (!enabled) {
+            closeHiddenContainerIfNeeded(MinecraftClient.getInstance());
             resetState();
         }
     }
@@ -100,16 +112,60 @@ public class AutoRestockFeature implements Feature {
         return config;
     }
 
+    public void tryHideVisibleContainerScreen() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (!canHideVisibleContainerScreen(client)) {
+            return;
+        }
+
+        ScreenHandler handler = client.player.currentScreenHandler;
+        TransferTask nextTask = activeTask;
+        if (nextTask != null) {
+            if (nextTask.context != TaskContext.CONTAINER || nextTask.expectedSyncId != handler.syncId) {
+                return;
+            }
+        } else {
+            if (!handler.getCursorStack().isEmpty()) {
+                return;
+            }
+
+            nextTask = createNextTask(handler, TaskContext.CONTAINER);
+            if (nextTask == null) {
+                return;
+            }
+        }
+
+        hiddenContainerSyncId = handler.syncId;
+        activeTask = nextTask;
+        client.setScreen(null);
+
+        if (!isHiddenContainerSessionReady(client)) {
+            clearHiddenContainerSession();
+            if (!isTaskContextValid(client, nextTask)) {
+                resetState();
+            }
+            return;
+        }
+    }
+
     private void onClientTick(MinecraftClient client) {
         if (!config.isEnabled()) {
+            closeHiddenContainerIfNeeded(client);
             resetState();
             return;
         }
 
         if (client.player == null || client.world == null || client.interactionManager == null || client.isPaused()) {
+            clearHiddenContainerSession();
             resetState();
             return;
         }
+
+        if (!hasHiddenContainerSession(client)) {
+            clearHiddenContainerSession();
+        }
+
+        tryHideVisibleContainerScreen();
 
         if (activeTask != null) {
             processActiveTask(client);
@@ -121,13 +177,19 @@ public class AutoRestockFeature implements Feature {
             return;
         }
 
-        if (isShulkerScreenOpen(client)) {
-            if (!config.isShulkerRestockEnabled()) {
+        if (shouldProcessContainerRestock(client)) {
+            if (!hasHiddenContainerSession(client) && shouldDeferToExternalAutoCollect()) {
                 return;
             }
 
-            activeTask = createNextTask(handler, TaskContext.SHULKER);
-        } else if (client.currentScreen == null && config.isInventoryRestockEnabled()) {
+            activeTask = createNextTask(handler, TaskContext.CONTAINER);
+            if (activeTask == null && isHiddenContainerSessionReady(client)) {
+                closeHiddenContainer(client);
+                return;
+            }
+        } else if (client.currentScreen == null
+                && config.isInventoryRestockEnabled()
+                && handler instanceof PlayerScreenHandler) {
             activeTask = createNextTask(handler, TaskContext.PLAYER);
         }
 
@@ -197,52 +259,78 @@ public class AutoRestockFeature implements Feature {
 
     private TransferTask createNextTask(ScreenHandler handler, TaskContext context) {
         for (AutoRestockEntry entry : config.getEntries()) {
-            for (int targetSlot : config.getTargetSlots(entry)) {
-                TransferTask task = createTaskForEntry(handler, entry, targetSlot, context);
-                if (task != null) {
-                    return task;
-                }
+            TransferTask task = createTaskForEntry(handler, entry, context);
+            if (task != null) {
+                return task;
             }
         }
 
         return null;
     }
 
-    private TransferTask createTaskForEntry(ScreenHandler handler, AutoRestockEntry entry, int targetInventorySlot, TaskContext context) {
+    private TransferTask createTaskForEntry(ScreenHandler handler, AutoRestockEntry entry, TaskContext context) {
         ItemStack configuredStack = config.getConfiguredStack(entry);
         if (configuredStack.isEmpty()) {
             return null;
         }
 
-        int targetInvIndex = sanitizeTargetSlot(targetInventorySlot);
-        int targetScreenSlot = findPlayerInventoryScreenSlot(handler, targetInvIndex);
-        if (targetScreenSlot == -1) {
+        List<Integer> targetSlots = config.getTargetSlots(entry);
+        if (targetSlots.isEmpty()) {
             return null;
         }
 
-        Slot destinationSlot = handler.getSlot(targetScreenSlot);
-        ItemStack targetStack = destinationSlot.getStack();
-        if (!targetStack.isEmpty() && !AutoRestockConfig.matches(configuredStack, targetStack)) {
+        int desiredCount = Math.max(1, entry.desiredCount);
+        int totalCurrentCount = 0;
+        int targetScreenSlot = -1;
+        int targetAvailableSpace = 0;
+
+        for (int targetInventorySlot : targetSlots) {
+            int targetInvIndex = sanitizeTargetSlot(targetInventorySlot);
+            int candidateTargetScreenSlot = findPlayerInventoryScreenSlot(handler, targetInvIndex);
+            if (candidateTargetScreenSlot == -1) {
+                continue;
+            }
+
+            ItemStack targetStack = handler.getSlot(candidateTargetScreenSlot).getStack();
+            if (targetStack.isEmpty()) {
+                if (targetScreenSlot == -1) {
+                    targetScreenSlot = candidateTargetScreenSlot;
+                    targetAvailableSpace = configuredStack.getMaxCount();
+                }
+                continue;
+            }
+
+            if (!AutoRestockConfig.matches(configuredStack, targetStack)) {
+                continue;
+            }
+
+            totalCurrentCount += targetStack.getCount();
+            int availableSpace = configuredStack.getMaxCount() - targetStack.getCount();
+            if (availableSpace > 0 && targetScreenSlot == -1) {
+                targetScreenSlot = candidateTargetScreenSlot;
+                targetAvailableSpace = availableSpace;
+            }
+        }
+
+        int deficit = desiredCount - totalCurrentCount;
+        if (deficit <= 0 || targetScreenSlot == -1 || targetAvailableSpace <= 0) {
             return null;
         }
 
-        int desiredCount = Math.max(1, Math.min(entry.desiredCount, configuredStack.getMaxCount()));
-        int currentCount = targetStack.isEmpty() ? 0 : targetStack.getCount();
-        int deficit = desiredCount - currentCount;
-        if (deficit <= 0) {
-            return null;
+        Set<Integer> reservedTargetSlots = new HashSet<>();
+        for (int targetSlot : targetSlots) {
+            reservedTargetSlots.add(sanitizeTargetSlot(targetSlot));
         }
 
-        int sourceScreenSlot = context == TaskContext.SHULKER
+        int sourceScreenSlot = context == TaskContext.CONTAINER
                 ? findContainerSourceSlot(handler, configuredStack)
-                : findPlayerSourceSlot(handler, configuredStack, targetInvIndex);
+                : findPlayerSourceSlot(handler, configuredStack, reservedTargetSlots);
         if (sourceScreenSlot == -1) {
             return null;
         }
 
         ItemStack sourceStack = handler.getSlot(sourceScreenSlot).getStack();
-        int availableSpace = configuredStack.getMaxCount() - currentCount;
-        int transferCount = Math.min(Math.min(deficit, sourceStack.getCount()), availableSpace);
+        int transferCount = Math.min(Math.min(deficit, sourceStack.getCount()), targetAvailableSpace);
         if (transferCount <= 0) {
             return null;
         }
@@ -273,7 +361,7 @@ public class AutoRestockFeature implements Feature {
         return -1;
     }
 
-    private int findPlayerSourceSlot(ScreenHandler handler, ItemStack configuredStack, int targetInvIndex) {
+    private int findPlayerSourceSlot(ScreenHandler handler, ItemStack configuredStack, Set<Integer> reservedTargetSlots) {
         for (int i = 0; i < handler.slots.size(); i++) {
             Slot slot = handler.getSlot(i);
             if (!(slot.inventory instanceof PlayerInventory)) {
@@ -281,7 +369,10 @@ public class AutoRestockFeature implements Feature {
             }
 
             int invIndex = slot.getIndex();
-            if (invIndex == targetInvIndex || invIndex == AutoRestockConfig.OFFHAND_SLOT || invIndex < 9 || invIndex > 35) {
+            if (reservedTargetSlots.contains(invIndex)
+                    || invIndex == AutoRestockConfig.OFFHAND_SLOT
+                    || invIndex < 9
+                    || invIndex > 35) {
                 continue;
             }
 
@@ -297,7 +388,7 @@ public class AutoRestockFeature implements Feature {
             }
 
             int invIndex = slot.getIndex();
-            if (invIndex == targetInvIndex || invIndex < 0 || invIndex > 8) {
+            if (reservedTargetSlots.contains(invIndex) || invIndex < 0 || invIndex > 8) {
                 continue;
             }
 
@@ -325,13 +416,77 @@ public class AutoRestockFeature implements Feature {
         }
 
         return switch (task.context) {
-            case PLAYER -> client.currentScreen == null;
-            case SHULKER -> isShulkerScreenOpen(client);
+            case PLAYER -> client.currentScreen == null && client.player.currentScreenHandler instanceof PlayerScreenHandler;
+            case CONTAINER -> shouldProcessContainerRestock(client);
         };
     }
 
-    private boolean isShulkerScreenOpen(MinecraftClient client) {
-        return client.currentScreen instanceof ShulkerBoxScreen;
+    private boolean shouldProcessContainerRestock(MinecraftClient client) {
+        return config.isContainerRestockEnabled() && isSupportedOpenContainer(client);
+    }
+
+    private boolean isSupportedOpenContainer(MinecraftClient client) {
+        if (client.player == null || client.player.currentScreenHandler instanceof PlayerScreenHandler) {
+            return false;
+        }
+
+        return isHiddenContainerSessionReady(client);
+    }
+
+    private boolean hasHiddenContainerSession(MinecraftClient client) {
+        return hiddenContainerSyncId != -1
+                && client.player != null
+                && !(client.player.currentScreenHandler instanceof PlayerScreenHandler)
+                && client.player.currentScreenHandler.syncId == hiddenContainerSyncId;
+    }
+
+    private boolean isHiddenContainerSessionReady(MinecraftClient client) {
+        return hasHiddenContainerSession(client) && client.currentScreen == null;
+    }
+
+    private boolean canHideVisibleContainerScreen(MinecraftClient client) {
+        return config.isEnabled()
+                && config.isContainerRestockEnabled()
+                && client.player != null
+                && client.world != null
+                && client.interactionManager != null
+                && !client.isPaused()
+                && client.currentScreen != null
+                && !shouldDeferToExternalAutoCollect()
+                && isSupportedContainerScreen(client.currentScreen)
+                && !(client.player.currentScreenHandler instanceof PlayerScreenHandler);
+    }
+
+    private void closeHiddenContainerIfNeeded(MinecraftClient client) {
+        if (client != null && isHiddenContainerSessionReady(client)) {
+            closeHiddenContainer(client);
+        } else {
+            clearHiddenContainerSession();
+        }
+    }
+
+    private void closeHiddenContainer(MinecraftClient client) {
+        clearHiddenContainerSession();
+        activeTask = null;
+        if (client.player != null && !(client.player.currentScreenHandler instanceof PlayerScreenHandler)) {
+            client.player.closeHandledScreen();
+        }
+    }
+
+    private void clearHiddenContainerSession() {
+        hiddenContainerSyncId = -1;
+    }
+
+    private boolean shouldDeferToExternalAutoCollect() {
+        return !config.shouldPrioritizeOverExternalAutoCollect()
+                && TweakerooCompat.isAutoCollectMaterialListItemEnabled();
+    }
+
+    private boolean isSupportedContainerScreen(Screen screen) {
+        return screen instanceof GenericContainerScreen
+                || screen instanceof Generic3x3ContainerScreen
+                || screen instanceof HopperScreen
+                || screen instanceof ShulkerBoxScreen;
     }
 
     private int sanitizeTargetSlot(int slot) {

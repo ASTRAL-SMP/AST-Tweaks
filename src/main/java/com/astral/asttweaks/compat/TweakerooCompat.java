@@ -15,6 +15,9 @@ public class TweakerooCompat {
     private static Object toolSwitchToggle = null;
     private static Method getBooleanValueMethod = null;
     private static Method setBooleanValueMethod = null;
+    private static boolean tweakerMoreAvailable = false;
+    private static Object autoCollectMaterialListItemToggle = null;
+    private static Method tweakerMoreGetBooleanValueMethod = null;
 
     // Stored state for restoration
     private static boolean previousState = false;
@@ -25,6 +28,11 @@ public class TweakerooCompat {
      * Should be called during mod initialization.
      */
     public static void init() {
+        initTweakeroo();
+        initTweakerMore();
+    }
+
+    private static void initTweakeroo() {
         try {
             // Try to load Tweakeroo's FeatureToggle class
             Class<?> featureToggleClass = Class.forName("fi.dy.masa.tweakeroo.config.FeatureToggle");
@@ -65,6 +73,25 @@ public class TweakerooCompat {
             // Unexpected error
             ASTTweaks.LOGGER.warn("Failed to initialize Tweakeroo compatibility: {}", e.getMessage());
             tweakerooAvailable = false;
+        }
+    }
+
+    private static void initTweakerMore() {
+        try {
+            Class<?> configsClass = Class.forName("me.fallenbreath.tweakermore.config.TweakerMoreConfigs");
+            autoCollectMaterialListItemToggle = configsClass.getField("AUTO_COLLECT_MATERIAL_LIST_ITEM").get(null);
+            tweakerMoreGetBooleanValueMethod = autoCollectMaterialListItemToggle.getClass().getMethod("getBooleanValue");
+            tweakerMoreAvailable = true;
+            ASTTweaks.LOGGER.info("TweakerMore compatibility initialized successfully");
+        } catch (ClassNotFoundException e) {
+            ASTTweaks.LOGGER.info("TweakerMore not found - autoCollectMaterialListItem compatibility disabled");
+            tweakerMoreAvailable = false;
+        } catch (NoSuchFieldException | NoSuchMethodException e) {
+            ASTTweaks.LOGGER.warn("TweakerMore API changed - autoCollectMaterialListItem compatibility disabled: {}", e.getMessage());
+            tweakerMoreAvailable = false;
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to initialize TweakerMore compatibility: {}", e.getMessage());
+            tweakerMoreAvailable = false;
         }
     }
 
@@ -136,6 +163,21 @@ public class TweakerooCompat {
         if (!tweakerooAvailable || toolSwitchToggle == null) return false;
         try {
             return (boolean) getBooleanValueMethod.invoke(toolSwitchToggle);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if TweakerMore's autoCollectMaterialListItem feature is currently enabled.
+     */
+    public static boolean isAutoCollectMaterialListItemEnabled() {
+        if (!tweakerMoreAvailable || autoCollectMaterialListItemToggle == null || tweakerMoreGetBooleanValueMethod == null) {
+            return false;
+        }
+
+        try {
+            return (boolean) tweakerMoreGetBooleanValueMethod.invoke(autoCollectMaterialListItemToggle);
         } catch (Exception e) {
             return false;
         }

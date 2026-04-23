@@ -4,6 +4,7 @@
   "package": "com.astral.asttweaks.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "ClientPlayNetworkHandlerMixin",
     "InGameHudMixin",
     "AutoEatMixin",
     "EntityRenderDispatcherMixin",
