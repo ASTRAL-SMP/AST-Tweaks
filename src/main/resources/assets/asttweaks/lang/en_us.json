@@ -329,6 +329,20 @@
   "gui.asttweaks.inventory.main": "Main",
   "gui.asttweaks.inventory.hotbar": "Hotbar",
 
+  "config.asttweaks.category.villagerlink": "Villager Link",
+  "config.asttweaks.villagerlink.enabled": "Show villager → job site lines",
+  "config.asttweaks.villagerlink.enabled.tooltip": "Draw lines connecting nearby villagers to their job site blocks. Because the actual link lives on the server, the displayed link is a heuristic match against the closest matching POI block.",
+  "config.asttweaks.villagerlink.range": "Detection Range",
+  "config.asttweaks.villagerlink.range.tooltip": "How far around the player to scan for villagers (in blocks)",
+  "config.asttweaks.villagerlink.lineColor": "Line Color",
+  "config.asttweaks.villagerlink.lineColor.tooltip": "Color of the line connecting a villager to its job site (ARGB)",
+  "config.asttweaks.villagerlink.seeThrough": "See Through Walls",
+  "config.asttweaks.villagerlink.seeThrough.tooltip": "Render the lines through blocks so they remain visible behind walls",
+  "config.asttweaks.keybind.villagerLinkToggle": "Toggle Villager Link",
+  "message.asttweaks.villagerlink.enabled": "Villager Link: Enabled",
+  "message.asttweaks.villagerlink.disabled": "Villager Link: Disabled",
+  "hud.asttweaks.villagerlink.jobsite": "Job Site: %d, %d, %d",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

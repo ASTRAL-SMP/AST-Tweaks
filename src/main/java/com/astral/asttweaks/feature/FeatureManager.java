@@ -16,6 +16,7 @@ import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
+import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import java.util.HashMap;
@@ -59,6 +60,7 @@ public class FeatureManager {
         registerFeature(new MouseSensitivityFeature());
         registerFeature(new AutoDropFeature());
         registerFeature(new AutoRestockFeature());
+        registerFeature(new VillagerLinkFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -206,5 +208,12 @@ public class FeatureManager {
      */
     public AutoRestockFeature getAutoRestockFeature() {
         return (AutoRestockFeature) getFeature("autorestock");
+    }
+
+    /**
+     * Get the villager link feature.
+     */
+    public VillagerLinkFeature getVillagerLinkFeature() {
+        return (VillagerLinkFeature) getFeature("villagerlink");
     }
 }

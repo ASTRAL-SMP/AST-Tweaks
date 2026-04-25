@@ -942,6 +942,55 @@ public class ConfigScreen implements ModMenuApi {
                 new KeyCombo(-1, -1),
                 combo -> config.autoRestockShulkerToggleKey.copyFrom(combo)));
 
+        // ============================
+        // Villager link category
+        // ============================
+        ConfigCategory villagerLink = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.villagerlink"));
+
+        villagerLink.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled"),
+                        config.villagerLinkEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled.tooltip"))
+                .setSaveConsumer(value -> config.villagerLinkEnabled = value)
+                .build());
+
+        villagerLink.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range"),
+                        config.villagerLinkRange, 4, 128)
+                .setDefaultValue(32)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range.tooltip"))
+                .setTextGetter(value -> Text.literal(value + " blocks"))
+                .setSaveConsumer(value -> config.villagerLinkRange = value)
+                .build());
+
+        villagerLink.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor"),
+                        config.villagerLinkLineColor)
+                .setDefaultValue(0xFF00FFFF)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor.tooltip"))
+                .setSaveConsumer(value -> config.villagerLinkLineColor = value)
+                .build());
+
+        villagerLink.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough"),
+                        config.villagerLinkSeeThrough)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough.tooltip"))
+                .setSaveConsumer(value -> config.villagerLinkSeeThrough = value)
+                .build());
+
+        villagerLink.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.villagerLinkToggle"),
+                config.villagerLinkToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.villagerLinkToggleKey.copyFrom(combo)));
+
         builder.setSavingRunnable(config::save);
 
         return builder.build();
