@@ -133,6 +133,13 @@ public class ModConfig {
     public int autoRestockOperationsPerTick = 8;
     public List<AutoRestockEntry> autoRestockEntries = new ArrayList<>();
 
+    // Villager link settings
+    public boolean villagerLinkEnabled = false;
+    public int villagerLinkRange = 32;                  // 検出半径（ブロック）
+    public int villagerLinkLineColor = 0xFF00FFFF;      // ARGB（デフォルト: 不透明シアン）
+    public boolean villagerLinkSeeThrough = true;       // 壁越し表示
+    public boolean villagerLinkShowUnemployed = false;  // 予約: 失業中の村人も表示する（現状未対応のため非表示で固定運用）
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -162,6 +169,7 @@ public class ModConfig {
     public KeyCombo autoRestockToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockInventoryToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockShulkerToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo villagerLinkToggleKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -319,6 +327,11 @@ public class ModConfig {
                     if (loaded.autoRestockEntries != null) {
                         this.autoRestockEntries = new ArrayList<>(loaded.autoRestockEntries);
                     }
+                    this.villagerLinkEnabled = loaded.villagerLinkEnabled;
+                    this.villagerLinkRange = loaded.villagerLinkRange;
+                    this.villagerLinkLineColor = loaded.villagerLinkLineColor;
+                    this.villagerLinkSeeThrough = loaded.villagerLinkSeeThrough;
+                    this.villagerLinkShowUnemployed = loaded.villagerLinkShowUnemployed;
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
@@ -403,6 +416,9 @@ public class ModConfig {
                     }
                     if (loaded.autoRestockShulkerToggleKey != null) {
                         this.autoRestockShulkerToggleKey.copyFrom(loaded.autoRestockShulkerToggleKey);
+                    }
+                    if (loaded.villagerLinkToggleKey != null) {
+                        this.villagerLinkToggleKey.copyFrom(loaded.villagerLinkToggleKey);
                     }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);

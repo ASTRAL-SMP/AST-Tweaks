@@ -329,6 +329,20 @@
   "gui.asttweaks.inventory.main": "メイン",
   "gui.asttweaks.inventory.hotbar": "ホットバー",
 
+  "config.asttweaks.category.villagerlink": "村人リンク表示",
+  "config.asttweaks.villagerlink.enabled": "村人と職業ブロックを線で表示",
+  "config.asttweaks.villagerlink.enabled.tooltip": "範囲内の村人と、その職業に対応する最寄りの職業ブロックを線で結びます。職業ブロックの紐付けはサーバー側でしか確認できないため、表示は近接ブロックを基にした推定です。",
+  "config.asttweaks.villagerlink.range": "検出範囲",
+  "config.asttweaks.villagerlink.range.tooltip": "プレイヤー周囲のどこまでの村人を対象にするか（ブロック単位）",
+  "config.asttweaks.villagerlink.lineColor": "線の色",
+  "config.asttweaks.villagerlink.lineColor.tooltip": "村人と職業ブロックを結ぶ線の色（ARGB）",
+  "config.asttweaks.villagerlink.seeThrough": "壁越し表示",
+  "config.asttweaks.villagerlink.seeThrough.tooltip": "ブロックに隠れていても線が見えるようにします",
+  "config.asttweaks.keybind.villagerLinkToggle": "村人リンク表示切替",
+  "message.asttweaks.villagerlink.enabled": "村人リンク表示: 有効",
+  "message.asttweaks.villagerlink.disabled": "村人リンク表示: 無効",
+  "hud.asttweaks.villagerlink.jobsite": "職業ブロック: %d, %d, %d",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

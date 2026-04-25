@@ -16,6 +16,7 @@ import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
+import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
@@ -52,6 +53,7 @@ public class KeyBindings {
     private static boolean wasAutoRestockToggleDown = false;
     private static boolean wasAutoRestockInventoryToggleDown = false;
     private static boolean wasAutoRestockShulkerToggleDown = false;
+    private static boolean wasVillagerLinkToggleDown = false;
 
     public static void register() {
         // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
@@ -294,6 +296,20 @@ public class KeyBindings {
                 }
             }
             wasAutoRestockShulkerToggleDown = autoRestockShulkerDown;
+
+            // 村人リンクトグル
+            boolean villagerLinkDown = config.villagerLinkToggleKey.isPressed(window);
+            if (villagerLinkDown && !wasVillagerLinkToggleDown) {
+                VillagerLinkFeature villagerLink = FeatureManager.getInstance().getVillagerLinkFeature();
+                if (villagerLink != null) {
+                    boolean newState = !villagerLink.isEnabled();
+                    villagerLink.setEnabled(newState);
+                    client.player.sendMessage(
+                            Text.translatable("message." + ASTTweaks.MOD_ID + ".villagerlink." + (newState ? "enabled" : "disabled")),
+                            true);
+                }
+            }
+            wasVillagerLinkToggleDown = villagerLinkDown;
 
             // 一般設定画面を開く（K+L デフォルト）
             boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);
