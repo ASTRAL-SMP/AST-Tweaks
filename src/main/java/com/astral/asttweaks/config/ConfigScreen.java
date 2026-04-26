@@ -227,11 +227,11 @@ public class ConfigScreen implements ModMenuApi {
 
         updateCheckerSub.add(entryBuilder
                 .startStrField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.projectId"),
-                        config.updateCheckerProjectId)
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.projectId.tooltip"))
-                .setSaveConsumer(value -> config.updateCheckerProjectId = value)
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo"),
+                        config.updateCheckerGithubRepo)
+                .setDefaultValue("ASTRAL-SMP/AST-Tweaks")
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo.tooltip"))
+                .setSaveConsumer(value -> config.updateCheckerGithubRepo = value)
                 .build());
 
         updateCheckerSub.add(entryBuilder
@@ -252,6 +252,15 @@ public class ConfigScreen implements ModMenuApi {
                 .setDefaultValue(true)
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification.tooltip"))
                 .setSaveConsumer(value -> config.updateCheckerShowNotification = value)
+                .build());
+
+        updateCheckerSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen"),
+                        config.updateCheckerShowOnTitleScreen)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen.tooltip"))
+                .setSaveConsumer(value -> config.updateCheckerShowOnTitleScreen = value)
                 .build());
 
         general.addEntry(updateCheckerSub.build());

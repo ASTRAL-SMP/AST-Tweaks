@@ -101,10 +101,12 @@ public class ModConfig {
 
     // Update checker settings
     public boolean updateCheckerEnabled = true;
-    public String updateCheckerProjectId = "";
+    public String updateCheckerGithubRepo = "ASTRAL-SMP/AST-Tweaks";
     public CheckFrequency updateCheckerFrequency = CheckFrequency.STARTUP_ONLY;
     public long updateCheckerLastCheck = 0;
     public boolean updateCheckerShowNotification = true;
+    public boolean updateCheckerShowOnTitleScreen = true;
+    public String updateCheckerSkippedVersion = "";
 
     // Bone meal filter settings
     public boolean boneMealFilterEnabled = false;
@@ -278,14 +280,18 @@ public class ModConfig {
                     this.massGrindstoneOperationsPerTick = loaded.massGrindstoneOperationsPerTick;
                     this.massGrindstoneDropResults = loaded.massGrindstoneDropResults;
                     this.updateCheckerEnabled = loaded.updateCheckerEnabled;
-                    if (loaded.updateCheckerProjectId != null) {
-                        this.updateCheckerProjectId = loaded.updateCheckerProjectId;
+                    if (loaded.updateCheckerGithubRepo != null && !loaded.updateCheckerGithubRepo.isBlank()) {
+                        this.updateCheckerGithubRepo = loaded.updateCheckerGithubRepo;
                     }
                     if (loaded.updateCheckerFrequency != null) {
                         this.updateCheckerFrequency = loaded.updateCheckerFrequency;
                     }
                     this.updateCheckerLastCheck = loaded.updateCheckerLastCheck;
                     this.updateCheckerShowNotification = loaded.updateCheckerShowNotification;
+                    this.updateCheckerShowOnTitleScreen = loaded.updateCheckerShowOnTitleScreen;
+                    if (loaded.updateCheckerSkippedVersion != null) {
+                        this.updateCheckerSkippedVersion = loaded.updateCheckerSkippedVersion;
+                    }
                     this.boneMealFilterEnabled = loaded.boneMealFilterEnabled;
                     if (loaded.boneMealFilterWhitelist != null) {
                         this.boneMealFilterWhitelist = new HashSet<>(loaded.boneMealFilterWhitelist);

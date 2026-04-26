@@ -16,12 +16,12 @@ public class UpdateCheckerConfig {
         ModConfig.getInstance().save();
     }
 
-    public String getProjectId() {
-        return ModConfig.getInstance().updateCheckerProjectId;
+    public String getGithubRepo() {
+        return ModConfig.getInstance().updateCheckerGithubRepo;
     }
 
-    public void setProjectId(String projectId) {
-        ModConfig.getInstance().updateCheckerProjectId = projectId;
+    public void setGithubRepo(String repo) {
+        ModConfig.getInstance().updateCheckerGithubRepo = repo;
         ModConfig.getInstance().save();
     }
 
@@ -52,6 +52,25 @@ public class UpdateCheckerConfig {
         ModConfig.getInstance().save();
     }
 
+    public boolean isShowOnTitleScreen() {
+        return ModConfig.getInstance().updateCheckerShowOnTitleScreen;
+    }
+
+    public void setShowOnTitleScreen(boolean show) {
+        ModConfig.getInstance().updateCheckerShowOnTitleScreen = show;
+        ModConfig.getInstance().save();
+    }
+
+    public String getSkippedVersion() {
+        String v = ModConfig.getInstance().updateCheckerSkippedVersion;
+        return v == null ? "" : v;
+    }
+
+    public void setSkippedVersion(String version) {
+        ModConfig.getInstance().updateCheckerSkippedVersion = version == null ? "" : version;
+        ModConfig.getInstance().save();
+    }
+
     /**
      * Check if enough time has passed since the last check based on the frequency setting.
      */
@@ -60,8 +79,8 @@ public class UpdateCheckerConfig {
             return false;
         }
 
-        String projectId = getProjectId();
-        if (projectId == null || projectId.isBlank()) {
+        String repo = getGithubRepo();
+        if (repo == null || repo.isBlank()) {
             return false;
         }
 
