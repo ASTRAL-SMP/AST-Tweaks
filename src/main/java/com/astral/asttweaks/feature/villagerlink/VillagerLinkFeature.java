@@ -2,6 +2,8 @@ package com.astral.asttweaks.feature.villagerlink;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.mixin.VillageDebugRendererAccessor;
+import com.astral.asttweaks.mixin.VillageDebugRendererBrainAccessor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -16,6 +18,7 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.debug.VillageDebugRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -38,15 +41,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 /**
  * Visualizes the relationship between villagers and their job site blocks
  * by drawing lines between matched pairs.
  *
- * Note: Job site memory is server-only and not synced to clients, so the
- * association is approximated heuristically by matching the villager's
- * profession to the nearest matching POI block within a small radius.
+ * Primary source: vanilla {@code VillageDebugRenderer} brain debug data,
+ * which the server broadcasts via {@code DebugInfoSender.sendBrainDebugData}.
+ * This is authoritative — each Brain carries the actual claimed POI set.
+ *
+ * Fallback: when the server doesn't broadcast brain debug packets (some
+ * server software filters them), the original heuristic kicks in — we
+ * scan a small radius around the villager and pick the nearest POI block
+ * matching the profession's workstation predicate.
  */
 public class VillagerLinkFeature implements Feature {
 
@@ -119,6 +129,8 @@ public class VillagerLinkFeature implements Feature {
         Box searchBox = new Box(client.player.getPos(), client.player.getPos()).expand(range);
         List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class, searchBox, e -> !e.isRemoved());
 
+        Map<UUID, VillageDebugRenderer.Brain> brains = getDebugBrains(client);
+
         for (VillagerEntity villager : villagers) {
             VillagerProfession profession = villager.getVillagerData().getProfession();
             if (profession == VillagerProfession.NONE || profession == VillagerProfession.NITWIT) {
@@ -130,11 +142,46 @@ public class VillagerLinkFeature implements Feature {
                 continue;
             }
 
-            BlockPos closest = findClosestJobSite(world, villager.getBlockPos(), predicate);
-            if (closest != null) {
-                cachedLinks.put(villager, closest);
+            BlockPos jobSite = findJobSiteFromDebugData(brains, villager, world, predicate);
+            if (jobSite == null) {
+                jobSite = findClosestJobSite(world, villager.getBlockPos(), predicate);
+            }
+            if (jobSite != null) {
+                cachedLinks.put(villager, jobSite);
             }
         }
+    }
+
+    private Map<UUID, VillageDebugRenderer.Brain> getDebugBrains(MinecraftClient client) {
+        if (client.debugRenderer == null || client.debugRenderer.villageDebugRenderer == null) {
+            return null;
+        }
+        return ((VillageDebugRendererAccessor) client.debugRenderer.villageDebugRenderer).getBrains();
+    }
+
+    private BlockPos findJobSiteFromDebugData(Map<UUID, VillageDebugRenderer.Brain> brains, VillagerEntity villager,
+                                               ClientWorld world, Predicate<RegistryEntry<PointOfInterestType>> predicate) {
+        if (brains == null || brains.isEmpty()) {
+            return null;
+        }
+        VillageDebugRenderer.Brain brain = brains.get(villager.getUuid());
+        if (brain == null) {
+            return null;
+        }
+        Set<BlockPos> claimed = ((VillageDebugRendererBrainAccessor) brain).getPointsOfInterest();
+        if (claimed == null || claimed.isEmpty()) {
+            return null;
+        }
+        for (BlockPos pos : claimed) {
+            BlockState state = world.getBlockState(pos);
+            if (state.isAir()) continue;
+            Optional<RegistryEntry<PointOfInterestType>> poi = PointOfInterestTypes.getTypeForState(state);
+            if (poi.isEmpty()) continue;
+            if (predicate.test(poi.get())) {
+                return pos.toImmutable();
+            }
+        }
+        return null;
     }
 
     private BlockPos findClosestJobSite(ClientWorld world, BlockPos origin, Predicate<RegistryEntry<PointOfInterestType>> predicate) {

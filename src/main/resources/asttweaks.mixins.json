@@ -3,6 +3,9 @@
   "minVersion": "0.8",
   "package": "com.astral.asttweaks.mixin",
   "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "DebugInfoSenderMixin"
+  ],
   "client": [
     "ClientPlayNetworkHandlerMixin",
     "InGameHudMixin",
@@ -12,7 +15,9 @@
     "HandledScreenMixin",
     "SilkTouchToolSwitchMixin",
     "AutoEatStopUsingItemMixin",
-    "AutoMoveInputMixin"
+    "AutoMoveInputMixin",
+    "VillageDebugRendererAccessor",
+    "VillageDebugRendererBrainAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
