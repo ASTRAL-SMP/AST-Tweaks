@@ -33,7 +33,8 @@
   "accessWidener": "asttweaks.accesswidener",
   "mixins": [
     "asttweaks.mixins.json",
-    "asttweaks.sodium.mixins.json"
+    "asttweaks.sodium.mixins.json",
+    "asttweaks.litematica.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.21",

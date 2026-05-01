@@ -16,6 +16,10 @@ loom {
 
 repositories {
     maven {
+        name = 'Masa'
+        url = 'https://masa.dy.fi/maven/'
+    }
+    maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/releases/'
     }
@@ -47,6 +51,10 @@ dependencies {
 
     // Sodium (optional, for Mixin compatibility)
     modCompileOnly "maven.modrinth:sodium:mc1.19.4-0.4.10"
+
+    // Litematica (optional, for drag-and-drop schematic import compatibility)
+    modCompileOnly "maven.modrinth:litematica:${project.litematica_version}"
+    modCompileOnly "maven.modrinth:malilib:${project.malilib_version}"
 }
 
 processResources {
