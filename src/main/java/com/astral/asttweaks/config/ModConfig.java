@@ -142,6 +142,9 @@ public class ModConfig {
     public boolean villagerLinkSeeThrough = true;       // 壁越し表示
     public boolean villagerLinkShowUnemployed = false;  // 予約: 失業中の村人も表示する（現状未対応のため非表示で固定運用）
 
+    // Litematica compatibility settings
+    public boolean litematicaSchematicDropEnabled = true;
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -338,6 +341,7 @@ public class ModConfig {
                     this.villagerLinkLineColor = loaded.villagerLinkLineColor;
                     this.villagerLinkSeeThrough = loaded.villagerLinkSeeThrough;
                     this.villagerLinkShowUnemployed = loaded.villagerLinkShowUnemployed;
+                    this.litematicaSchematicDropEnabled = loaded.litematicaSchematicDropEnabled;
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);

@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.astral.asttweaks.mixin.litematica",
+  "compatibilityLevel": "JAVA_17",
+  "plugin": "com.astral.asttweaks.mixin.litematica.LitematicaMixinPlugin",
+  "client": [
+    "GuiSchematicLoadMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

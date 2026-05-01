@@ -265,6 +265,21 @@ public class ConfigScreen implements ModMenuApi {
 
         general.addEntry(updateCheckerSub.build());
 
+        // --- Litematica compatibility subcategory ---
+        SubCategoryBuilder litematicaSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.litematica"));
+
+        litematicaSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled"),
+                        config.litematicaSchematicDropEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled.tooltip"))
+                .setSaveConsumer(value -> config.litematicaSchematicDropEnabled = value)
+                .build());
+
+        general.addEntry(litematicaSub.build());
+
         // --- キーバインド サブカテゴリ（一般のみ） ---
         SubCategoryBuilder keyBindSub = entryBuilder.startSubCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));

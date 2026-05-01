@@ -358,6 +358,13 @@
   "message.asttweaks.villagerlink.disabled": "村人リンク表示: 無効",
   "hud.asttweaks.villagerlink.jobsite": "職業ブロック: %d, %d, %d",
 
+  "config.asttweaks.category.litematica": "Litematica",
+  "config.asttweaks.litematica.schematicDrop.enabled": "Schematic のドラッグ&ドロップを有効化",
+  "config.asttweaks.litematica.schematicDrop.enabled.tooltip": "Litematica の「Load Schematics」画面へ .litematic、.schematic、.schem、.nbt ファイルをドロップして読み込めるようにします。schematics フォルダ外のファイルは先にコピーされます。ドロップ時は読み込みのみで、配置は作成しません。",
+  "message.asttweaks.litematicaDrop.loaded": "Litematica Drop: %d件の schematic を読み込みました（%d件を取り込み）",
+  "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: 未対応ファイル %d件をスキップしました",
+  "message.asttweaks.litematicaDrop.failed": "Litematica Drop: %d件の読み込みに失敗しました",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }
