@@ -3,10 +3,15 @@ package com.astral.asttweaks.feature.inventorysort;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.block.Block;
+import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -19,9 +24,15 @@ import java.util.*;
  * Simple and fast inventory sort feature.
  */
 public class InventorySortFeature implements Feature {
+    private static final int LARGE_CONTAINER_SLOTS = 54;
+    private static final int QUEUED_CLICKS_PER_TICK = 4;
+
     private final InventorySortConfig config;
+    private final Queue<Integer> queuedClicks = new ArrayDeque<>();
     private boolean keyWasPressed = false;
     private boolean containerKeyWasPressed = false;
+    private boolean sorting = false;
+    private int queuedSyncId = -1;
 
     public InventorySortFeature() {
         this.config = new InventorySortConfig();
@@ -44,6 +55,12 @@ public class InventorySortFeature implements Feature {
         if (client.player == null || client.world == null) return;
 
         if (client.currentScreen instanceof HandledScreen) {
+            if (processQueuedSort(client)) {
+                keyWasPressed = isKeyPressed(client);
+                containerKeyWasPressed = isContainerKeyPressed(client);
+                return;
+            }
+
             boolean keyPressed = isKeyPressed(client);
             if (keyPressed && !keyWasPressed) {
                 performSort();
@@ -56,6 +73,7 @@ public class InventorySortFeature implements Feature {
             }
             containerKeyWasPressed = containerKeyPressed;
         } else {
+            clearQueuedSort();
             keyWasPressed = false;
             containerKeyWasPressed = false;
         }
@@ -77,11 +95,12 @@ public class InventorySortFeature implements Feature {
     @Override public boolean isEnabled() { return config.isEnabled(); }
     @Override public void setEnabled(boolean enabled) { config.setEnabled(enabled); }
     public InventorySortConfig getConfig() { return config; }
-    public boolean isSorting() { return false; } // Instant sort, no ongoing state
+    public boolean isSorting() { return sorting; }
 
     public void performSort() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!canSort(client)) return;
+        if (sorting) return;
 
         ScreenHandler handler = client.player.currentScreenHandler;
         int playerInvStart = findPlayerInventoryStart(handler);
@@ -89,26 +108,30 @@ public class InventorySortFeature implements Feature {
 
         SortTarget target = config.getSortTarget();
         boolean hasContainer = containerSlots > 0;
+        boolean queued = false;
 
         if (!hasContainer) {
             sortPlayerInventory(client, playerInvStart);
         } else {
             switch (target) {
                 case PLAYER_ONLY -> sortPlayerInventory(client, playerInvStart);
-                case CONTAINER_ONLY -> sortContainer(client, containerSlots);
+                case CONTAINER_ONLY -> queued = sortContainer(client, containerSlots);
                 case BOTH -> {
-                    sortContainer(client, containerSlots);
                     sortPlayerInventory(client, playerInvStart);
+                    queued = sortContainer(client, containerSlots);
                 }
             }
         }
 
-        client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        if (!queued) {
+            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        }
     }
 
     public void performPlayerSort() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!canSort(client)) return;
+        if (sorting) return;
 
         ScreenHandler handler = client.player.currentScreenHandler;
         int playerInvStart = findPlayerInventoryStart(handler);
@@ -120,6 +143,7 @@ public class InventorySortFeature implements Feature {
     public void performContainerSort() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!canSort(client)) return;
+        if (sorting) return;
 
         ScreenHandler handler = client.player.currentScreenHandler;
         int playerInvStart = findPlayerInventoryStart(handler);
@@ -127,8 +151,10 @@ public class InventorySortFeature implements Feature {
 
         if (containerSlots <= 0) return;
 
-        sortContainer(client, containerSlots);
-        client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        boolean queued = sortContainer(client, containerSlots);
+        if (!queued) {
+            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        }
     }
 
     private boolean canSort(MinecraftClient client) {
@@ -181,8 +207,9 @@ public class InventorySortFeature implements Feature {
     /**
      * Sort container instantly.
      */
-    private void sortContainer(MinecraftClient client, int containerSlots) {
+    private boolean sortContainer(MinecraftClient client, int containerSlots) {
         ScreenHandler handler = client.player.currentScreenHandler;
+        boolean queueClicks = shouldUseQueuedShulkerSort(handler, containerSlots);
 
         // Collect all container slots
         List<Integer> slots = new ArrayList<>();
@@ -190,7 +217,7 @@ public class InventorySortFeature implements Feature {
             slots.add(i);
         }
 
-        if (slots.isEmpty()) return;
+        if (slots.isEmpty()) return false;
 
         // Step 1: Physically merge partial stacks
         mergePartialStacks(client, handler, slots, 0, true);
@@ -204,13 +231,14 @@ public class InventorySortFeature implements Feature {
             }
         }
 
-        if (entries.isEmpty()) return;
+        if (entries.isEmpty()) return false;
 
         // Step 3: Sort entries
         sortEntries(entries);
 
         // Step 4: Execute sort
-        executeSort(client, handler, entries, slots, containerSlots, true);
+        executeSort(client, handler, entries, slots, containerSlots, true, queueClicks);
+        return queueClicks && sorting;
     }
 
     /**
@@ -220,30 +248,53 @@ public class InventorySortFeature implements Feature {
         SortMode mode = config.getSortMode();
 
         Comparator<SortEntry> cmp = switch (mode) {
-            case ITEM_ID -> Comparator.<SortEntry, String>comparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+            case ITEM_ID -> Comparator.<SortEntry, String>comparing(e -> getItemIdSortKey(e.stack))
                     .thenComparingInt(e -> -e.stack.getCount());
-            case ITEM_NAME -> Comparator.<SortEntry, String>comparing(e -> e.stack.getName().getString())
+            case ITEM_NAME -> Comparator.<SortEntry, String>comparing(e -> getItemNameSortKey(e.stack))
                     .thenComparingInt(e -> -e.stack.getCount());
-            case CATEGORY -> Comparator.<SortEntry>comparingInt(e -> getCategory(e.stack.getItem()))
-                    .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+            case CATEGORY -> Comparator.<SortEntry>comparingInt(e -> getStackCategory(e.stack))
+                    .thenComparing(e -> getItemIdSortKey(e.stack))
                     .thenComparingInt(e -> -e.stack.getCount());
             case STACK_COUNT -> Comparator.<SortEntry>comparingInt(e -> -e.stack.getCount())
-                    .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString());
+                    .thenComparing(e -> getItemIdSortKey(e.stack));
             case TOTAL_COUNT -> {
                 Map<String, Integer> totalCounts = new HashMap<>();
                 for (SortEntry e : entries) {
-                    String key = Registries.ITEM.getId(e.stack.getItem()).toString();
+                    String key = getItemIdSortKey(e.stack);
                     totalCounts.merge(key, e.stack.getCount(), Integer::sum);
                 }
                 yield Comparator.<SortEntry>comparingInt(
                             e -> -totalCounts.getOrDefault(
-                                Registries.ITEM.getId(e.stack.getItem()).toString(), 0))
-                        .thenComparing(e -> Registries.ITEM.getId(e.stack.getItem()).toString())
+                                getItemIdSortKey(e.stack), 0))
+                        .thenComparing(e -> getItemIdSortKey(e.stack))
                         .thenComparingInt(e -> -e.stack.getCount());
             }
         };
 
         entries.sort(cmp);
+    }
+
+    private String getItemIdSortKey(ItemStack stack) {
+        if (isShulkerBox(stack)) {
+            String contentKey = getShulkerContentSortKey(stack);
+            if (!contentKey.isEmpty()) {
+                return contentKey;
+            }
+        }
+        return Registries.ITEM.getId(stack.getItem()).toString();
+    }
+
+    private String getItemNameSortKey(ItemStack stack) {
+        ItemStack primaryContent = getPrimaryShulkerContent(stack);
+        if (!primaryContent.isEmpty()) {
+            return primaryContent.getName().getString();
+        }
+        return stack.getName().getString();
+    }
+
+    private int getStackCategory(ItemStack stack) {
+        ItemStack primaryContent = getPrimaryShulkerContent(stack);
+        return getCategory(primaryContent.isEmpty() ? stack.getItem() : primaryContent.getItem());
     }
 
     private int getCategory(Item item) {
@@ -262,7 +313,18 @@ public class InventorySortFeature implements Feature {
     private void executeSort(MinecraftClient client, ScreenHandler handler,
                               List<SortEntry> sortedEntries, List<Integer> availableSlots,
                               int playerInvStart, boolean isContainer) {
+        executeSort(client, handler, sortedEntries, availableSlots, playerInvStart, isContainer, false);
+    }
+
+    /**
+     * Execute the sort by swapping items to their target positions.
+     * @param playerInvStart for player inventory: screen slot where main inventory starts; for container: unused
+     */
+    private void executeSort(MinecraftClient client, ScreenHandler handler,
+                              List<SortEntry> sortedEntries, List<Integer> availableSlots,
+                              int playerInvStart, boolean isContainer, boolean queueClicks) {
         int syncId = handler.syncId;
+        List<Integer> clickSlots = new ArrayList<>();
 
         // Build current state: which item index is at which slot
         // itemLocations[i] = current slot of item i
@@ -292,16 +354,24 @@ public class InventorySortFeature implements Feature {
             int screenTarget = isContainer ? targetSlot : toScreenSlot(targetSlot, playerInvStart);
 
             // Swap using pickup operations
-            click(client, syncId, screenCurrent); // Pick up item from current
-            click(client, syncId, screenTarget);  // Swap with target (or place if empty)
+            clickSlots.add(screenCurrent); // Pick up item from current
+            clickSlots.add(screenTarget);  // Swap with target (or place if empty)
 
             // If target had an item, we now have it on cursor, put it back
             if (itemAtTarget >= 0) {
-                click(client, syncId, screenCurrent); // Put swapped item at original location
+                clickSlots.add(screenCurrent); // Put swapped item at original location
                 itemLocations[itemAtTarget] = currentSlot;
             }
 
             itemLocations[targetIdx] = targetSlot;
+        }
+
+        if (queueClicks) {
+            enqueueSort(syncId, clickSlots);
+        } else {
+            for (int slot : clickSlots) {
+                click(client, syncId, slot);
+            }
         }
     }
 
@@ -372,6 +442,165 @@ public class InventorySortFeature implements Feature {
         return key;
     }
 
+    private boolean shouldUseQueuedShulkerSort(ScreenHandler handler, int containerSlots) {
+        if (containerSlots != LARGE_CONTAINER_SLOTS) {
+            return false;
+        }
+
+        for (int i = 0; i < containerSlots; i++) {
+            if (isShulkerBox(handler.getSlot(i).getStack())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isShulkerBox(ItemStack stack) {
+        if (!(stack.getItem() instanceof BlockItem blockItem)) {
+            return false;
+        }
+
+        Block block = blockItem.getBlock();
+        return block instanceof ShulkerBoxBlock;
+    }
+
+    private String getShulkerContentSortKey(ItemStack stack) {
+        List<ContainedItemSummary> summaries = getShulkerContentSummaries(stack);
+        if (summaries.isEmpty()) {
+            return "";
+        }
+
+        summaries.sort(Comparator
+                .<ContainedItemSummary>comparingInt(summary -> -summary.totalCount)
+                .thenComparing(summary -> summary.id)
+                .thenComparing(summary -> summary.nbt));
+
+        StringBuilder key = new StringBuilder();
+        ContainedItemSummary primary = summaries.get(0);
+        key.append(primary.id);
+
+        for (ContainedItemSummary summary : summaries) {
+            key.append('|')
+                    .append(summary.id)
+                    .append('#')
+                    .append(summary.totalCount);
+            if (!summary.nbt.isEmpty()) {
+                key.append('@').append(summary.nbt);
+            }
+        }
+        return key.toString();
+    }
+
+    private ItemStack getPrimaryShulkerContent(ItemStack stack) {
+        if (!isShulkerBox(stack)) {
+            return ItemStack.EMPTY;
+        }
+
+        NbtCompound blockEntityTag = stack.getSubNbt("BlockEntityTag");
+        if (blockEntityTag == null || !blockEntityTag.contains("Items", NbtElement.LIST_TYPE)) {
+            return ItemStack.EMPTY;
+        }
+
+        NbtList items = blockEntityTag.getList("Items", NbtElement.COMPOUND_TYPE);
+        ItemStack bestStack = ItemStack.EMPTY;
+        String bestId = "";
+        int bestCount = -1;
+
+        for (int i = 0; i < items.size(); i++) {
+            NbtCompound itemNbt = items.getCompound(i);
+            ItemStack contentStack = ItemStack.fromNbt(itemNbt);
+            if (contentStack.isEmpty()) {
+                continue;
+            }
+
+            String id = Registries.ITEM.getId(contentStack.getItem()).toString();
+            int count = contentStack.getCount();
+            if (count > bestCount || (count == bestCount && id.compareTo(bestId) < 0)) {
+                bestStack = contentStack;
+                bestId = id;
+                bestCount = count;
+            }
+        }
+
+        return bestStack;
+    }
+
+    private List<ContainedItemSummary> getShulkerContentSummaries(ItemStack stack) {
+        NbtCompound blockEntityTag = stack.getSubNbt("BlockEntityTag");
+        if (blockEntityTag == null || !blockEntityTag.contains("Items", NbtElement.LIST_TYPE)) {
+            return Collections.emptyList();
+        }
+
+        NbtList items = blockEntityTag.getList("Items", NbtElement.COMPOUND_TYPE);
+        Map<String, ContainedItemSummary> summaries = new HashMap<>();
+
+        for (int i = 0; i < items.size(); i++) {
+            NbtCompound itemNbt = items.getCompound(i);
+            String id = itemNbt.getString("id");
+            if (id.isEmpty()) {
+                continue;
+            }
+
+            String nbt = "";
+            if (itemNbt.contains("tag", NbtElement.COMPOUND_TYPE)) {
+                nbt = itemNbt.getCompound("tag").toString();
+            }
+
+            String key = id + "|" + nbt;
+            String summaryId = id;
+            String summaryNbt = nbt;
+            ContainedItemSummary summary = summaries.computeIfAbsent(
+                    key,
+                    ignored -> new ContainedItemSummary(summaryId, summaryNbt)
+            );
+            summary.totalCount += Byte.toUnsignedInt(itemNbt.getByte("Count"));
+        }
+
+        return new ArrayList<>(summaries.values());
+    }
+
+    private boolean processQueuedSort(MinecraftClient client) {
+        if (!sorting) {
+            return false;
+        }
+
+        if (client.player == null
+                || client.interactionManager == null
+                || client.player.currentScreenHandler.syncId != queuedSyncId) {
+            clearQueuedSort();
+            return false;
+        }
+
+        int clicksThisTick = Math.min(QUEUED_CLICKS_PER_TICK, queuedClicks.size());
+        for (int i = 0; i < clicksThisTick; i++) {
+            click(client, queuedSyncId, queuedClicks.remove());
+        }
+
+        if (queuedClicks.isEmpty()) {
+            clearQueuedSort();
+            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        }
+
+        return true;
+    }
+
+    private void enqueueSort(int syncId, List<Integer> clickSlots) {
+        if (clickSlots.isEmpty()) {
+            return;
+        }
+
+        queuedClicks.clear();
+        queuedClicks.addAll(clickSlots);
+        queuedSyncId = syncId;
+        sorting = true;
+    }
+
+    private void clearQueuedSort() {
+        queuedClicks.clear();
+        queuedSyncId = -1;
+        sorting = false;
+    }
+
     /**
      * Find the screen slot index where the player's main inventory starts.
      * This correctly handles both container screens and player inventory screen.
@@ -440,6 +669,17 @@ public class InventorySortFeature implements Feature {
         SortEntry(int slot, ItemStack stack) {
             this.originalSlot = slot;
             this.stack = stack;
+        }
+    }
+
+    private static class ContainedItemSummary {
+        final String id;
+        final String nbt;
+        int totalCount;
+
+        ContainedItemSummary(String id, String nbt) {
+            this.id = id;
+            this.nbt = nbt;
         }
     }
 }
