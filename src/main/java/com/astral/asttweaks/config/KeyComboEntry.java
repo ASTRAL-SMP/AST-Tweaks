@@ -4,6 +4,7 @@ import com.astral.asttweaks.util.KeyCombo;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -52,6 +53,8 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             waitingRelease = false;
             updateButtonText();
         }).build();
+        // ホバー時に操作説明（特に ESC=未割り当て）が見えるようにする
+        this.bindButton.setTooltip(Tooltip.of(Text.translatable("config.asttweaks.keybind.bindButton.tooltip")));
 
         this.resetButton = ButtonWidget.builder(Text.translatable("controls.reset"), button -> {
             value.copyFrom(defaultValue);
@@ -73,9 +76,14 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
                         Text.literal(KeyCombo.getInputName(firstKey, firstKeyType) + " + ?")
                                 .formatted(Formatting.YELLOW));
             } else {
+                // ESC で未割り当てにできる旨を、リスニングモードのプロンプト上で常時掲示する（機能の発見性向上）
                 this.bindButton.setMessage(
-                        Text.literal("> ??? <").formatted(Formatting.YELLOW));
+                        Text.translatable("config.asttweaks.keybind.listening_prompt").formatted(Formatting.YELLOW));
             }
+        } else if (value.mainKey == -1) {
+            // 未割り当て状態を視認しやすく
+            this.bindButton.setMessage(
+                    Text.translatable("config.asttweaks.keybind.unbound").formatted(Formatting.GRAY, Formatting.ITALIC));
         } else {
             this.bindButton.setMessage(Text.literal(value.getDisplayName()));
         }

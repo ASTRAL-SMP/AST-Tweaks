@@ -38,6 +38,9 @@
 
   "config.asttweaks.category.general": "一般",
   "config.asttweaks.category.keybinds": "キーバインド",
+  "config.asttweaks.keybind.unbound": "未割り当て",
+  "config.asttweaks.keybind.listening_prompt": "> ??? <  (ESC で解除)",
+  "config.asttweaks.keybind.bindButton.tooltip": "クリックでキー組み合わせを登録\nリスニング中に ESC で未割り当てに設定",
   "config.asttweaks.keybind.scoreboardToggle": "スコアボード表示切替",
   "config.asttweaks.keybind.autoEatToggle": "自動食事切替",
   "config.asttweaks.keybind.autoMoveToggle": "自動移動切替",
