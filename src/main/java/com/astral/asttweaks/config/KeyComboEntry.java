@@ -39,6 +39,14 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     private String firstKeyType = KeyCombo.TYPE_KEY; // 1キー目の種別 ("key" or "mouse")
     private boolean waitingRelease = false;  // 1キー目の離しを待っている状態
 
+    // リスニング中のエントリ数。0 でない間は Screen.shouldCloseOnEsc を false に倒し、
+    // ESC を画面クローズではなく当エントリの keyPressed まで届かせる (ScreenMixin が参照)。
+    private static int activeListenerCount = 0;
+
+    public static boolean isAnyListening() {
+        return activeListenerCount > 0;
+    }
+
     public KeyComboEntry(Text fieldName, KeyCombo currentValue, KeyCombo defaultValue, Consumer<KeyCombo> saveConsumer) {
         super(fieldName, null);
         this.value = currentValue.copy();
@@ -47,6 +55,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
         this.saveConsumer = saveConsumer;
 
         this.bindButton = ButtonWidget.builder(Text.literal(value.getDisplayName()), button -> {
+            if (!listening) {
+                activeListenerCount++;
+            }
             listening = true;
             firstKey = -1;
             firstKeyType = KeyCombo.TYPE_KEY;
@@ -58,6 +69,10 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
 
         this.resetButton = ButtonWidget.builder(Text.translatable("controls.reset"), button -> {
             value.copyFrom(defaultValue);
+            // リスニング中にリセットされた場合はカウンタも巻き戻す
+            if (listening) {
+                activeListenerCount = Math.max(0, activeListenerCount - 1);
+            }
             listening = false;
             firstKey = -1;
             firstKeyType = KeyCombo.TYPE_KEY;
@@ -178,6 +193,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     }
 
     private void finishListening() {
+        if (listening) {
+            activeListenerCount = Math.max(0, activeListenerCount - 1);
+        }
         listening = false;
         firstKey = -1;
         firstKeyType = KeyCombo.TYPE_KEY;
@@ -237,6 +255,10 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
 
     @Override
     public void save() {
+        // "Save & Quit" 経由で閉じられた場合の counter leak を防ぐ
+        if (listening) {
+            finishListening();
+        }
         if (saveConsumer != null) {
             saveConsumer.accept(value);
         }
