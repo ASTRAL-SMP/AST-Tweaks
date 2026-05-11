@@ -17,7 +17,8 @@
     "AutoEatStopUsingItemMixin",
     "AutoMoveInputMixin",
     "VillageDebugRendererAccessor",
-    "VillageDebugRendererBrainAccessor"
+    "VillageDebugRendererBrainAccessor",
+    "ScreenShouldCloseOnEscMixin"
   ],
   "injectors": {
     "defaultRequire": 1
