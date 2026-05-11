@@ -38,6 +38,9 @@
 
   "config.asttweaks.category.general": "General",
   "config.asttweaks.category.keybinds": "Key Bindings",
+  "config.asttweaks.keybind.unbound": "Not bound",
+  "config.asttweaks.keybind.listening_prompt": "> ??? <  (ESC: unbind)",
+  "config.asttweaks.keybind.bindButton.tooltip": "Click to bind a key combo.\nPress ESC while binding to clear (set to unbound).",
   "config.asttweaks.keybind.scoreboardToggle": "Toggle Scoreboard",
   "config.asttweaks.keybind.autoEatToggle": "Toggle Auto Eat",
   "config.asttweaks.keybind.autoMoveToggle": "Toggle Auto Move",

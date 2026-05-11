@@ -42,6 +42,15 @@ public class AutoRepairFeature implements Feature {
     private Set<Integer> repairedSlots = new HashSet<>();  // Slots that have been repaired this session
     private static final int SYNC_DELAY_TICKS = 1;  // Minimal delay for fast swapping
 
+    // In-flight throttle state: 投擲済みボトルの推定リペア量で過剰投擲を抑制する
+    private int bottlesInFlight = 0;        // 投擲後 damage 更新待ちのボトル本数（推定）
+    private int lastSeenDamage = -1;        // 直近に観測した damage 値
+    private int ticksWithoutDamageChange = 0; // damage が更新されないまま経過した tick 数
+    // 1 本の経験瓶あたりの平均修繕量（vanilla: 3-11 XP × 2 durability/XP ≒ 14）
+    private static final int AVG_DURABILITY_PER_BOTTLE = 14;
+    // damage 更新が来ない場合に in-flight 推定をリセットするまでの待機 tick 数
+    private static final int IN_FLIGHT_RESET_TICKS = 20;
+
     public AutoRepairFeature() {
         this.config = new AutoRepairConfig();
     }
@@ -166,6 +175,10 @@ public class AutoRepairFeature implements Feature {
 
                 // Select target slot
                 player.getInventory().selectedSlot = targetSlot;
+                // 新規アイテムにつき in-flight 推定をリセット
+                bottlesInFlight = 0;
+                lastSeenDamage = -1;
+                ticksWithoutDamageChange = 0;
                 currentState = State.REPAIRING;
                 break;
 
@@ -177,7 +190,9 @@ public class AutoRepairFeature implements Feature {
 
                 // Check if current item is fully repaired
                 if (isCurrentItemFullyRepaired(player)) {
-                    currentState = State.SWAP_NEXT_ITEM;
+                    // damage=0 を確認した瞬間に swap-back と次アイテムへの swap-in を同一 tick で行い、
+                    // Mending 対象が mainhand に居ない時間を最小化する（Clumps の大型オーブ取りこぼし対策）
+                    swapToNextItemImmediate(client, player);
                     return;
                 }
 
@@ -193,27 +208,12 @@ public class AutoRepairFeature implements Feature {
                     return;
                 }
 
-                // Fast use experience bottles from offhand
+                // Fast use experience bottles from offhand (with in-flight throttle)
                 fastUseOffhand(client, player);
                 break;
 
             case SWAP_NEXT_ITEM:
-                int targetSlotSwap = getTargetSlot();
-
-                // Mark current slot as repaired
-                if (currentRepairSlot != -1) {
-                    repairedSlots.add(currentRepairSlot);
-                    ASTTweaks.LOGGER.info("Marked slot {} as repaired", currentRepairSlot);
-                }
-
-                // Return current item to its original slot if it was moved
-                if (currentRepairSlot != targetSlotSwap && currentRepairSlot != -1) {
-                    // Swap back
-                    swapSlots(client, player, targetSlotSwap, currentRepairSlot);
-                    delayTicks = SYNC_DELAY_TICKS;
-                }
-
-                currentRepairSlot = -1;
+                // 旧フローの後方互換（resetState から直に到達しない限り通常は未使用）
                 currentState = State.SETUP_MAINHAND;
                 break;
         }
@@ -221,18 +221,95 @@ public class AutoRepairFeature implements Feature {
 
     /**
      * Fast use experience bottles from offhand (multiple times per tick).
+     * 投擲済み（in-flight）ボトル本数の推定で残りダメージをカバーしきれていれば投擲を見送る。
+     * これにより Clumps 環境で起こる「最後の大型オーブが repaired 済みアイテムに当たって XP バーへ漏れる」損失を抑制する。
      */
     private void fastUseOffhand(MinecraftClient client, PlayerEntity player) {
         if (client.interactionManager == null) return;
 
-        int clicks = config.getClicksPerTick();
+        ItemStack mainhand = player.getMainHandStack();
+        int currentDamage = mainhand.getDamage();
+
+        // damage 更新を検知したら in-flight カウンタを巻き戻す
+        if (lastSeenDamage == -1 || currentDamage < lastSeenDamage) {
+            int repaired = lastSeenDamage == -1 ? 0 : (lastSeenDamage - currentDamage);
+            int consumedEstimate = Math.max(1, (repaired + AVG_DURABILITY_PER_BOTTLE - 1) / AVG_DURABILITY_PER_BOTTLE);
+            bottlesInFlight = Math.max(0, bottlesInFlight - consumedEstimate);
+            lastSeenDamage = currentDamage;
+            ticksWithoutDamageChange = 0;
+        } else {
+            ticksWithoutDamageChange++;
+            // damage 更新が長期間来なければ取りこぼしと判断してカウンタをリセットし投擲再開
+            if (ticksWithoutDamageChange >= IN_FLIGHT_RESET_TICKS) {
+                bottlesInFlight = 0;
+                ticksWithoutDamageChange = 0;
+            }
+        }
+
+        // 推定残ダメージ（保守的）
+        int estimatedRemainingDamage = currentDamage - bottlesInFlight * AVG_DURABILITY_PER_BOTTLE;
+        if (estimatedRemainingDamage <= 0) {
+            // 投擲済みで十分。今ティックは見送ってオーブ到着を待つ
+            return;
+        }
+
+        // 残ダメージに合わせて投擲数を抑える
+        int bottlesNeeded = (estimatedRemainingDamage + AVG_DURABILITY_PER_BOTTLE - 1) / AVG_DURABILITY_PER_BOTTLE;
+        int clicks = Math.min(config.getClicksPerTick(), bottlesNeeded);
+        if (clicks <= 0) return;
+
+        int actuallyThrown = 0;
         for (int i = 0; i < clicks; i++) {
-            // Check if we still have bottles before each use
             if (!hasExperienceBottleInOffhand(player)) {
                 break;
             }
             client.interactionManager.interactItem(player, Hand.OFF_HAND);
+            actuallyThrown++;
         }
+        bottlesInFlight += actuallyThrown;
+    }
+
+    /**
+     * damage=0 を観測した直後に同一 tick で swap-back と swap-in を実行する。
+     * Mending 対象が mainhand に居ない時間を最小化することで、in-flight オーブの取りこぼしを減らす。
+     */
+    private void swapToNextItemImmediate(MinecraftClient client, PlayerEntity player) {
+        int targetSlot = getTargetSlot();
+
+        // 現アイテムを repaired として記録
+        if (currentRepairSlot != -1) {
+            repairedSlots.add(currentRepairSlot);
+        }
+
+        // 現アイテムを元のスロットへ戻す（swap-back）
+        if (currentRepairSlot != -1 && currentRepairSlot != targetSlot) {
+            swapSlots(client, player, targetSlot, currentRepairSlot);
+        }
+
+        // 次の修繕対象を探す
+        int nextSlot = findNextRepairItem(player);
+        if (nextSlot == -1) {
+            // 全完了
+            currentRepairSlot = -1;
+            finishRepair(client, player);
+            return;
+        }
+
+        // 次アイテムを target slot に持ってくる（swap-in、同一 tick で連続実行）
+        if (nextSlot != targetSlot) {
+            swapSlots(client, player, nextSlot, targetSlot);
+        }
+        player.getInventory().selectedSlot = targetSlot;
+        currentRepairSlot = nextSlot;
+
+        // in-flight 推定をリセット（新アイテム用）
+        bottlesInFlight = 0;
+        lastSeenDamage = -1;
+        ticksWithoutDamageChange = 0;
+
+        // server 側へ slot 更新が伝わるのを待つ
+        delayTicks = SYNC_DELAY_TICKS;
+        currentState = State.REPAIRING;
     }
 
     /**
@@ -506,5 +583,8 @@ public class AutoRepairFeature implements Feature {
         originalOffhandDisplacedSlot = -1;
         hadOffhandItem = false;
         repairedSlots.clear();
+        bottlesInFlight = 0;
+        lastSeenDamage = -1;
+        ticksWithoutDamageChange = 0;
     }
 }
