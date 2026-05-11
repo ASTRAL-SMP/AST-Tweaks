@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  *   1キー目を押して離す → "K + ?" 表示、2キー目待ち
  *   2キー目を押す → コンボ確定（K + L）
  *   Enter を押す → 単キー確定
- *   ESC → キャンセル
+ *   ESC → 未割り当て (None) に設定 (MC vanilla の controls 画面互換)
  */
 public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     private final KeyCombo value;
@@ -86,8 +86,12 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
         if (!listening) return false;
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            // ESCでキャンセル
-            cancelListening();
+            // ESC で未割り当て (None) に設定
+            value.mainKey = -1;
+            value.mainKeyType = KeyCombo.TYPE_KEY;
+            value.modifierKey = -1;
+            value.modifierKeyType = KeyCombo.TYPE_KEY;
+            finishListening();
             return true;
         }
 
@@ -163,14 +167,6 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             return false;
         }
         return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    private void cancelListening() {
-        listening = false;
-        firstKey = -1;
-        firstKeyType = KeyCombo.TYPE_KEY;
-        waitingRelease = false;
-        updateButtonText();
     }
 
     private void finishListening() {

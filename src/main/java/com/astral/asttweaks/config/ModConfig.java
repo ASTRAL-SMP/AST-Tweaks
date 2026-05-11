@@ -87,7 +87,7 @@ public class ModConfig {
 
     // Auto repair settings (Fast repair mode - Tweakeroo style)
     public boolean autoRepairEnabled = true;
-    public int autoRepairClicksPerTick = 10;          // Number of clicks per tick (fast use)
+    public int autoRepairClicksPerTick = 4;           // Number of clicks per tick (fast use). 過剰投擲によるロスを避けるため控えめが既定
     public boolean autoRepairWhitelistMode = false;   // false = blacklist mode
     public Set<String> autoRepairItemList = new HashSet<>();
     public int autoRepairTargetSlot = 0;              // Hotbar slot to use for repairing items (0-8)
