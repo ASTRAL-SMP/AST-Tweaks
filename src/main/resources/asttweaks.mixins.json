@@ -16,6 +16,7 @@
     "SilkTouchToolSwitchMixin",
     "AutoEatStopUsingItemMixin",
     "AutoMoveInputMixin",
+    "PickBlockMixin",
     "VillageDebugRendererAccessor",
     "VillageDebugRendererBrainAccessor",
     "ScreenShouldCloseOnEscMixin"

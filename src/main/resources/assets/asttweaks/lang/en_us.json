@@ -368,6 +368,14 @@
   "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: skipped %d unsupported file(s)",
   "message.asttweaks.litematicaDrop.failed": "Litematica Drop: failed to load %d file(s)",
 
+  "config.asttweaks.category.pickprotect": "Pick Protect",
+  "config.asttweaks.pickprotect.enabled": "Enable Pick Protect",
+  "config.asttweaks.pickprotect.enabled.tooltip": "When the vanilla Pick Block action would overwrite a protected hotbar slot, redirect it to the nearest non-protected slot instead. If no non-protected slot is reachable, the pick is cancelled.",
+  "config.asttweaks.pickprotect.slots.button": "Configure Protected Hotbar Slots",
+  "config.asttweaks.pickprotect.slots.title": "Pick Protect: Protected Hotbar Slots",
+  "config.asttweaks.pickprotect.slots.help": "Click a slot to toggle protection (red = protected).",
+  "message.asttweaks.pickprotect.blocked": "Pick Protect: no non-protected hotbar slot available",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

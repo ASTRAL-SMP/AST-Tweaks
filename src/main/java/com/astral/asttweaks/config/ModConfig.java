@@ -142,6 +142,10 @@ public class ModConfig {
     public boolean villagerLinkSeeThrough = true;       // 壁越し表示
     public boolean villagerLinkShowUnemployed = false;  // 予約: 失業中の村人も表示する（現状未対応のため非表示で固定運用）
 
+    // Pick protect settings
+    public boolean pickProtectEnabled = false;
+    public Set<Integer> pickProtectSlots = new HashSet<>();  // hotbar slot indices (0-8)
+
     // Litematica compatibility settings
     public boolean litematicaSchematicDropEnabled = true;
 
@@ -341,6 +345,10 @@ public class ModConfig {
                     this.villagerLinkLineColor = loaded.villagerLinkLineColor;
                     this.villagerLinkSeeThrough = loaded.villagerLinkSeeThrough;
                     this.villagerLinkShowUnemployed = loaded.villagerLinkShowUnemployed;
+                    this.pickProtectEnabled = loaded.pickProtectEnabled;
+                    if (loaded.pickProtectSlots != null) {
+                        this.pickProtectSlots = new HashSet<>(loaded.pickProtectSlots);
+                    }
                     this.litematicaSchematicDropEnabled = loaded.litematicaSchematicDropEnabled;
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {

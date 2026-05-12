@@ -13,6 +13,7 @@ import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
+import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
@@ -61,6 +62,7 @@ public class FeatureManager {
         registerFeature(new AutoDropFeature());
         registerFeature(new AutoRestockFeature());
         registerFeature(new VillagerLinkFeature());
+        registerFeature(new PickProtectFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -215,5 +217,12 @@ public class FeatureManager {
      */
     public VillagerLinkFeature getVillagerLinkFeature() {
         return (VillagerLinkFeature) getFeature("villagerlink");
+    }
+
+    /**
+     * Get the pick protect feature.
+     */
+    public PickProtectFeature getPickProtectFeature() {
+        return (PickProtectFeature) getFeature("pickprotect");
     }
 }
