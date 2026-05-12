@@ -368,6 +368,14 @@
   "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: 未対応ファイル %d件をスキップしました",
   "message.asttweaks.litematicaDrop.failed": "Litematica Drop: %d件の読み込みに失敗しました",
 
+  "config.asttweaks.category.pickprotect": "ピックブロック保護",
+  "config.asttweaks.pickprotect.enabled": "ピックブロック保護を有効化",
+  "config.asttweaks.pickprotect.enabled.tooltip": "バニラのピックブロック（既定はマウスホイールクリック。TAB 等に再割当した場合も同様）で保護中スロットが上書きされそうな場合、自動的に保護されていない最も近いスロットへリダイレクトします。リダイレクト先が無い場合のみキャンセルします。",
+  "config.asttweaks.pickprotect.slots.button": "保護スロット設定を開く",
+  "config.asttweaks.pickprotect.slots.title": "ピックブロック保護: 保護ホットバースロット",
+  "config.asttweaks.pickprotect.slots.help": "クリックで保護をトグル（赤=保護）。",
+  "message.asttweaks.pickprotect.blocked": "ピックブロック保護: 利用可能な非保護スロットがありません",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

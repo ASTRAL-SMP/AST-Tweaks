@@ -18,6 +18,7 @@ import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
+import com.astral.asttweaks.feature.pickprotect.gui.PickProtectSlotScreen;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
 import com.astral.asttweaks.util.KeyCombo;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
@@ -1014,6 +1015,26 @@ public class ConfigScreen implements ModMenuApi {
                 config.villagerLinkToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.villagerLinkToggleKey.copyFrom(combo)));
+
+        // ============================
+        // Pick protect category
+        // ============================
+        ConfigCategory pickProtect = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.pickprotect"));
+
+        pickProtect.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled"),
+                        config.pickProtectEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled.tooltip"))
+                .setSaveConsumer(value -> config.pickProtectEnabled = value)
+                .build());
+
+        pickProtect.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.button"),
+                button -> MinecraftClient.getInstance().setScreen(new PickProtectSlotScreen(MinecraftClient.getInstance().currentScreen))
+        ));
 
         builder.setSavingRunnable(config::save);
 
