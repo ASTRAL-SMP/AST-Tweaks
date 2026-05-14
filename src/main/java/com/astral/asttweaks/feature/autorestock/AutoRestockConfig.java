@@ -72,6 +72,24 @@ public class AutoRestockConfig {
         return Math.max(1, ModConfig.getInstance().autoRestockOperationsPerTick);
     }
 
+    public Set<Integer> getProtectedSlots() {
+        return ModConfig.getInstance().autoRestockProtectedSlots;
+    }
+
+    public boolean isSlotProtected(int invIndex) {
+        return getProtectedSlots().contains(invIndex);
+    }
+
+    public void toggleSlotProtection(int invIndex) {
+        Set<Integer> set = getProtectedSlots();
+        if (set.contains(invIndex)) {
+            set.remove(invIndex);
+        } else {
+            set.add(invIndex);
+        }
+        ModConfig.getInstance().save();
+    }
+
     public List<AutoRestockEntry> getEntries() {
         if (ModConfig.getInstance().autoRestockEntries == null) {
             ModConfig.getInstance().autoRestockEntries = new ArrayList<>();

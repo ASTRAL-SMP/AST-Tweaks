@@ -370,6 +370,7 @@ public class AutoRestockFeature implements Feature {
 
             int invIndex = slot.getIndex();
             if (reservedTargetSlots.contains(invIndex)
+                    || config.isSlotProtected(invIndex)
                     || invIndex == AutoRestockConfig.OFFHAND_SLOT
                     || invIndex < 9
                     || invIndex > 35) {
@@ -388,7 +389,10 @@ public class AutoRestockFeature implements Feature {
             }
 
             int invIndex = slot.getIndex();
-            if (reservedTargetSlots.contains(invIndex) || invIndex < 0 || invIndex > 8) {
+            if (reservedTargetSlots.contains(invIndex)
+                    || config.isSlotProtected(invIndex)
+                    || invIndex < 0
+                    || invIndex > 8) {
                 continue;
             }
 

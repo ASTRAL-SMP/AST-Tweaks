@@ -285,10 +285,9 @@ public class InventorySortFeature implements Feature {
     }
 
     private String getItemNameSortKey(ItemStack stack) {
-        ItemStack primaryContent = getPrimaryShulkerContent(stack);
-        if (!primaryContent.isEmpty()) {
-            return primaryContent.getName().getString();
-        }
+        // Sort by the stack's own display name. Shulker boxes are intentionally
+        // keyed by their own name (not their contents) so they cluster together
+        // instead of scattering across unrelated items.
         return stack.getName().getString();
     }
 

@@ -134,6 +134,7 @@ public class ModConfig {
     public boolean autoRestockPreferOverExternalAutoCollect = false;
     public int autoRestockOperationsPerTick = 8;
     public List<AutoRestockEntry> autoRestockEntries = new ArrayList<>();
+    public Set<Integer> autoRestockProtectedSlots = new HashSet<>();  // PlayerInventory indices excluded as restock sources (default: none)
 
     // Villager link settings
     public boolean villagerLinkEnabled = false;
@@ -339,6 +340,9 @@ public class ModConfig {
                     this.autoRestockOperationsPerTick = hasAutoRestockConfig ? loaded.autoRestockOperationsPerTick : 8;
                     if (loaded.autoRestockEntries != null) {
                         this.autoRestockEntries = new ArrayList<>(loaded.autoRestockEntries);
+                    }
+                    if (loaded.autoRestockProtectedSlots != null) {
+                        this.autoRestockProtectedSlots = new HashSet<>(loaded.autoRestockProtectedSlots);
                     }
                     this.villagerLinkEnabled = loaded.villagerLinkEnabled;
                     this.villagerLinkRange = loaded.villagerLinkRange;
