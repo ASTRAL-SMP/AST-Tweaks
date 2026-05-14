@@ -5,6 +5,7 @@ import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropItemListScreen;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropProtectedSlotScreen;
 import com.astral.asttweaks.feature.autorestock.gui.AutoRestockItemListScreen;
+import com.astral.asttweaks.feature.autorestock.gui.AutoRestockProtectedSlotScreen;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
 import com.astral.asttweaks.feature.autoeat.gui.FoodListScreen;
 import com.astral.asttweaks.feature.autoeat.gui.HungerBarEntry;
@@ -943,6 +944,11 @@ public class ConfigScreen implements ModMenuApi {
                 .setTextGetter(value -> Text.literal(value + " ops"))
                 .setSaveConsumer(value -> config.autoRestockOperationsPerTick = value)
                 .build());
+
+        autoRestock.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.protectedslots.button"),
+                button -> MinecraftClient.getInstance().setScreen(new AutoRestockProtectedSlotScreen(MinecraftClient.getInstance().currentScreen))
+        ));
 
         autoRestock.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.itemlist.button"),
