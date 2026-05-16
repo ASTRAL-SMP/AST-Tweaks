@@ -147,6 +147,9 @@ public class ModConfig {
     public boolean pickProtectEnabled = false;
     public Set<Integer> pickProtectSlots = new HashSet<>();  // hotbar slot indices (0-8)
 
+    // Portal protect settings
+    public boolean portalProtectEnabled = true;
+
     // Litematica compatibility settings
     public boolean litematicaSchematicDropEnabled = true;
 
@@ -353,6 +356,7 @@ public class ModConfig {
                     if (loaded.pickProtectSlots != null) {
                         this.pickProtectSlots = new HashSet<>(loaded.pickProtectSlots);
                     }
+                    this.portalProtectEnabled = loaded.portalProtectEnabled;
                     this.litematicaSchematicDropEnabled = loaded.litematicaSchematicDropEnabled;
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {

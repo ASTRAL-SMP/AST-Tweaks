@@ -379,6 +379,11 @@
   "config.asttweaks.pickprotect.slots.help": "Click a slot to toggle protection (red = protected).",
   "message.asttweaks.pickprotect.blocked": "Pick Protect: no non-protected hotbar slot available",
 
+  "config.asttweaks.category.portalprotect": "Portal Protect",
+  "config.asttweaks.portalprotect.enabled": "Block placement near nether portals",
+  "config.asttweaks.portalprotect.enabled.tooltip": "Cancels block placements that would land on or directly touch a nether portal block, so sliced portal decorations are not accidentally overwritten.",
+  "message.asttweaks.portalprotect.blocked": "Portal Protect: cannot place blocks next to a nether portal",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }
