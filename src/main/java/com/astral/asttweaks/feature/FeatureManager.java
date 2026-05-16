@@ -14,6 +14,7 @@ import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
 import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
+import com.astral.asttweaks.feature.portalprotect.PortalProtectFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
@@ -63,6 +64,7 @@ public class FeatureManager {
         registerFeature(new AutoRestockFeature());
         registerFeature(new VillagerLinkFeature());
         registerFeature(new PickProtectFeature());
+        registerFeature(new PortalProtectFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -224,5 +226,12 @@ public class FeatureManager {
      */
     public PickProtectFeature getPickProtectFeature() {
         return (PickProtectFeature) getFeature("pickprotect");
+    }
+
+    /**
+     * Get the portal protect feature.
+     */
+    public PortalProtectFeature getPortalProtectFeature() {
+        return (PortalProtectFeature) getFeature("portalprotect");
     }
 }

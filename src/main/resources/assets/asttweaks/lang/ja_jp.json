@@ -379,6 +379,11 @@
   "config.asttweaks.pickprotect.slots.help": "クリックで保護をトグル（赤=保護）。",
   "message.asttweaks.pickprotect.blocked": "ピックブロック保護: 利用可能な非保護スロットがありません",
 
+  "config.asttweaks.category.portalprotect": "ポータル保護",
+  "config.asttweaks.portalprotect.enabled": "ネザーポータル周辺のブロック設置を防止",
+  "config.asttweaks.portalprotect.enabled.tooltip": "スライス加工されたネザーゲートなど、ネザーポータルブロックに接する位置へのブロック設置をキャンセルします。装飾を誤って上書きするのを防ぎます。",
+  "message.asttweaks.portalprotect.blocked": "ポータル保護: ネザーポータルの近くにはブロックを置けません",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

@@ -282,6 +282,21 @@ public class ConfigScreen implements ModMenuApi {
 
         general.addEntry(litematicaSub.build());
 
+        // --- Portal Protect サブカテゴリ ---
+        SubCategoryBuilder portalProtectSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.portalprotect"));
+
+        portalProtectSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled"),
+                        config.portalProtectEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled.tooltip"))
+                .setSaveConsumer(value -> config.portalProtectEnabled = value)
+                .build());
+
+        general.addEntry(portalProtectSub.build());
+
         // --- キーバインド サブカテゴリ（一般のみ） ---
         SubCategoryBuilder keyBindSub = entryBuilder.startSubCategory(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
