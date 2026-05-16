@@ -3,7 +3,6 @@ package com.astral.asttweaks.feature.portalprotect;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.NetherPortalBlock;
 import net.minecraft.entity.player.PlayerEntity;
@@ -11,6 +10,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -20,9 +20,15 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 /**
- * Prevents block placement at or directly adjacent to nether portal blocks so
- * that "sliced" portal decorations (portal blocks left exposed in a wall) are
- * not accidentally overwritten by misplaced building blocks.
+ * Prevents block placement at positions that would trigger a nether portal's
+ * neighbor-update validity check, which is what destroys "sliced" portals.
+ *
+ * NetherPortalBlock.getStateForNeighborUpdate skips the validity check when the
+ * neighbor change comes from the thin horizontal axis (perpendicular to the
+ * portal plane), so placements in that direction are safe. We only cancel
+ * placements on the dangerous sides: in-plane horizontal (same axis as portal)
+ * and vertical. That lets rails / suppression blocks on the front and back of
+ * a horizontal portal go through without any whitelist.
  */
 public class PortalProtectFeature implements Feature {
     private final PortalProtectConfig config = new PortalProtectConfig();
@@ -62,23 +68,33 @@ public class PortalProtectFeature implements Feature {
         if (!ctx.canPlace()) return ActionResult.PASS;
 
         BlockPos placePos = ctx.getBlockPos();
-        if (isPortal(world, placePos)) {
+
+        // Defensive: replacing the portal block itself.
+        BlockState placeState = world.getBlockState(placePos);
+        if (placeState.getBlock() instanceof NetherPortalBlock) {
             notify(player);
             return ActionResult.FAIL;
         }
+
+        // Only cancel if the placement would change a neighbor on a side that
+        // triggers the portal's validity check (in-plane horizontal or vertical).
         for (Direction d : Direction.values()) {
-            if (isPortal(world, placePos.offset(d))) {
+            BlockState neighborState = world.getBlockState(placePos.offset(d));
+            if (!(neighborState.getBlock() instanceof NetherPortalBlock)) continue;
+
+            Direction.Axis portalAxis = neighborState.get(Properties.HORIZONTAL_AXIS);
+            Direction.Axis placementAxis = d.getAxis();
+
+            // Mirrors NetherPortalBlock.getStateForNeighborUpdate:
+            //   axisMismatch = placementAxis != portalAxis && placementAxis.isHorizontal()
+            // axisMismatch == true means vanilla skips the validity check, so we can pass.
+            boolean safe = placementAxis != portalAxis && placementAxis.isHorizontal();
+            if (!safe) {
                 notify(player);
                 return ActionResult.FAIL;
             }
         }
         return ActionResult.PASS;
-    }
-
-    private static boolean isPortal(World world, BlockPos pos) {
-        BlockState state = world.getBlockState(pos);
-        Block block = state.getBlock();
-        return block instanceof NetherPortalBlock;
     }
 
     private static void notify(PlayerEntity player) {

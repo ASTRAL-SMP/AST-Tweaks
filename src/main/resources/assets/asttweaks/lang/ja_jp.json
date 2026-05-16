@@ -381,8 +381,8 @@
 
   "config.asttweaks.category.portalprotect": "ポータル保護",
   "config.asttweaks.portalprotect.enabled": "ネザーポータル周辺のブロック設置を防止",
-  "config.asttweaks.portalprotect.enabled.tooltip": "スライス加工されたネザーゲートなど、ネザーポータルブロックに接する位置へのブロック設置をキャンセルします。装飾を誤って上書きするのを防ぎます。",
-  "message.asttweaks.portalprotect.blocked": "ポータル保護: ネザーポータルの近くにはブロックを置けません",
+  "config.asttweaks.portalprotect.enabled.tooltip": "ネザーポータルブロックに接する位置へのブロック設置のうち、ポータルを破壊しうる方向（軸方向の隣接・上下方向）のみキャンセルします。横向きポータルの前後（薄い側）はサプレス用レールなども含めて設置可能です。",
+  "message.asttweaks.portalprotect.blocked": "ポータル保護: その向きに置くとポータルが壊れます",
 
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"

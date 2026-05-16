@@ -381,8 +381,8 @@
 
   "config.asttweaks.category.portalprotect": "Portal Protect",
   "config.asttweaks.portalprotect.enabled": "Block placement near nether portals",
-  "config.asttweaks.portalprotect.enabled.tooltip": "Cancels block placements that would land on or directly touch a nether portal block, so sliced portal decorations are not accidentally overwritten.",
-  "message.asttweaks.portalprotect.blocked": "Portal Protect: cannot place blocks next to a nether portal",
+  "config.asttweaks.portalprotect.enabled.tooltip": "Only cancels placements on sides that would trigger a nether portal's validity check (the portal's in-plane axis and vertical sides). The thin perpendicular sides (front/back of a horizontal portal) remain placeable, so rails and other suppression blocks work without a whitelist.",
+  "message.asttweaks.portalprotect.blocked": "Portal Protect: placing here would break the portal",
 
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
