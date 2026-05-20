@@ -38,8 +38,12 @@ public class AutoRestockFeature implements Feature {
         PICKUP_SOURCE,
         PLACE_ALL,
         PLACE_ONE_BY_ONE,
-        RETURN_REMAINDER
+        RETURN_REMAINDER,
+        SWAP_TO_OFFHAND
     }
+
+    /** Hotbar button index used by SlotActionType.SWAP to swap a slot with the offhand. */
+    private static final int OFFHAND_SWAP_BUTTON = 40;
 
     private static class TransferTask {
         final TaskContext context;
@@ -49,11 +53,12 @@ public class AutoRestockFeature implements Feature {
         final int targetScreenSlot;
         final int sourceCount;
         final int transferCount;
-        TaskStage stage = TaskStage.PICKUP_SOURCE;
+        TaskStage stage;
         int remainingPlacements;
 
         TransferTask(TaskContext context, ItemStack configuredStack, int expectedSyncId,
-                     int sourceScreenSlot, int targetScreenSlot, int sourceCount, int transferCount) {
+                     int sourceScreenSlot, int targetScreenSlot, int sourceCount, int transferCount,
+                     boolean offhandSwap) {
             this.context = context;
             this.configuredStack = configuredStack;
             this.expectedSyncId = expectedSyncId;
@@ -61,6 +66,7 @@ public class AutoRestockFeature implements Feature {
             this.targetScreenSlot = targetScreenSlot;
             this.sourceCount = sourceCount;
             this.transferCount = transferCount;
+            this.stage = offhandSwap ? TaskStage.SWAP_TO_OFFHAND : TaskStage.PICKUP_SOURCE;
             this.remainingPlacements = transferCount;
         }
 
@@ -253,6 +259,18 @@ public class AutoRestockFeature implements Feature {
                     }
                     activeTask = null;
                 }
+
+                case SWAP_TO_OFFHAND -> {
+                    ItemStack sourceStack = handler.getSlot(activeTask.sourceScreenSlot).getStack();
+                    if (!getOffhandStack().isEmpty()
+                            || !AutoRestockConfig.matches(activeTask.configuredStack, sourceStack)) {
+                        resetState();
+                        return;
+                    }
+
+                    swapToOffhand(client, activeTask.sourceScreenSlot);
+                    activeTask = null;
+                }
             }
         }
     }
@@ -283,9 +301,25 @@ public class AutoRestockFeature implements Feature {
         int totalCurrentCount = 0;
         int targetScreenSlot = -1;
         int targetAvailableSpace = 0;
+        boolean offhandContainerTarget = false;
+        boolean offhandEmpty = false;
 
         for (int targetInventorySlot : targetSlots) {
             int targetInvIndex = sanitizeTargetSlot(targetInventorySlot);
+
+            // Container screen handlers do not expose the offhand slot, so it cannot be
+            // clicked directly. Track it here and, if no other target needs filling,
+            // restock it through an offhand SWAP action below.
+            if (targetInvIndex == AutoRestockConfig.OFFHAND_SLOT && context == TaskContext.CONTAINER) {
+                ItemStack offhandStack = getOffhandStack();
+                offhandContainerTarget = true;
+                offhandEmpty = offhandStack.isEmpty();
+                if (!offhandStack.isEmpty() && AutoRestockConfig.matches(configuredStack, offhandStack)) {
+                    totalCurrentCount += offhandStack.getCount();
+                }
+                continue;
+            }
+
             int candidateTargetScreenSlot = findPlayerInventoryScreenSlot(handler, targetInvIndex);
             if (candidateTargetScreenSlot == -1) {
                 continue;
@@ -312,8 +346,17 @@ public class AutoRestockFeature implements Feature {
             }
         }
 
+        // The offhand can only be reached from a container via a SWAP action, and only
+        // safely when it is empty. Use it as a fallback once no directly clickable
+        // target slot needs filling.
+        boolean offhandSwapTarget = false;
+        if (targetScreenSlot == -1 && offhandContainerTarget && offhandEmpty) {
+            offhandSwapTarget = true;
+            targetAvailableSpace = configuredStack.getMaxCount();
+        }
+
         int deficit = desiredCount - totalCurrentCount;
-        if (deficit <= 0 || targetScreenSlot == -1 || targetAvailableSpace <= 0) {
+        if (deficit <= 0 || targetAvailableSpace <= 0 || (targetScreenSlot == -1 && !offhandSwapTarget)) {
             return null;
         }
 
@@ -335,6 +378,25 @@ public class AutoRestockFeature implements Feature {
             return null;
         }
 
+        if (offhandSwapTarget) {
+            // A direct SWAP moves the whole source stack into the offhand. Only use it
+            // when that exactly matches the amount we want (e.g. a single totem);
+            // partial offhand restock from a container is not supported.
+            if (transferCount != sourceStack.getCount()) {
+                return null;
+            }
+
+            return new TransferTask(
+                    context,
+                    configuredStack.copyWithCount(1),
+                    handler.syncId,
+                    sourceScreenSlot,
+                    -1,
+                    sourceStack.getCount(),
+                    transferCount,
+                    true);
+        }
+
         return new TransferTask(
                 context,
                 configuredStack.copyWithCount(1),
@@ -342,7 +404,8 @@ public class AutoRestockFeature implements Feature {
                 sourceScreenSlot,
                 targetScreenSlot,
                 sourceStack.getCount(),
-                transferCount);
+                transferCount,
+                false);
     }
 
     private int findContainerSourceSlot(ScreenHandler handler, ItemStack configuredStack) {
@@ -507,6 +570,23 @@ public class AutoRestockFeature implements Feature {
                 button,
                 SlotActionType.PICKUP,
                 client.player);
+    }
+
+    private void swapToOffhand(MinecraftClient client, int slot) {
+        client.interactionManager.clickSlot(
+                client.player.currentScreenHandler.syncId,
+                slot,
+                OFFHAND_SWAP_BUTTON,
+                SlotActionType.SWAP,
+                client.player);
+    }
+
+    private ItemStack getOffhandStack() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null) {
+            return ItemStack.EMPTY;
+        }
+        return client.player.getOffHandStack();
     }
 
     private void resetState() {
