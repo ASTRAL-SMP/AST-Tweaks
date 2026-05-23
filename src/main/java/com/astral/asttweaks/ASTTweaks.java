@@ -3,6 +3,7 @@ package com.astral.asttweaks;
 import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.FeatureManager;
+import com.astral.asttweaks.feature.updatechecker.ResidualCleanup;
 import com.astral.asttweaks.util.KeyBindings;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
@@ -18,6 +19,8 @@ public class ASTTweaks implements ClientModInitializer {
     public void onInitializeClient() {
         instance = this;
         LOGGER.info("Initializing AST-Tweaks...");
+
+        ResidualCleanup.run();
 
         // Load configuration
         ModConfig.getInstance().load();
