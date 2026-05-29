@@ -409,7 +409,11 @@ public class AutoRestockFeature implements Feature {
     }
 
     private int findContainerSourceSlot(ScreenHandler handler, ItemStack configuredStack) {
-        for (int i = 0; i < handler.slots.size(); i++) {
+        boolean fromEnd = config.getContainerPickupOrder() == ContainerPickupOrder.LAST_SLOT;
+        int size = handler.slots.size();
+
+        for (int n = 0; n < size; n++) {
+            int i = fromEnd ? size - 1 - n : n;
             Slot slot = handler.getSlot(i);
             if (slot.inventory instanceof PlayerInventory) {
                 continue;

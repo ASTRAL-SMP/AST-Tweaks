@@ -72,6 +72,11 @@ public class AutoRestockConfig {
         return Math.max(1, ModConfig.getInstance().autoRestockOperationsPerTick);
     }
 
+    public ContainerPickupOrder getContainerPickupOrder() {
+        ContainerPickupOrder order = ModConfig.getInstance().autoRestockContainerPickupOrder;
+        return order != null ? order : ContainerPickupOrder.FIRST_SLOT;
+    }
+
     public Set<Integer> getProtectedSlots() {
         return ModConfig.getInstance().autoRestockProtectedSlots;
     }
