@@ -3,6 +3,7 @@ package com.astral.asttweaks.config;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.autorestock.AutoRestockEntry;
 import com.astral.asttweaks.feature.autodrop.AutoDropMode;
+import com.astral.asttweaks.feature.autorestock.ContainerPickupOrder;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
@@ -135,6 +136,7 @@ public class ModConfig {
     public int autoRestockOperationsPerTick = 8;
     public List<AutoRestockEntry> autoRestockEntries = new ArrayList<>();
     public Set<Integer> autoRestockProtectedSlots = new HashSet<>();  // PlayerInventory indices excluded as restock sources (default: none)
+    public ContainerPickupOrder autoRestockContainerPickupOrder = ContainerPickupOrder.FIRST_SLOT;  // Slot scan order when pulling from containers
 
     // Villager link settings
     public boolean villagerLinkEnabled = false;
@@ -346,6 +348,9 @@ public class ModConfig {
                     }
                     if (loaded.autoRestockProtectedSlots != null) {
                         this.autoRestockProtectedSlots = new HashSet<>(loaded.autoRestockProtectedSlots);
+                    }
+                    if (loaded.autoRestockContainerPickupOrder != null) {
+                        this.autoRestockContainerPickupOrder = loaded.autoRestockContainerPickupOrder;
                     }
                     this.villagerLinkEnabled = loaded.villagerLinkEnabled;
                     this.villagerLinkRange = loaded.villagerLinkRange;

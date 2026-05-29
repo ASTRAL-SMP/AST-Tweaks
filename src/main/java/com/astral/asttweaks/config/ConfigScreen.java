@@ -4,6 +4,7 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.autodrop.AutoDropMode;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropItemListScreen;
 import com.astral.asttweaks.feature.autodrop.gui.AutoDropProtectedSlotScreen;
+import com.astral.asttweaks.feature.autorestock.ContainerPickupOrder;
 import com.astral.asttweaks.feature.autorestock.gui.AutoRestockItemListScreen;
 import com.astral.asttweaks.feature.autorestock.gui.AutoRestockProtectedSlotScreen;
 import com.astral.asttweaks.feature.autoeat.gui.ButtonEntry;
@@ -958,6 +959,17 @@ public class ConfigScreen implements ModMenuApi {
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick.tooltip"))
                 .setTextGetter(value -> Text.literal(value + " ops"))
                 .setSaveConsumer(value -> config.autoRestockOperationsPerTick = value)
+                .build());
+
+        autoRestock.addEntry(entryBuilder
+                .startEnumSelector(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder"),
+                        ContainerPickupOrder.class,
+                        config.autoRestockContainerPickupOrder)
+                .setDefaultValue(ContainerPickupOrder.FIRST_SLOT)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder.tooltip"))
+                .setEnumNameProvider(order -> Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder." + ((ContainerPickupOrder) order).getId()))
+                .setSaveConsumer(value -> config.autoRestockContainerPickupOrder = value)
                 .build());
 
         autoRestock.addEntry(new ButtonEntry(
