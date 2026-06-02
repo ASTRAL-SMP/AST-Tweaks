@@ -1097,7 +1097,7 @@ public class ConfigScreen implements ModMenuApi {
                 .startIntSlider(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius"),
                         config.syncerTuneDetectionChunkRadius, 1, 16)
-                .setDefaultValue(4)
+                .setDefaultValue(8)
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneDetectionChunkRadius = value)
                 .build());

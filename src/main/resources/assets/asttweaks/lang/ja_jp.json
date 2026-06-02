@@ -163,7 +163,7 @@
   "config.asttweaks.autorepair.targetSlot": "修繕スロット",
   "config.asttweaks.autorepair.targetSlot.tooltip": "修繕アイテムを配置するホットバースロット（1-9）",
   "config.asttweaks.autorepair.includeArmor": "装備中の防具を含める",
-  "config.asttweaks.autorepair.includeArmor.tooltip": "装備中のヘルメット/チェストプレート/レギンス/ブーツも修繕対象に含めます。各スロットを一時的に修繕スロット（ホットバー）へ移動して修繕し、終わったら元に戻します。修繕スロットに別アイテムがある場合、メインインベントリに空きスロットが 1 つ必要です。",
+  "config.asttweaks.autorepair.includeArmor.tooltip": "装備中のヘルメット/チェストプレート/レギンス/ブーツも修繕対象に含めます。防具は装備したままで、投擲した経験値瓶の Mending によって修繕されます（スロット移動なし）。",
   "config.asttweaks.autorepair.itemlist.title": "修復アイテム設定",
   "config.asttweaks.autorepair.itemlist.help.whitelist": "クリックしてホワイトリストにアイテムを追加/削除します",
   "config.asttweaks.autorepair.itemlist.help.blacklist": "クリックしてブラックリストにアイテムを追加/削除します",

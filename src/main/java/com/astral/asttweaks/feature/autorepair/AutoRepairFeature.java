@@ -240,8 +240,10 @@ public class AutoRepairFeature implements Feature {
     private void fastUseOffhand(MinecraftClient client, PlayerEntity player) {
         if (client.interactionManager == null) return;
 
-        ItemStack mainhand = player.getMainHandStack();
-        int currentDamage = mainhand.getDamage();
+        ItemStack targetStack = currentRepairSlot != -1 && isArmorSlot(currentRepairSlot)
+                ? player.getInventory().getStack(currentRepairSlot)
+                : player.getMainHandStack();
+        int currentDamage = targetStack.getDamage();
 
         // damage 更新を検知したら in-flight カウンタを巻き戻す
         if (lastSeenDamage == -1 || currentDamage < lastSeenDamage) {
@@ -350,66 +352,20 @@ public class AutoRepairFeature implements Feature {
     }
 
     /**
-     * 装備中の防具を target hotbar スロットに持ってくる。
-     * - target にあった元アイテムは main inventory の空きスロットへ退避（armorDisplacedFromTargetSlot に記録）
-     * - その後 armor → target に PICKUP ベースで移動（ArmorSlot.canInsert チェックを回避）
-     * 退避先が確保できない場合 false。
+     * 防具は装備したまま修繕する（Mending は装備中の armor にも適用されるため）。
+     * スロット移動は行わないので常に成功。
      */
     private boolean setupArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
-        if (client.interactionManager == null) return false;
-
-        int targetSlot = getTargetSlot();
-        PlayerInventory inv = player.getInventory();
-
-        // target に何かあれば main inv (9-35) の空きスロットへ退避
-        if (!inv.getStack(targetSlot).isEmpty()) {
-            int emptyMainSlot = findEmptyMainInvSlot(player);
-            if (emptyMainSlot == -1) {
-                ASTTweaks.LOGGER.warn("AutoRepair: no empty slot to displace target for armor repair, skipping {}", armorSlot);
-                return false;
-            }
-            // target スロット (hotbar) と main inv の空きスロットを SWAP
-            swapSlots(client, player, targetSlot, emptyMainSlot);
-            armorDisplacedFromTargetSlot = emptyMainSlot;
-        } else {
-            armorDisplacedFromTargetSlot = -1;
-        }
-
-        int syncId = player.currentScreenHandler.syncId;
-        int armorScreen = armorInvToScreenSlot(armorSlot);
-        int targetScreen = targetSlot + 36;
-
-        // armor を pickup → target に place
-        client.interactionManager.clickSlot(syncId, armorScreen, 0, SlotActionType.PICKUP, player);
-        client.interactionManager.clickSlot(syncId, targetScreen, 0, SlotActionType.PICKUP, player);
-
-        ASTTweaks.LOGGER.info("Set up armor repair: armorSlot={} → targetSlot={}, displaced={}",
-                armorSlot, targetSlot, armorDisplacedFromTargetSlot);
+        armorDisplacedFromTargetSlot = -1;
+        ASTTweaks.LOGGER.info("Set up armor repair (in-place): armorSlot={}", armorSlot);
         return true;
     }
 
     /**
-     * setupArmorRepair の逆操作。修繕済み防具を armor slot に戻し、退避していたアイテムを target に戻す。
+     * 装備のまま修繕したので戻す必要なし。
      */
     private void teardownArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
-        if (client.interactionManager == null) return;
-
-        int targetSlot = getTargetSlot();
-        int syncId = player.currentScreenHandler.syncId;
-        int armorScreen = armorInvToScreenSlot(armorSlot);
-        int targetScreen = targetSlot + 36;
-
-        // target から防具を pickup → armor に place
-        client.interactionManager.clickSlot(syncId, targetScreen, 0, SlotActionType.PICKUP, player);
-        client.interactionManager.clickSlot(syncId, armorScreen, 0, SlotActionType.PICKUP, player);
-
-        // 退避していたアイテムを target に戻す
-        if (armorDisplacedFromTargetSlot != -1) {
-            swapSlots(client, player, targetSlot, armorDisplacedFromTargetSlot);
-            armorDisplacedFromTargetSlot = -1;
-        }
-
-        ASTTweaks.LOGGER.info("Tear down armor repair: targetSlot={} → armorSlot={}", targetSlot, armorSlot);
+        // no-op: armor は装備したままなのでスロット移動は不要
     }
 
     /**
@@ -595,14 +551,17 @@ public class AutoRepairFeature implements Feature {
     }
 
     /**
-     * Check if current mainhand item is fully repaired (damage == 0).
+     * 現在の修繕対象が damage=0 まで戻ったかチェック。
+     * armor (装備のまま修繕) の場合は対象 armor スロットを、それ以外は mainhand を見る。
      */
     private boolean isCurrentItemFullyRepaired(PlayerEntity player) {
-        ItemStack mainhand = player.getMainHandStack();
-        if (mainhand.isEmpty() || !mainhand.isDamageable()) {
+        ItemStack target = currentRepairSlot != -1 && isArmorSlot(currentRepairSlot)
+                ? player.getInventory().getStack(currentRepairSlot)
+                : player.getMainHandStack();
+        if (target.isEmpty() || !target.isDamageable()) {
             return true;
         }
-        return mainhand.getDamage() == 0;
+        return target.getDamage() == 0;
     }
 
     /**

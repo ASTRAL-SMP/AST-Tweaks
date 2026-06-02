@@ -163,7 +163,7 @@
   "config.asttweaks.autorepair.targetSlot": "Target Slot",
   "config.asttweaks.autorepair.targetSlot.tooltip": "Hotbar slot to use for repairing items (1-9)",
   "config.asttweaks.autorepair.includeArmor": "Include Equipped Armor",
-  "config.asttweaks.autorepair.includeArmor.tooltip": "Also repair currently-equipped armor (helmet/chestplate/leggings/boots). Each piece is temporarily moved to the target hotbar slot for repair and put back when done. Requires a free main-inventory slot if the target hotbar slot is occupied.",
+  "config.asttweaks.autorepair.includeArmor.tooltip": "Also repair currently-equipped armor (helmet/chestplate/leggings/boots). Armor stays equipped — Mending applies through the experience bottle throw, no slot moves.",
   "config.asttweaks.autorepair.itemlist.title": "Repair Item Settings",
   "config.asttweaks.autorepair.itemlist.help.whitelist": "Click to add/remove items from the whitelist",
   "config.asttweaks.autorepair.itemlist.help.blacklist": "Click to add/remove items from the blacklist",
