@@ -39,8 +39,13 @@ public class AutoRepairFeature implements Feature {
     private int previousMainhandSlot = -1;   // Player's original selected slot before repair
     private int originalOffhandDisplacedSlot = -1;  // オフハンドアイテムの退避先スロット
     private boolean hadOffhandItem = false;          // 修繕開始時にオフハンドにアイテムがあったか
+    private int armorDisplacedFromTargetSlot = -1;  // armor 修繕時、target スロットの元アイテムを退避した先（PlayerInventory index）
     private Set<Integer> repairedSlots = new HashSet<>();  // Slots that have been repaired this session
     private static final int SYNC_DELAY_TICKS = 1;  // Minimal delay for fast swapping
+
+    // PlayerInventory slot ranges
+    private static final int ARMOR_SLOT_FIRST = 36;
+    private static final int ARMOR_SLOT_LAST = 39;
 
     // In-flight throttle state: 投擲済みボトルの推定リペア量で過剰投擲を抑制する
     private int bottlesInFlight = 0;        // 投擲後 damage 更新待ちのボトル本数（推定）
@@ -163,16 +168,24 @@ public class AutoRepairFeature implements Feature {
                     return;
                 }
 
-                currentRepairSlot = repairSlot;
                 int targetSlot = getTargetSlot();
                 ASTTweaks.LOGGER.info("State: SETUP_MAINHAND, repairSlot: {}, targetSlot: {}", repairSlot, targetSlot);
 
-                // Move item to target slot if not already there
-                if (repairSlot != targetSlot) {
+                if (isArmorSlot(repairSlot)) {
+                    // 防具スロットは ArmorSlot.canInsert で非装備品が弾かれるため、
+                    // 先に target を空にしてから PICKUP ベースで防具を取り込む
+                    if (!setupArmorRepair(client, player, repairSlot)) {
+                        // 退避先確保失敗 → 今回はスキップ
+                        repairedSlots.add(repairSlot);
+                        return;
+                    }
+                    delayTicks = SYNC_DELAY_TICKS;
+                } else if (repairSlot != targetSlot) {
                     moveItemToMainhand(client, player, repairSlot);
                     delayTicks = SYNC_DELAY_TICKS;
                 }
 
+                currentRepairSlot = repairSlot;
                 // Select target slot
                 player.getInventory().selectedSlot = targetSlot;
                 // 新規アイテムにつき in-flight 推定をリセット
@@ -283,7 +296,11 @@ public class AutoRepairFeature implements Feature {
 
         // 現アイテムを元のスロットへ戻す（swap-back）
         if (currentRepairSlot != -1 && currentRepairSlot != targetSlot) {
-            swapSlots(client, player, targetSlot, currentRepairSlot);
+            if (isArmorSlot(currentRepairSlot)) {
+                teardownArmorRepair(client, player, currentRepairSlot);
+            } else {
+                swapSlots(client, player, targetSlot, currentRepairSlot);
+            }
         }
 
         // 次の修繕対象を探す
@@ -296,7 +313,16 @@ public class AutoRepairFeature implements Feature {
         }
 
         // 次アイテムを target slot に持ってくる（swap-in、同一 tick で連続実行）
-        if (nextSlot != targetSlot) {
+        if (isArmorSlot(nextSlot)) {
+            if (!setupArmorRepair(client, player, nextSlot)) {
+                // 退避先確保失敗 → スキップして次回検索
+                repairedSlots.add(nextSlot);
+                currentRepairSlot = -1;
+                delayTicks = SYNC_DELAY_TICKS;
+                currentState = State.SETUP_MAINHAND;
+                return;
+            }
+        } else if (nextSlot != targetSlot) {
             swapSlots(client, player, nextSlot, targetSlot);
         }
         player.getInventory().selectedSlot = targetSlot;
@@ -310,6 +336,94 @@ public class AutoRepairFeature implements Feature {
         // server 側へ slot 更新が伝わるのを待つ
         delayTicks = SYNC_DELAY_TICKS;
         currentState = State.REPAIRING;
+    }
+
+    private static boolean isArmorSlot(int invSlot) {
+        return invSlot >= ARMOR_SLOT_FIRST && invSlot <= ARMOR_SLOT_LAST;
+    }
+
+    /**
+     * PlayerInventory の armor slot (36-39) を PlayerScreenHandler のスクリーンスロット (5-8) に変換。
+     */
+    private static int armorInvToScreenSlot(int invSlot) {
+        return 44 - invSlot;
+    }
+
+    /**
+     * 装備中の防具を target hotbar スロットに持ってくる。
+     * - target にあった元アイテムは main inventory の空きスロットへ退避（armorDisplacedFromTargetSlot に記録）
+     * - その後 armor → target に PICKUP ベースで移動（ArmorSlot.canInsert チェックを回避）
+     * 退避先が確保できない場合 false。
+     */
+    private boolean setupArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
+        if (client.interactionManager == null) return false;
+
+        int targetSlot = getTargetSlot();
+        PlayerInventory inv = player.getInventory();
+
+        // target に何かあれば main inv (9-35) の空きスロットへ退避
+        if (!inv.getStack(targetSlot).isEmpty()) {
+            int emptyMainSlot = findEmptyMainInvSlot(player);
+            if (emptyMainSlot == -1) {
+                ASTTweaks.LOGGER.warn("AutoRepair: no empty slot to displace target for armor repair, skipping {}", armorSlot);
+                return false;
+            }
+            // target スロット (hotbar) と main inv の空きスロットを SWAP
+            swapSlots(client, player, targetSlot, emptyMainSlot);
+            armorDisplacedFromTargetSlot = emptyMainSlot;
+        } else {
+            armorDisplacedFromTargetSlot = -1;
+        }
+
+        int syncId = player.currentScreenHandler.syncId;
+        int armorScreen = armorInvToScreenSlot(armorSlot);
+        int targetScreen = targetSlot + 36;
+
+        // armor を pickup → target に place
+        client.interactionManager.clickSlot(syncId, armorScreen, 0, SlotActionType.PICKUP, player);
+        client.interactionManager.clickSlot(syncId, targetScreen, 0, SlotActionType.PICKUP, player);
+
+        ASTTweaks.LOGGER.info("Set up armor repair: armorSlot={} → targetSlot={}, displaced={}",
+                armorSlot, targetSlot, armorDisplacedFromTargetSlot);
+        return true;
+    }
+
+    /**
+     * setupArmorRepair の逆操作。修繕済み防具を armor slot に戻し、退避していたアイテムを target に戻す。
+     */
+    private void teardownArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
+        if (client.interactionManager == null) return;
+
+        int targetSlot = getTargetSlot();
+        int syncId = player.currentScreenHandler.syncId;
+        int armorScreen = armorInvToScreenSlot(armorSlot);
+        int targetScreen = targetSlot + 36;
+
+        // target から防具を pickup → armor に place
+        client.interactionManager.clickSlot(syncId, targetScreen, 0, SlotActionType.PICKUP, player);
+        client.interactionManager.clickSlot(syncId, armorScreen, 0, SlotActionType.PICKUP, player);
+
+        // 退避していたアイテムを target に戻す
+        if (armorDisplacedFromTargetSlot != -1) {
+            swapSlots(client, player, targetSlot, armorDisplacedFromTargetSlot);
+            armorDisplacedFromTargetSlot = -1;
+        }
+
+        ASTTweaks.LOGGER.info("Tear down armor repair: targetSlot={} → armorSlot={}", targetSlot, armorSlot);
+    }
+
+    /**
+     * main inventory (9-35) から空きスロットを探す。なければ -1。
+     * hotbar や offhand は除外（既に何か入っている前提）。
+     */
+    private int findEmptyMainInvSlot(PlayerEntity player) {
+        PlayerInventory inv = player.getInventory();
+        for (int i = 9; i < 36; i++) {
+            if (inv.getStack(i).isEmpty()) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -430,6 +544,16 @@ public class AutoRepairFeature implements Feature {
         for (int i = 9; i < 36; i++) {
             if (!repairedSlots.contains(i) && needsRepair(inv.getStack(i))) {
                 return i;
+            }
+        }
+
+        // 最後に装備中の防具 (slots 36-39)
+        // 設定でオフの場合はスキップ
+        if (config.shouldRepairArmor()) {
+            for (int i = ARMOR_SLOT_FIRST; i <= ARMOR_SLOT_LAST; i++) {
+                if (!repairedSlots.contains(i) && needsRepair(inv.getStack(i))) {
+                    return i;
+                }
             }
         }
 
@@ -582,6 +706,7 @@ public class AutoRepairFeature implements Feature {
         previousMainhandSlot = -1;
         originalOffhandDisplacedSlot = -1;
         hadOffhandItem = false;
+        armorDisplacedFromTargetSlot = -1;
         repairedSlots.clear();
         bottlesInFlight = 0;
         lastSeenDamage = -1;

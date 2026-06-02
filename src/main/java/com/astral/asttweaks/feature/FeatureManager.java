@@ -17,6 +17,7 @@ import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
 import com.astral.asttweaks.feature.portalprotect.PortalProtectFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
+import com.astral.asttweaks.feature.syncertune.SyncerTuneFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -65,6 +66,7 @@ public class FeatureManager {
         registerFeature(new VillagerLinkFeature());
         registerFeature(new PickProtectFeature());
         registerFeature(new PortalProtectFeature());
+        registerFeature(new SyncerTuneFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -233,5 +235,12 @@ public class FeatureManager {
      */
     public PortalProtectFeature getPortalProtectFeature() {
         return (PortalProtectFeature) getFeature("portalprotect");
+    }
+
+    /**
+     * Get the syncer tune feature.
+     */
+    public SyncerTuneFeature getSyncerTuneFeature() {
+        return (SyncerTuneFeature) getFeature("syncertune");
     }
 }
