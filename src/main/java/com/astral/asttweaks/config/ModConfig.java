@@ -158,7 +158,7 @@ public class ModConfig {
 
     // Syncer Tune (TweakerMore serverDataSyncer 自動切替)
     public boolean syncerTuneEnabled = false;
-    public int syncerTuneDetectionChunkRadius = 4;          // プレイヤー周辺チャンク半径
+    public int syncerTuneDetectionChunkRadius = 8;          // プレイヤー周辺チャンク半径
     public int syncerTuneDetectionIntervalTicks = 20;       // 1 秒
     public int syncerTuneHighThreshold = 200;               // この block entity 数以上で高密度判定
     public int syncerTuneHighInterval = 5;                  // 高密度時 query interval (1-100)
