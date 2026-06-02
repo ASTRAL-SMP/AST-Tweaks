@@ -92,6 +92,7 @@ public class ModConfig {
     public boolean autoRepairWhitelistMode = false;   // false = blacklist mode
     public Set<String> autoRepairItemList = new HashSet<>();
     public int autoRepairTargetSlot = 0;              // Hotbar slot to use for repairing items (0-8)
+    public boolean autoRepairIncludeArmor = true;     // 装備中の防具も修繕対象に含める
 
     // Mass grindstone settings
     public boolean massGrindstoneEnabled = true;
@@ -154,6 +155,16 @@ public class ModConfig {
 
     // Litematica compatibility settings
     public boolean litematicaSchematicDropEnabled = true;
+
+    // Syncer Tune (TweakerMore serverDataSyncer 自動切替)
+    public boolean syncerTuneEnabled = false;
+    public int syncerTuneDetectionChunkRadius = 4;          // プレイヤー周辺チャンク半径
+    public int syncerTuneDetectionIntervalTicks = 20;       // 1 秒
+    public int syncerTuneHighThreshold = 200;               // この block entity 数以上で高密度判定
+    public int syncerTuneHighInterval = 5;                  // 高密度時 query interval (1-100)
+    public int syncerTuneHighLimit = 64;                    // 高密度時 query limit (1-8192)
+    public int syncerTuneNormalInterval = 1;                // 通常時 query interval
+    public int syncerTuneNormalLimit = 512;                 // 通常時 query limit
 
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
@@ -285,6 +296,7 @@ public class ModConfig {
                         this.autoRepairItemList = new HashSet<>(loaded.autoRepairItemList);
                     }
                     this.autoRepairTargetSlot = loaded.autoRepairTargetSlot;
+                    this.autoRepairIncludeArmor = loaded.autoRepairIncludeArmor;
                     this.massGrindstoneEnabled = loaded.massGrindstoneEnabled;
                     this.massGrindstoneWhitelistMode = loaded.massGrindstoneWhitelistMode;
                     if (loaded.massGrindstoneItemList != null) {
@@ -363,6 +375,28 @@ public class ModConfig {
                     }
                     this.portalProtectEnabled = loaded.portalProtectEnabled;
                     this.litematicaSchematicDropEnabled = loaded.litematicaSchematicDropEnabled;
+                    this.syncerTuneEnabled = loaded.syncerTuneEnabled;
+                    if (loaded.syncerTuneDetectionChunkRadius > 0) {
+                        this.syncerTuneDetectionChunkRadius = loaded.syncerTuneDetectionChunkRadius;
+                    }
+                    if (loaded.syncerTuneDetectionIntervalTicks > 0) {
+                        this.syncerTuneDetectionIntervalTicks = loaded.syncerTuneDetectionIntervalTicks;
+                    }
+                    if (loaded.syncerTuneHighThreshold > 0) {
+                        this.syncerTuneHighThreshold = loaded.syncerTuneHighThreshold;
+                    }
+                    if (loaded.syncerTuneHighInterval > 0) {
+                        this.syncerTuneHighInterval = loaded.syncerTuneHighInterval;
+                    }
+                    if (loaded.syncerTuneHighLimit > 0) {
+                        this.syncerTuneHighLimit = loaded.syncerTuneHighLimit;
+                    }
+                    if (loaded.syncerTuneNormalInterval > 0) {
+                        this.syncerTuneNormalInterval = loaded.syncerTuneNormalInterval;
+                    }
+                    if (loaded.syncerTuneNormalLimit > 0) {
+                        this.syncerTuneNormalLimit = loaded.syncerTuneNormalLimit;
+                    }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);

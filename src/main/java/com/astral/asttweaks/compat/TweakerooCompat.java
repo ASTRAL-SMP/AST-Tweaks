@@ -19,6 +19,12 @@ public class TweakerooCompat {
     private static Object autoCollectMaterialListItemToggle = null;
     private static Method tweakerMoreGetBooleanValueMethod = null;
 
+    // ServerDataSyncer integer configs (TweakerMore mod_tweaks)
+    private static Object serverDataSyncerQueryIntervalConfig = null;
+    private static Object serverDataSyncerQueryLimitConfig = null;
+    private static Method tweakerMoreGetIntegerValueMethod = null;
+    private static Method tweakerMoreSetIntegerValueMethod = null;
+
     // Stored state for restoration
     private static boolean previousState = false;
     private static boolean stateModified = false;
@@ -81,13 +87,27 @@ public class TweakerooCompat {
             Class<?> configsClass = Class.forName("me.fallenbreath.tweakermore.config.TweakerMoreConfigs");
             autoCollectMaterialListItemToggle = configsClass.getField("AUTO_COLLECT_MATERIAL_LIST_ITEM").get(null);
             tweakerMoreGetBooleanValueMethod = autoCollectMaterialListItemToggle.getClass().getMethod("getBooleanValue");
+
+            // ServerDataSyncer の Integer 設定（マップエンティティ等の問い合わせ間隔・上限）
+            try {
+                serverDataSyncerQueryIntervalConfig = configsClass.getField("SERVER_DATA_SYNCER_QUERY_INTERVAL").get(null);
+                serverDataSyncerQueryLimitConfig = configsClass.getField("SERVER_DATA_SYNCER_QUERY_LIMIT").get(null);
+                // TweakerMoreConfigInteger は maLiLib ConfigInteger を継承し、getIntegerValue/setIntegerValue を持つ
+                tweakerMoreGetIntegerValueMethod = serverDataSyncerQueryIntervalConfig.getClass().getMethod("getIntegerValue");
+                tweakerMoreSetIntegerValueMethod = serverDataSyncerQueryIntervalConfig.getClass().getMethod("setIntegerValue", int.class);
+            } catch (NoSuchFieldException | NoSuchMethodException e) {
+                ASTTweaks.LOGGER.warn("TweakerMore ServerDataSyncer integer config unavailable: {}", e.getMessage());
+                serverDataSyncerQueryIntervalConfig = null;
+                serverDataSyncerQueryLimitConfig = null;
+            }
+
             tweakerMoreAvailable = true;
             ASTTweaks.LOGGER.info("TweakerMore compatibility initialized successfully");
         } catch (ClassNotFoundException e) {
-            ASTTweaks.LOGGER.info("TweakerMore not found - autoCollectMaterialListItem compatibility disabled");
+            ASTTweaks.LOGGER.info("TweakerMore not found - compatibility disabled");
             tweakerMoreAvailable = false;
         } catch (NoSuchFieldException | NoSuchMethodException e) {
-            ASTTweaks.LOGGER.warn("TweakerMore API changed - autoCollectMaterialListItem compatibility disabled: {}", e.getMessage());
+            ASTTweaks.LOGGER.warn("TweakerMore API changed - compatibility disabled: {}", e.getMessage());
             tweakerMoreAvailable = false;
         } catch (Exception e) {
             ASTTweaks.LOGGER.warn("Failed to initialize TweakerMore compatibility: {}", e.getMessage());
@@ -164,6 +184,71 @@ public class TweakerooCompat {
         try {
             return (boolean) getBooleanValueMethod.invoke(toolSwitchToggle);
         } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Whether TweakerMore's ServerDataSyncer integer configs are accessible via reflection.
+     */
+    public static boolean isServerDataSyncerConfigAvailable() {
+        return tweakerMoreAvailable
+                && serverDataSyncerQueryIntervalConfig != null
+                && serverDataSyncerQueryLimitConfig != null
+                && tweakerMoreGetIntegerValueMethod != null
+                && tweakerMoreSetIntegerValueMethod != null;
+    }
+
+    /**
+     * Read TweakerMore's serverDataSyncerQueryInterval. Returns -1 if unavailable.
+     */
+    public static int getServerDataSyncerQueryInterval() {
+        if (!isServerDataSyncerConfigAvailable()) return -1;
+        try {
+            return (int) tweakerMoreGetIntegerValueMethod.invoke(serverDataSyncerQueryIntervalConfig);
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to read serverDataSyncerQueryInterval: {}", e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Read TweakerMore's serverDataSyncerQueryLimit. Returns -1 if unavailable.
+     */
+    public static int getServerDataSyncerQueryLimit() {
+        if (!isServerDataSyncerConfigAvailable()) return -1;
+        try {
+            return (int) tweakerMoreGetIntegerValueMethod.invoke(serverDataSyncerQueryLimitConfig);
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to read serverDataSyncerQueryLimit: {}", e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Write TweakerMore's serverDataSyncerQueryInterval. Returns false if unavailable.
+     */
+    public static boolean setServerDataSyncerQueryInterval(int value) {
+        if (!isServerDataSyncerConfigAvailable()) return false;
+        try {
+            tweakerMoreSetIntegerValueMethod.invoke(serverDataSyncerQueryIntervalConfig, value);
+            return true;
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to set serverDataSyncerQueryInterval: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Write TweakerMore's serverDataSyncerQueryLimit. Returns false if unavailable.
+     */
+    public static boolean setServerDataSyncerQueryLimit(int value) {
+        if (!isServerDataSyncerConfigAvailable()) return false;
+        try {
+            tweakerMoreSetIntegerValueMethod.invoke(serverDataSyncerQueryLimitConfig, value);
+            return true;
+        } catch (Exception e) {
+            ASTTweaks.LOGGER.warn("Failed to set serverDataSyncerQueryLimit: {}", e.getMessage());
             return false;
         }
     }

@@ -42,6 +42,13 @@ public class AutoRepairConfig {
     }
 
     /**
+     * Whether to include currently-equipped armor (slots 36-39) in repair scan.
+     */
+    public boolean shouldRepairArmor() {
+        return ModConfig.getInstance().autoRepairIncludeArmor;
+    }
+
+    /**
      * Check if whitelist mode is enabled.
      */
     public boolean isWhitelistMode() {

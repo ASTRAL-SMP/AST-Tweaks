@@ -671,6 +671,15 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.autoRepairTargetSlot = value)
                 .build());
 
+        autoRepair.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor"),
+                        config.autoRepairIncludeArmor)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor.tooltip"))
+                .setSaveConsumer(value -> config.autoRepairIncludeArmor = value)
+                .build());
+
         autoRepair.addEntry(new ButtonEntry(
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
                 button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(MinecraftClient.getInstance().currentScreen))
@@ -1068,6 +1077,90 @@ public class ConfigScreen implements ModMenuApi {
                 Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.button"),
                 button -> MinecraftClient.getInstance().setScreen(new PickProtectSlotScreen(MinecraftClient.getInstance().currentScreen))
         ));
+
+        // ============================
+        // Syncer Tune category (TweakerMore serverDataSyncer 自動切替)
+        // ============================
+        ConfigCategory syncerTune = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.syncertune"));
+
+        syncerTune.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled"),
+                        config.syncerTuneEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneEnabled = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntSlider(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius"),
+                        config.syncerTuneDetectionChunkRadius, 1, 16)
+                .setDefaultValue(4)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneDetectionChunkRadius = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval"),
+                        config.syncerTuneDetectionIntervalTicks)
+                .setMin(1).setMax(1200)
+                .setDefaultValue(20)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneDetectionIntervalTicks = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold"),
+                        config.syncerTuneHighThreshold)
+                .setMin(1).setMax(100000)
+                .setDefaultValue(200)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneHighThreshold = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval"),
+                        config.syncerTuneHighInterval)
+                .setMin(1).setMax(100)
+                .setDefaultValue(5)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneHighInterval = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit"),
+                        config.syncerTuneHighLimit)
+                .setMin(1).setMax(8192)
+                .setDefaultValue(64)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneHighLimit = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval"),
+                        config.syncerTuneNormalInterval)
+                .setMin(1).setMax(100)
+                .setDefaultValue(1)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneNormalInterval = value)
+                .build());
+
+        syncerTune.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit"),
+                        config.syncerTuneNormalLimit)
+                .setMin(1).setMax(8192)
+                .setDefaultValue(512)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit.tooltip"))
+                .setSaveConsumer(value -> config.syncerTuneNormalLimit = value)
+                .build());
 
         builder.setSavingRunnable(config::save);
 
