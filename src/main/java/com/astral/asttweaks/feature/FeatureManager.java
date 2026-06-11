@@ -20,6 +20,7 @@ import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.syncertune.SyncerTuneFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
+import com.astral.asttweaks.feature.worldborderfix.WorldBorderFixFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import java.util.HashMap;
@@ -67,6 +68,7 @@ public class FeatureManager {
         registerFeature(new PickProtectFeature());
         registerFeature(new PortalProtectFeature());
         registerFeature(new SyncerTuneFeature());
+        registerFeature(new WorldBorderFixFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -242,5 +244,12 @@ public class FeatureManager {
      */
     public SyncerTuneFeature getSyncerTuneFeature() {
         return (SyncerTuneFeature) getFeature("syncertune");
+    }
+
+    /**
+     * Get the world border fix feature.
+     */
+    public WorldBorderFixFeature getWorldBorderFixFeature() {
+        return (WorldBorderFixFeature) getFeature("worldborderfix");
     }
 }

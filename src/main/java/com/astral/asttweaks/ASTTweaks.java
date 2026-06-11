@@ -1,5 +1,6 @@
 package com.astral.asttweaks;
 
+import com.astral.asttweaks.compat.NvidiumCompat;
 import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.FeatureManager;
@@ -30,6 +31,7 @@ public class ASTTweaks implements ClientModInitializer {
 
         // Initialize mod compatibility layers
         TweakerooCompat.init();
+        NvidiumCompat.init();
 
         // Initialize feature manager
         FeatureManager.getInstance().init();

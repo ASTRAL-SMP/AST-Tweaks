@@ -281,6 +281,15 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.litematicaSchematicDropEnabled = value)
                 .build());
 
+        litematicaSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled"),
+                        config.litematicaCoralSubstituteEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled.tooltip"))
+                .setSaveConsumer(value -> config.litematicaCoralSubstituteEnabled = value)
+                .build());
+
         general.addEntry(litematicaSub.build());
 
         // --- Portal Protect サブカテゴリ ---
@@ -1160,6 +1169,59 @@ public class ConfigScreen implements ModMenuApi {
                 .setDefaultValue(512)
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneNormalLimit = value)
+                .build());
+
+        // ============================
+        // World Border Fix category (ボーダー付近の描画バグ対策)
+        // ============================
+        ConfigCategory worldBorderFix = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.worldborderfix"));
+
+        worldBorderFix.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled"),
+                        config.worldBorderFixEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixEnabled = value)
+                .build());
+
+        worldBorderFix.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray"),
+                        config.worldBorderFixXray)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixXray = value)
+                .build());
+
+        worldBorderFix.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance"),
+                        config.worldBorderFixDistance)
+                .setMin(1).setMax(10000)
+                .setDefaultValue(128)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixDistance = value)
+                .build());
+
+        worldBorderFix.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords"),
+                        config.worldBorderFixFarCoords)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixFarCoords = value)
+                .build());
+
+        worldBorderFix.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold"),
+                        config.worldBorderFixCoordThreshold)
+                .setMin(1000).setMax(29999000)
+                .setDefaultValue(100000)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixCoordThreshold = value)
                 .build());
 
         builder.setSavingRunnable(config::save);
