@@ -408,6 +408,20 @@
   "config.asttweaks.syncertune.normalLimit": "Normal: Query Limit",
   "config.asttweaks.syncertune.normalLimit.tooltip": "serverDataSyncerQueryLimit applied in normal areas (TweakerMore default: 512).",
 
+  "config.asttweaks.category.worldborderfix": "World Border Fix",
+  "config.asttweaks.worldborderfix.enabled": "Enable World Border Fix",
+  "config.asttweaks.worldborderfix.enabled.tooltip": "Fixes rendering bugs near the world border (walls turning invisible like X-ray, terrain failing to load at far coordinates). While you are in the affected area, Nvidium is temporarily disabled and Sodium's default renderer is used; it is automatically re-enabled when you leave. Does nothing if Nvidium is not installed.",
+  "config.asttweaks.worldborderfix.xray": "Fix X-ray near the border",
+  "config.asttweaks.worldborderfix.xray.tooltip": "Temporarily disables Nvidium while you are within the configured distance of the world border.",
+  "config.asttweaks.worldborderfix.distance": "Border distance threshold (blocks)",
+  "config.asttweaks.worldborderfix.distance.tooltip": "The fix activates when your distance to the world border falls below this value.",
+  "config.asttweaks.worldborderfix.farCoords": "Fix far-coordinate glitches",
+  "config.asttweaks.worldborderfix.farCoords.tooltip": "Temporarily disables Nvidium when |X| or |Z| is at or above the threshold, where Nvidium fails to load terrain correctly.",
+  "config.asttweaks.worldborderfix.coordThreshold": "Coordinate threshold",
+  "config.asttweaks.worldborderfix.coordThreshold.tooltip": "The fix activates when the absolute X or Z coordinate is at or above this value.",
+  "message.asttweaks.worldborderfix.suppressed": "World Border Fix: Nvidium temporarily disabled, reloading chunks...",
+  "message.asttweaks.worldborderfix.restored": "World Border Fix: Nvidium re-enabled, reloading chunks...",
+
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
 }

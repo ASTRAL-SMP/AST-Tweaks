@@ -166,6 +166,13 @@ public class ModConfig {
     public int syncerTuneNormalInterval = 1;                // 通常時 query interval
     public int syncerTuneNormalLimit = 512;                 // 通常時 query limit
 
+    // World Border Fix (ワールドボーダー付近の描画バグ対策、Nvidium を一時無効化)
+    public boolean worldBorderFixEnabled = false;
+    public boolean worldBorderFixXray = true;               // ボーダー接近時の X-ray 化対策
+    public int worldBorderFixDistance = 128;                // ボーダーからの距離しきい値（ブロック）
+    public boolean worldBorderFixFarCoords = true;          // 遠距離座標での読み込み不良対策
+    public int worldBorderFixCoordThreshold = 100000;       // |X| または |Z| のしきい値
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -396,6 +403,16 @@ public class ModConfig {
                     }
                     if (loaded.syncerTuneNormalLimit > 0) {
                         this.syncerTuneNormalLimit = loaded.syncerTuneNormalLimit;
+                    }
+                    this.worldBorderFixEnabled = loaded.worldBorderFixEnabled;
+                    boolean hasWorldBorderFixConfig = loaded.worldBorderFixDistance > 0;
+                    this.worldBorderFixXray = hasWorldBorderFixConfig ? loaded.worldBorderFixXray : true;
+                    this.worldBorderFixFarCoords = hasWorldBorderFixConfig ? loaded.worldBorderFixFarCoords : true;
+                    if (loaded.worldBorderFixDistance > 0) {
+                        this.worldBorderFixDistance = loaded.worldBorderFixDistance;
+                    }
+                    if (loaded.worldBorderFixCoordThreshold > 0) {
+                        this.worldBorderFixCoordThreshold = loaded.worldBorderFixCoordThreshold;
                     }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
