@@ -281,6 +281,15 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.litematicaSchematicDropEnabled = value)
                 .build());
 
+        litematicaSub.add(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled"),
+                        config.litematicaCoralSubstituteEnabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled.tooltip"))
+                .setSaveConsumer(value -> config.litematicaCoralSubstituteEnabled = value)
+                .build());
+
         general.addEntry(litematicaSub.build());
 
         // --- Portal Protect サブカテゴリ ---

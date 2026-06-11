@@ -373,6 +373,8 @@
   "config.asttweaks.category.litematica": "Litematica",
   "config.asttweaks.litematica.schematicDrop.enabled": "Schematic のドラッグ&ドロップを有効化",
   "config.asttweaks.litematica.schematicDrop.enabled.tooltip": "Litematica の「Load Schematics」画面へ .litematic、.schematic、.schem、.nbt ファイルをドロップして読み込めるようにします。schematics フォルダ外のファイルは先にコピーされます。ドロップ時は読み込みのみで、配置は作成しません。",
+  "config.asttweaks.litematica.coralSubstitute.enabled": "死サンゴを生サンゴで代用設置",
+  "config.asttweaks.litematica.coralSubstitute.enabled.tooltip": "スケマティックが死んだサンゴ（ブロック・サンゴ・ウチワ）を要求しているとき、手持ちに死サンゴが無ければ対応する生きたサンゴを Easy Place・設置制限・ピックブロックで使えるようにします。生サンゴは水の外に置くとすぐ枯れて死サンゴになります。死サンゴを持っている場合は従来どおりそちらを使います。",
   "message.asttweaks.litematicaDrop.loaded": "Litematica Drop: %d件の schematic を読み込みました（%d件を取り込み）",
   "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: 未対応ファイル %d件をスキップしました",
   "message.asttweaks.litematicaDrop.failed": "Litematica Drop: %d件の読み込みに失敗しました",

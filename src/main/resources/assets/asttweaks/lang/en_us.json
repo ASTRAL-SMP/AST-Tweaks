@@ -373,6 +373,8 @@
   "config.asttweaks.category.litematica": "Litematica",
   "config.asttweaks.litematica.schematicDrop.enabled": "Enable Schematic Drag and Drop",
   "config.asttweaks.litematica.schematicDrop.enabled.tooltip": "Allows dropping .litematic, .schematic, .schem, and .nbt files onto Litematica's Load Schematics screen. Files outside the schematics folder are copied there first. Dropped schematics are loaded only; no placement is created.",
+  "config.asttweaks.litematica.coralSubstitute.enabled": "Allow live corals for dead coral placement",
+  "config.asttweaks.litematica.coralSubstitute.enabled.tooltip": "When a schematic requires a dead coral (block, coral or fan) and you don't have it in your inventory, the corresponding live coral is accepted instead by Easy Place, placement restriction and pick block. Live corals dry out into dead corals when placed out of water. If you do have the dead coral, it is used as usual.",
   "message.asttweaks.litematicaDrop.loaded": "Litematica Drop: loaded %d schematic(s), imported %d file(s)",
   "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: skipped %d unsupported file(s)",
   "message.asttweaks.litematicaDrop.failed": "Litematica Drop: failed to load %d file(s)",

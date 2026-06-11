@@ -155,6 +155,7 @@ public class ModConfig {
 
     // Litematica compatibility settings
     public boolean litematicaSchematicDropEnabled = true;
+    public boolean litematicaCoralSubstituteEnabled = true;  // 死サンゴを生サンゴで代用設置
 
     // Syncer Tune (TweakerMore serverDataSyncer 自動切替)
     public boolean syncerTuneEnabled = false;
@@ -382,6 +383,7 @@ public class ModConfig {
                     }
                     this.portalProtectEnabled = loaded.portalProtectEnabled;
                     this.litematicaSchematicDropEnabled = loaded.litematicaSchematicDropEnabled;
+                    this.litematicaCoralSubstituteEnabled = loaded.litematicaCoralSubstituteEnabled;
                     this.syncerTuneEnabled = loaded.syncerTuneEnabled;
                     if (loaded.syncerTuneDetectionChunkRadius > 0) {
                         this.syncerTuneDetectionChunkRadius = loaded.syncerTuneDetectionChunkRadius;
