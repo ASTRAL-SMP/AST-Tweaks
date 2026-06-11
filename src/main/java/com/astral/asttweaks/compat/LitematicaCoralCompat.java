@@ -8,8 +8,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
+import com.astral.asttweaks.ASTTweaks;
+
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Litematica で死んだサンゴ系ブロックを設置する際、手持ちに死サンゴが無くても
@@ -20,6 +24,8 @@ import java.util.Map;
 public class LitematicaCoralCompat {
     // dead item -> live item（サンゴ系でないアイテムは null を記録して再判定を省く）
     private static final Map<Item, Item> DEAD_TO_LIVE_CACHE = new IdentityHashMap<>();
+    // 動作確認用ログをアイテム種別ごとに 1 回だけ出すための記録
+    private static final Set<Item> LOGGED_ITEMS = Collections.newSetFromMap(new IdentityHashMap<>());
 
     /**
      * Litematica が要求するアイテムが死サンゴ系で、プレイヤーが死サンゴを持っておらず
@@ -42,6 +48,10 @@ public class LitematicaCoralCompat {
         // 生サンゴも持っていなければ置換せず、元の不足表示を維持する
         if (!playerHasItem(live)) {
             return null;
+        }
+        if (LOGGED_ITEMS.add(dead)) {
+            ASTTweaks.LOGGER.info("LitematicaCoral: substituting {} -> {}",
+                    Registries.ITEM.getId(dead), Registries.ITEM.getId(live));
         }
         return new ItemStack(live, required.getCount());
     }
