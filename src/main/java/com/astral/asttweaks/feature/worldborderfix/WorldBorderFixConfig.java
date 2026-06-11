@@ -24,6 +24,10 @@ public class WorldBorderFixConfig {
         return ModConfig.getInstance().worldBorderFixFarCoords;
     }
 
+    public boolean isAutoReenable() {
+        return ModConfig.getInstance().worldBorderFixAutoReenable;
+    }
+
     public int getBorderDistance() {
         return Math.max(1, ModConfig.getInstance().worldBorderFixDistance);
     }

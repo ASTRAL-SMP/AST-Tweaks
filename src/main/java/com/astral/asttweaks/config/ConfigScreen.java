@@ -1224,6 +1224,15 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixCoordThreshold = value)
                 .build());
 
+        worldBorderFix.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable"),
+                        config.worldBorderFixAutoReenable)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable.tooltip"))
+                .setSaveConsumer(value -> config.worldBorderFixAutoReenable = value)
+                .build());
+
         builder.setSavingRunnable(config::save);
 
         return builder.build();

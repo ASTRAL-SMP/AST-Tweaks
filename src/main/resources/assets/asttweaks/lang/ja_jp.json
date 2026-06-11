@@ -421,8 +421,11 @@
   "config.asttweaks.worldborderfix.farCoords.tooltip": "X または Z の絶対値がしきい値以上のとき、Nvidium を一時無効化します（遠距離座標で Nvidium が地形を正しく読み込めない問題への対策）。",
   "config.asttweaks.worldborderfix.coordThreshold": "座標しきい値",
   "config.asttweaks.worldborderfix.coordThreshold.tooltip": "X / Z の絶対値がこの値以上になると対策が発動します。",
+  "config.asttweaks.worldborderfix.autoReenable": "離脱時に Nvidium を即時再有効化",
+  "config.asttweaks.worldborderfix.autoReenable.tooltip": "対象エリアを離れた際、即座にレンダラーを再読み込みして Nvidium を復帰させます。Nvidium はランタイム切替を公式サポートしておらず、この即時再読み込みは一部環境でクラッシュ報告があるため既定はオフです。オフの場合、次の自然な再読み込み（ディメンション移動・F3+A・再ログイン・ビデオ設定変更など）で Nvidium が復帰します。",
   "message.asttweaks.worldborderfix.suppressed": "ワールドボーダー描画修正: Nvidium を一時無効化しました（チャンク再読み込み中）",
   "message.asttweaks.worldborderfix.restored": "ワールドボーダー描画修正: Nvidium を再有効化しました（チャンク再読み込み中）",
+  "message.asttweaks.worldborderfix.restoredDeferred": "ワールドボーダー描画修正: Nvidium は次のチャンク再読み込み時（F3+A・ディメンション移動等）に復帰します",
 
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"

@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 public class NvidiumCompat {
     private static boolean available = false;
     private static Field isCompatibleField = null;
+    private static Field isEnabledField = null;
 
     // 初回 suppress 時に GPU 判定済みの元値を控えておき、restore で戻す
     private static boolean originalCaptured = false;
@@ -29,6 +30,7 @@ public class NvidiumCompat {
         try {
             Class<?> nvidiumClass = Class.forName("me.cortex.nvidium.Nvidium");
             isCompatibleField = nvidiumClass.getField("IS_COMPATIBLE");
+            isEnabledField = nvidiumClass.getField("IS_ENABLED");
             available = true;
             ASTTweaks.LOGGER.info("Nvidium compatibility initialized successfully");
         } catch (ClassNotFoundException e) {
@@ -56,6 +58,22 @@ public class NvidiumCompat {
      */
     public static boolean isSuppressed() {
         return suppressed;
+    }
+
+    /**
+     * Whether Nvidium's renderer is currently active (IS_ENABLED).
+     * IS_ENABLED is recomputed only when the RenderSectionManager is constructed,
+     * so this reflects the state of the renderer actually in use right now.
+     */
+    public static boolean isCurrentlyEnabled() {
+        if (!available) {
+            return false;
+        }
+        try {
+            return isEnabledField.getBoolean(null);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

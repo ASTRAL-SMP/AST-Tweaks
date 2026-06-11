@@ -421,8 +421,11 @@
   "config.asttweaks.worldborderfix.farCoords.tooltip": "Temporarily disables Nvidium when |X| or |Z| is at or above the threshold, where Nvidium fails to load terrain correctly.",
   "config.asttweaks.worldborderfix.coordThreshold": "Coordinate threshold",
   "config.asttweaks.worldborderfix.coordThreshold.tooltip": "The fix activates when the absolute X or Z coordinate is at or above this value.",
+  "config.asttweaks.worldborderfix.autoReenable": "Re-enable Nvidium immediately on leaving",
+  "config.asttweaks.worldborderfix.autoReenable.tooltip": "When you leave the affected area, immediately reload the renderer to re-enable Nvidium. Nvidium does not officially support runtime toggling and this immediate reload has caused native crashes on some systems, so it is OFF by default; Nvidium then returns on the next natural renderer reload (dimension change, F3+A, rejoining, changing video settings).",
   "message.asttweaks.worldborderfix.suppressed": "World Border Fix: Nvidium temporarily disabled, reloading chunks...",
   "message.asttweaks.worldborderfix.restored": "World Border Fix: Nvidium re-enabled, reloading chunks...",
+  "message.asttweaks.worldborderfix.restoredDeferred": "World Border Fix: Nvidium will return on the next renderer reload (F3+A, dimension change, etc.)",
 
   "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
   "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"

@@ -173,6 +173,7 @@ public class ModConfig {
     public int worldBorderFixDistance = 128;                // ボーダーからの距離しきい値（ブロック）
     public boolean worldBorderFixFarCoords = true;          // 遠距離座標での読み込み不良対策
     public int worldBorderFixCoordThreshold = 100000;       // |X| または |Z| のしきい値
+    public boolean worldBorderFixAutoReenable = false;      // ゾーン離脱時に即時再ロードで Nvidium を復帰（一部環境でクラッシュ報告あり）
 
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
@@ -416,6 +417,7 @@ public class ModConfig {
                     if (loaded.worldBorderFixCoordThreshold > 0) {
                         this.worldBorderFixCoordThreshold = loaded.worldBorderFixCoordThreshold;
                     }
+                    this.worldBorderFixAutoReenable = loaded.worldBorderFixAutoReenable;
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
