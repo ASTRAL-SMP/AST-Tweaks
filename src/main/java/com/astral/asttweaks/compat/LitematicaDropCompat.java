@@ -24,6 +24,15 @@ public final class LitematicaDropCompat {
     }
 
     public static void handleDroppedFiles(List<Path> paths) {
+        handleDroppedFiles(paths, null);
+    }
+
+    /**
+     * Imports the dropped files into {@code targetDirectory}, which should be the
+     * folder currently open in the schematic browser. When it is {@code null} or
+     * not part of the schematics tree, the schematics base directory is used.
+     */
+    public static void handleDroppedFiles(List<Path> paths, File targetDirectory) {
         int loaded = 0;
         int imported = 0;
         int skipped = 0;
@@ -39,7 +48,7 @@ public final class LitematicaDropCompat {
             }
 
             try {
-                File fileToLoad = importIfNeeded(source);
+                File fileToLoad = importIfNeeded(source, targetDirectory);
                 FileType loadType = FileType.fromFile(fileToLoad);
                 LitematicaSchematic schematic = loadSchematic(fileToLoad, loadType);
 
@@ -71,17 +80,37 @@ public final class LitematicaDropCompat {
                 || fileType == FileType.VANILLA_STRUCTURE;
     }
 
-    private static File importIfNeeded(File source) throws IOException {
+    private static File importIfNeeded(File source, File targetDirectory) throws IOException {
         File baseDir = DataManager.getSchematicsBaseDirectory();
         Files.createDirectories(baseDir.toPath());
 
+        // A file already living somewhere inside the schematics tree is loaded in
+        // place rather than copied around.
         if (isInsideDirectory(source.toPath(), baseDir.toPath())) {
             return source.getCanonicalFile();
         }
 
-        File target = resolveUniqueTarget(baseDir.toPath(), source.getName()).toFile();
+        File destinationDir = resolveDestinationDirectory(baseDir, targetDirectory);
+        Files.createDirectories(destinationDir.toPath());
+
+        File target = resolveUniqueTarget(destinationDir.toPath(), source.getName()).toFile();
         Files.copy(source.toPath(), target.toPath());
         return target.getCanonicalFile();
+    }
+
+    /**
+     * Resolves the folder a dropped file should be copied into. Only directories
+     * that live inside the schematics base directory are honoured; anything else
+     * falls back to the base directory.
+     */
+    private static File resolveDestinationDirectory(File baseDir, File targetDirectory) throws IOException {
+        if (targetDirectory != null
+                && targetDirectory.isDirectory()
+                && isInsideDirectory(targetDirectory.toPath(), baseDir.toPath())) {
+            return targetDirectory.getCanonicalFile();
+        }
+
+        return baseDir;
     }
 
     private static boolean isInsideDirectory(Path file, Path directory) throws IOException {
