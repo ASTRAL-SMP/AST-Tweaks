@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "plugin": "com.astral.asttweaks.mixin.litematica.LitematicaMixinPlugin",
   "client": [
-    "GuiSchematicLoadMixin",
+    "GuiListBaseAccessor",
+    "GuiSchematicBrowserBaseMixin",
     "MaterialCacheMixin"
   ],
   "injectors": {
