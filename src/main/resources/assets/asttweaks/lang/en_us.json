@@ -376,6 +376,7 @@
   "config.asttweaks.litematica.coralSubstitute.enabled": "Allow live corals for dead coral placement",
   "config.asttweaks.litematica.coralSubstitute.enabled.tooltip": "When a schematic requires a dead coral (block, coral or fan) and you don't have it in your inventory, the corresponding live coral is accepted instead by Easy Place, placement restriction and pick block. Live corals dry out into dead corals when placed out of water. If you do have the dead coral, it is used as usual.",
   "message.asttweaks.litematicaDrop.loaded": "Litematica Drop: loaded %d schematic(s), imported %d file(s)",
+  "message.asttweaks.litematicaDrop.importedInto": "Litematica Drop: imported into '%s'",
   "message.asttweaks.litematicaDrop.skipped": "Litematica Drop: skipped %d unsupported file(s)",
   "message.asttweaks.litematicaDrop.failed": "Litematica Drop: failed to load %d file(s)",
 
