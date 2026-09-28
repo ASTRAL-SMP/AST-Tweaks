@@ -36,8 +36,10 @@ import net.minecraft.village.TradeOfferList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Void Trade（ボイドトレード）自動化。
@@ -98,6 +100,9 @@ public class VoidTradeFeature implements Feature {
     private int tradeIdleTicks;
     private boolean inventoryFull;
     private String firstFinishReason;
+    private int currentOfferTraded;
+    private final List<MutableText> skippedOffers = new ArrayList<>();   // 1 回も取引できなかったお気に入り
+    private final Set<Integer> warnedSkipSteps = new HashSet<>();         // 取引できなかったお気に入りを知らせたステップ
     // 取引ステップ・取引ごとの、最初に画面を開いたときの取引回数（ボイド不成立の検出用）
     private final Map<String, Integer> baselineUses = new HashMap<>();
 
@@ -186,6 +191,7 @@ public class VoidTradeFeature implements Feature {
         merchantEntityId = -1;
         merchantWorld = null;
         baselineUses.clear();
+        warnedSkipSteps.clear();
         client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.started"), true);
         ASTTweaks.LOGGER.info("VoidTrade: started ({} steps)", config.getSteps().size());
     }
@@ -310,6 +316,8 @@ public class VoidTradeFeature implements Feature {
         tradeIdleTicks = 0;
         inventoryFull = false;
         firstFinishReason = null;
+        currentOfferTraded = 0;
+        skippedOffers.clear();
         showStatus(client, step);
     }
 
@@ -671,6 +679,7 @@ public class VoidTradeFeature implements Feature {
         if (tradeQueuePos >= tradeQueue.size()) {
             // 1 回も取引できなかった場合は、次の周も空回りするだけなので理由を出して止める
             if (tradedCount > 0) {
+                warnSkippedOffers(player);
                 return StepResult.DONE;
             }
             StepResult result = fail(firstFinishReason != null ? firstFinishReason : "offerLocked");
@@ -711,6 +720,7 @@ public class VoidTradeFeature implements Feature {
         int traded = offer.getUses() - usesBefore;
         if (traded > 0) {
             tradedCount += traded;
+            currentOfferTraded += traded;
             tradeIdleTicks = 0;
             return StepResult.CONTINUE;
         }
@@ -726,10 +736,33 @@ public class VoidTradeFeature implements Feature {
         if (firstFinishReason == null) {
             firstFinishReason = finishReason;
         }
+        if (currentOfferTraded == 0 && tradeQueue.size() > 1) {
+            skippedOffers.add(describeOffer(tradeQueue.get(tradeQueuePos))
+                    .append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skipped." + finishReason)));
+        }
+        currentOfferTraded = 0;
         tradeQueuePos++;
         offerSelected = false;
         tradeIdleTicks = 0;
         return StepResult.CONTINUE;
+    }
+
+    /**
+     * お気に入りのうち 1 回も取引できなかったものを知らせる。毎周出るとうるさいので、ステップごとに 1 回だけ。
+     */
+    private void warnSkippedOffers(ClientPlayerEntity player) {
+        if (skippedOffers.isEmpty() || !warnedSkipSteps.add(stepIndex)) {
+            return;
+        }
+        MutableText list = Text.empty();
+        for (int i = 0; i < skippedOffers.size(); i++) {
+            if (i > 0) {
+                list.append(", ");
+            }
+            list.append(skippedOffers.get(i));
+        }
+        player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skippedFavorites",
+                skippedOffers.size(), tradeQueue.size(), list).formatted(Formatting.YELLOW), false);
     }
 
     /**
@@ -798,16 +831,23 @@ public class VoidTradeFeature implements Feature {
         player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList").formatted(Formatting.GRAY), false);
         for (int i = 0; i < offers.size(); i++) {
             TradeOffer offer = offers.get(i);
-            MutableText line = Text.literal(" " + (i + 1) + ": ").append(describeStack(offer.getAdjustedFirstBuyItem()));
-            if (!offer.getSecondBuyItem().isEmpty()) {
-                line.append(" + ").append(describeStack(offer.getSecondBuyItem()));
-            }
-            line.append(" → ").append(describeStack(offer.getSellItem()));
+            MutableText line = Text.literal(" " + (i + 1) + ": ").append(describeOffer(offer));
             if (offer.isDisabled()) {
                 line.append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList.locked"));
             }
             player.sendMessage(line.formatted(Formatting.GRAY), false);
         }
+    }
+
+    /**
+     * 「材料 → 結果」の 1 行表記。
+     */
+    private static MutableText describeOffer(TradeOffer offer) {
+        MutableText text = describeStack(offer.getAdjustedFirstBuyItem());
+        if (!offer.getSecondBuyItem().isEmpty()) {
+            text.append(" + ").append(describeStack(offer.getSecondBuyItem()));
+        }
+        return text.append(" → ").append(describeStack(offer.getSellItem()));
     }
 
     private static MutableText describeStack(ItemStack stack) {
