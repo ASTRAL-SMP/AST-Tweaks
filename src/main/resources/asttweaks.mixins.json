@@ -19,7 +19,10 @@
     "PickBlockMixin",
     "VillageDebugRendererAccessor",
     "VillageDebugRendererBrainAccessor",
-    "ScreenShouldCloseOnEscMixin"
+    "ScreenShouldCloseOnEscMixin",
+    "VoidTradeInputMixin",
+    "MerchantScreenAccessor",
+    "MerchantScreenHandlerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
