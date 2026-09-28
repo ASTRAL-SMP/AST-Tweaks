@@ -437,6 +437,8 @@
   "config.asttweaks.voidtrade.stepTimeout.tooltip": "Stops the workflow when a waiting step (moving, waiting for the trade screen, waiting for unload, ...) does not finish within this many seconds.",
   "config.asttweaks.voidtrade.extraWait": "Extra Wait (ticks)",
   "config.asttweaks.voidtrade.extraWait.tooltip": "Added to every Wait step (20 ticks = 1 second). Increase it when lag makes the villager reload or the trades lag behind (same as Extra Delay in the AHK script).",
+  "config.asttweaks.voidtrade.tradesPerTick": "Trades per Tick",
+  "config.asttweaks.voidtrade.tradesPerTick.tooltip": "How many results a \"drop the result\" trade step throws away per tick (0.05 s). Each throw sends two packets (click and arm swing), so lower this when the server ignores or rate-limits bursts of clicks and the trades stop part-way.",
   "config.asttweaks.voidtrade.workflow.button": "Edit Workflow...",
   "config.asttweaks.keybind.voidTradeToggle": "Start/Stop Void Trade",
   "config.asttweaks.voidtrade.workflow.title": "Void Trade Workflow",

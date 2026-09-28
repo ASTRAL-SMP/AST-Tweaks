@@ -8,6 +8,7 @@ import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.feature.voidtrade.VoidTradeConfig;
 import com.astral.asttweaks.feature.voidtrade.VoidTradePreset;
 import com.astral.asttweaks.feature.voidtrade.VoidTradeStep;
 import com.astral.asttweaks.util.KeyCombo;
@@ -182,6 +183,7 @@ public class ModConfig {
     public int voidTradeLoopCount = 0;                      // 0 = 停止するまで無限ループ
     public int voidTradeStepTimeoutSeconds = 120;           // 移動・取引画面待ち等のタイムアウト
     public int voidTradeExtraWaitTicks = 0;                 // 待機ステップに一律で足す tick 数（ラグ対策）
+    public int voidTradeTradesPerTick = 4;                  // 「結果を捨てる」取引で 1 tick に投げ捨てる回数（サーバーのクリック制限対策）
     public List<VoidTradeStep> voidTradeSteps = new ArrayList<>();
     public List<VoidTradePreset> voidTradePresets = new ArrayList<>();
 
@@ -432,6 +434,9 @@ public class ModConfig {
                     this.voidTradeEnabled = loaded.voidTradeEnabled;
                     this.voidTradeLoopCount = Math.max(0, loaded.voidTradeLoopCount);
                     this.voidTradeExtraWaitTicks = Math.max(0, loaded.voidTradeExtraWaitTicks);
+                    if (loaded.voidTradeTradesPerTick > 0) {
+                        this.voidTradeTradesPerTick = Math.min(VoidTradeConfig.MAX_TRADES_PER_TICK, loaded.voidTradeTradesPerTick);
+                    }
                     if (loaded.voidTradeStepTimeoutSeconds > 0) {
                         this.voidTradeStepTimeoutSeconds = loaded.voidTradeStepTimeoutSeconds;
                     }

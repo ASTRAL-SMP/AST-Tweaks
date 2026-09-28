@@ -437,6 +437,8 @@
   "config.asttweaks.voidtrade.stepTimeout.tooltip": "移動・取引画面が開くのを待つ・アンロード待ちなどが、この秒数を過ぎても終わらない場合に停止します。",
   "config.asttweaks.voidtrade.extraWait": "待機の追加時間（tick）",
   "config.asttweaks.voidtrade.extraWait.tooltip": "すべての待機ステップに足す時間です（20 tick = 1 秒）。ラグで村人の読み込みや取引が間に合わないときに増やします（AHK の Extra Delay 相当）。",
+  "config.asttweaks.voidtrade.tradesPerTick": "1 tick あたりの取引回数",
+  "config.asttweaks.voidtrade.tradesPerTick.tooltip": "「結果を捨てる」取引で 1 tick（0.05 秒）に投げ捨てる回数です。1 回ごとにクリックと腕振りの 2 パケットを送るため、サーバーが短時間の大量クリックを無視・制限して取引が途中で止まる場合は小さくしてください。",
   "config.asttweaks.voidtrade.workflow.button": "ワークフローを編集...",
   "config.asttweaks.keybind.voidTradeToggle": "Void Trade 開始/停止",
   "config.asttweaks.voidtrade.workflow.title": "Void Trade ワークフロー",

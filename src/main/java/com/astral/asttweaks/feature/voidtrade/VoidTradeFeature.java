@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Void Trade（ボイドトレード）自動化。
@@ -59,13 +60,20 @@ public class VoidTradeFeature implements Feature {
     private static final double MAX_REACH_SQUARED = 36.0;       // サーバー側の MAX_BREAK_SQUARED_DISTANCE と同じ
     private static final int INTERACT_RETRY_TICKS = 5;           // 右クリック連打相当。開いた後の余分なクリックはサーバーが無視する
     private static final int OUT_OF_REACH_GRACE_TICKS = 40;
-    private static final int TRADE_IDLE_LIMIT = 5;
-    private static final int MAX_THROWS_PER_TICK = 16;
+    private static final int TRADE_IDLE_LIMIT = 20;            // 出力が出ないまま諦めるまでの tick 数（サーバーの応答待ちを含む）
+    private static final int TRADE_RESELECT_TICKS = 5;         // 出力が出ないときに取引を選び直す間隔
     private static final int MIN_LOOP_TICKS = 20;               // コマンドだけのワークフロー等で毎 tick ループしないように
     private static final int STATUS_REFRESH_TICKS = 20;
     private static final int OUTPUT_SLOT = 2;
 
     private enum StepResult { CONTINUE, DONE, FAILED }
+
+    /**
+     * 取引ステップで取引する 1 件。TradeOffer の実体ではなく、サーバーと同じ並び（元の一覧）での番号で持つ。
+     * 画面を開いている間に取引一覧が差し替えられても（ItemScroller の並べ替えの作り直しやサーバーからの再送）
+     * 同じ取引を追い続けられるよう、TradeOffer は毎 tick 元の一覧から引き直す。
+     */
+    private record TradeTarget(int index, MutableText description) {}
 
     private final VoidTradeConfig config;
     private boolean wasToggleKeyDown = false;
@@ -93,7 +101,7 @@ public class VoidTradeFeature implements Feature {
     private MoveDirection nudgeDirection;   // 「少し歩く」ステップ中の方向（null なら無効）
 
     // 取引ステップの状態
-    private List<TradeOffer> tradeQueue;    // このステップで取引する取引（お気に入りなら複数）
+    private List<TradeTarget> tradeQueue;   // このステップで取引する取引（お気に入りなら複数）
     private int tradeQueuePos;
     private boolean offerSelected;
     private int tradedCount;
@@ -656,7 +664,8 @@ public class VoidTradeFeature implements Feature {
         if (!(player.currentScreenHandler instanceof MerchantScreenHandler handler)) {
             return fail("screenClosed");
         }
-        if (handler.getRecipes().isEmpty()) {
+        TradeOfferList original = originalOffers(handler);
+        if (original.isEmpty()) {
             waitReason = "offersNotReceived";
             return StepResult.CONTINUE;
         }
@@ -668,10 +677,11 @@ public class VoidTradeFeature implements Feature {
             }
             // 前の周の取引が村人に残っている = アンロードされないまま取引していた。
             // 気づかずに回し続けると村人がロック・値上がりするので止める
-            for (TradeOffer offer : tradeQueue) {
-                String key = stepIndex + ":" + originalOffers(handler).indexOf(offer);
-                Integer baseline = baselineUses.putIfAbsent(key, offer.getUses());
-                if (baseline != null && offer.getUses() > baseline) {
+            for (TradeTarget target : tradeQueue) {
+                String key = stepIndex + ":" + target.index();
+                int uses = original.get(target.index()).getUses();
+                Integer baseline = baselineUses.putIfAbsent(key, uses);
+                if (baseline != null && uses > baseline) {
                     return fail("notVoided");
                 }
             }
@@ -689,25 +699,41 @@ public class VoidTradeFeature implements Feature {
             return result;
         }
 
-        TradeOffer offer = tradeQueue.get(tradeQueuePos);
+        TradeTarget target = tradeQueue.get(tradeQueuePos);
+        if (target.index() >= original.size()) {
+            // 画面を開いている間に取引一覧が短くなった（通常は起きない）
+            return nextOffer("offerLocked");
+        }
+        TradeOffer offer = original.get(target.index());
         if (offer.isDisabled()) {
             return nextOffer("offerLocked");
         }
 
         // 最初は必ず選び直す（前の取引の材料が残っていると別の取引が出力されるため）。
-        // 以降は出力が空になったら選び直して、サーバー側でインベントリから材料を補充させる
-        if (!offerSelected || handler.getSlot(OUTPUT_SLOT).getStack().isEmpty()) {
-            selectOffer(client, handler, offer);
+        // 以降は出力が空になったら選び直して、サーバー側でインベントリから材料を補充させる。
+        // 出力が空のままのときはサーバーの応答を待つ間を空けて、一定間隔で選び直す
+        if (!offerSelected
+                || (handler.getSlot(OUTPUT_SLOT).getStack().isEmpty() && tradeIdleTicks % TRADE_RESELECT_TICKS == 0)) {
+            selectOffer(client, handler, target.index());
             offerSelected = true;
         }
         if (handler.getSlot(OUTPUT_SLOT).getStack().isEmpty()) {
-            // 選んでも出力が出ない = 材料切れ
-            return ++tradeIdleTicks >= TRADE_IDLE_LIMIT ? nextOffer("noMaterials") : StepResult.CONTINUE;
+            if (++tradeIdleTicks < TRADE_IDLE_LIMIT) {
+                return StepResult.CONTINUE;
+            }
+            // 選んでも出力が出ない = 材料切れ。前の取引の材料が入力欄に残ったまま戻せないならインベントリ満杯
+            boolean inputsLeft = !handler.getSlot(0).getStack().isEmpty() || !handler.getSlot(1).getStack().isEmpty();
+            if (inputsLeft && player.getInventory().getEmptySlot() < 0) {
+                inventoryFull = true;
+                return nextOffer("inventoryFull");
+            }
+            return nextOffer("noMaterials");
         }
 
         int usesBefore = offer.getUses();
         if (step.dropOutput) {
-            for (int i = 0; i < MAX_THROWS_PER_TICK
+            // 1 tick に投げる回数は設定で抑える（1 回ごとにクリックと腕振りの 2 パケットを送るため）
+            for (int i = 0; i < config.getTradesPerTick()
                     && !offer.isDisabled()
                     && !handler.getSlot(OUTPUT_SLOT).getStack().isEmpty(); i++) {
                 client.interactionManager.clickSlot(handler.syncId, OUTPUT_SLOT, 1, SlotActionType.THROW, player);
@@ -733,11 +759,14 @@ public class VoidTradeFeature implements Feature {
      * 今の取引を終えて次の取引へ進む。
      */
     private StepResult nextOffer(String finishReason) {
+        TradeTarget target = tradeQueue.get(tradeQueuePos);
+        ASTTweaks.LOGGER.info("VoidTrade: trade #{} ({}/{}) finished: {} ({} trades)",
+                target.index() + 1, tradeQueuePos + 1, tradeQueue.size(), finishReason, currentOfferTraded);
         if (firstFinishReason == null) {
             firstFinishReason = finishReason;
         }
         if (currentOfferTraded == 0 && tradeQueue.size() > 1) {
-            skippedOffers.add(describeOffer(tradeQueue.get(tradeQueuePos))
+            skippedOffers.add(target.description().copy()
                     .append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skipped." + finishReason)));
         }
         currentOfferTraded = 0;
@@ -766,16 +795,17 @@ public class VoidTradeFeature implements Feature {
     }
 
     /**
-     * 取引する取引を決める。取引番号は画面に表示されている並び（ItemScroller が並べ替えていればその並び）で数える。
+     * 取引する取引を決める。お気に入りは ItemScroller が持つ元の一覧（サーバーと同じ並び）での番号をそのまま使う。
+     * 番号指定は画面に表示されている並び（ItemScroller が並べ替えていればその並び）で数え、元の一覧での番号に直す。
      * 決められなければ理由を出して止め、null を返す。
      */
-    private List<TradeOffer> resolveTradeTargets(ClientPlayerEntity player, MerchantScreenHandler handler, VoidTradeStep step) {
-        List<TradeOffer> targets = new ArrayList<>();
+    private List<TradeTarget> resolveTradeTargets(ClientPlayerEntity player, MerchantScreenHandler handler, VoidTradeStep step) {
+        List<TradeTarget> targets = new ArrayList<>();
+        TradeOfferList original = originalOffers(handler);
         if (step.useFavorites) {
-            TradeOfferList original = originalOffers(handler);
             for (int index : ItemScrollerCompat.getFavoriteTradeIndices(handler)) {
-                if (index >= 0 && index < original.size()) {
-                    targets.add(original.get(index));
+                if (index >= 0 && index < original.size() && targets.stream().noneMatch(t -> t.index() == index)) {
+                    targets.add(new TradeTarget(index, describeOffer(original.get(index))));
                 }
             }
             if (targets.isEmpty()) {
@@ -783,17 +813,21 @@ public class VoidTradeFeature implements Feature {
                 sendOfferList(player, handler);
                 return null;
             }
+            ASTTweaks.LOGGER.info("VoidTrade: trading {} favorite(s): {}", targets.size(),
+                    targets.stream().map(t -> "#" + (t.index() + 1)).collect(Collectors.joining(", ")));
             return targets;
         }
 
         TradeOfferList offers = handler.getRecipes();
-        int index = step.offerIndex - 1;
-        if (index < 0 || index >= offers.size()) {
+        int visibleIndex = step.offerIndex - 1;
+        if (visibleIndex < 0 || visibleIndex >= offers.size()) {
             fail("offerOutOfRange");
             sendOfferList(player, handler);
             return null;
         }
-        targets.add(offers.get(index));
+        TradeOffer offer = offers.get(visibleIndex);
+        int realIndex = original.indexOf(offer);
+        targets.add(new TradeTarget(realIndex >= 0 ? realIndex : visibleIndex, describeOffer(offer)));
         return targets;
     }
 
@@ -806,19 +840,22 @@ public class VoidTradeFeature implements Feature {
 
     /**
      * MerchantScreen で取引を選んだときと同じ処理（MerchantScreen#syncRecipeIndex）。
-     * 表示上の並びとサーバー側の並びが違う場合（ItemScroller のお気に入りの並べ替え）に備えて番号を変換する。
-     * 材料の自動補充は表示側の一覧、サーバーへ送る番号と MerchantInventory の番号は元の一覧で数える。
+     * サーバーへ送る番号と MerchantInventory の番号は元の一覧、材料の自動補充（switchTo）は表示側の一覧で数える
+     * （ItemScroller のお気に入りの並べ替えに備えて番号を変換する）。表示側の一覧に同じ取引が見つからなければ
+     * クライアント側の補充は行わず、サーバーが補充した結果を待つ。
      */
-    private static void selectOffer(MinecraftClient client, MerchantScreenHandler handler, TradeOffer offer) {
-        int visibleIndex = handler.getRecipes().indexOf(offer);
-        int realIndex = originalOffers(handler).indexOf(offer);
-        if (visibleIndex < 0 || realIndex < 0) {
+    private static void selectOffer(MinecraftClient client, MerchantScreenHandler handler, int realIndex) {
+        TradeOfferList original = originalOffers(handler);
+        if (realIndex < 0 || realIndex >= original.size()) {
             return;
         }
+        int visibleIndex = handler.getRecipes().indexOf(original.get(realIndex));
         handler.setRecipeIndex(realIndex);
-        handler.switchTo(visibleIndex);
+        if (visibleIndex >= 0) {
+            handler.switchTo(visibleIndex);
+        }
         client.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(realIndex));
-        if (client.currentScreen instanceof MerchantScreen screen) {
+        if (visibleIndex >= 0 && client.currentScreen instanceof MerchantScreen screen) {
             ((MerchantScreenAccessor) screen).setSelectedIndex(visibleIndex);
         }
     }

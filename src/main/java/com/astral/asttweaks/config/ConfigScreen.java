@@ -22,6 +22,7 @@ import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
 import com.astral.asttweaks.feature.pickprotect.gui.PickProtectSlotScreen;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.feature.voidtrade.VoidTradeConfig;
 import com.astral.asttweaks.feature.voidtrade.gui.VoidTradeWorkflowScreen;
 import com.astral.asttweaks.util.KeyCombo;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
@@ -1277,6 +1278,16 @@ public class ConfigScreen implements ModMenuApi {
                 .setDefaultValue(0)
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait.tooltip"))
                 .setSaveConsumer(value -> config.voidTradeExtraWaitTicks = value)
+                .build());
+
+        voidTrade.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.tradesPerTick"),
+                        config.voidTradeTradesPerTick)
+                .setMin(1).setMax(VoidTradeConfig.MAX_TRADES_PER_TICK)
+                .setDefaultValue(4)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.tradesPerTick.tooltip"))
+                .setSaveConsumer(value -> config.voidTradeTradesPerTick = value)
                 .build());
 
         voidTrade.addEntry(new ButtonEntry(

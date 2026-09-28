@@ -9,6 +9,7 @@ import java.util.List;
  * Configuration wrapper for the Void Trade feature.
  */
 public class VoidTradeConfig {
+    public static final int MAX_TRADES_PER_TICK = 16;
 
     public boolean isEnabled() {
         return ModConfig.getInstance().voidTradeEnabled;
@@ -35,6 +36,14 @@ public class VoidTradeConfig {
 
     public int getStepTimeoutTicks() {
         return Math.max(1, ModConfig.getInstance().voidTradeStepTimeoutSeconds) * 20;
+    }
+
+    /**
+     * 「結果を捨てる」取引で 1 tick に投げ捨てる回数。1 回ごとにクリックと腕振りの 2 パケットを送るので、
+     * サーバー側のクリック・パケット制限に掛からないよう抑えられるようにしてある。
+     */
+    public int getTradesPerTick() {
+        return Math.max(1, Math.min(MAX_TRADES_PER_TICK, ModConfig.getInstance().voidTradeTradesPerTick));
     }
 
     /**
