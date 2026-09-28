@@ -172,6 +172,10 @@ public class VoidTradeWorkflowScreen extends Screen {
                 .build(this.editorLeft, TOP, this.editorWidth, 20, Text.translatable(KEY + "type"), (button, type) -> {
                     VoidTradeStep step = getSelectedStep();
                     if (step != null) {
+                        // ItemScroller があれば、新しく作る取引ステップはお気に入り全部を対象にする（AHK と同じ）
+                        if (type == VoidTradeStepType.TRADE && step.getType() != VoidTradeStepType.TRADE && ItemScrollerCompat.isLoaded()) {
+                            step.useFavorites = true;
+                        }
                         step.type = type;
                         refreshEditor();
                     }
