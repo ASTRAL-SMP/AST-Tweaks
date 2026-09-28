@@ -22,6 +22,7 @@ import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
 import com.astral.asttweaks.feature.pickprotect.gui.PickProtectSlotScreen;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.feature.voidtrade.gui.VoidTradeWorkflowScreen;
 import com.astral.asttweaks.util.KeyCombo;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -1232,6 +1233,62 @@ public class ConfigScreen implements ModMenuApi {
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixAutoReenable = value)
                 .build());
+
+        // ============================
+        // Void Trade category (座標指定ワークフローのループ実行)
+        // ============================
+        ConfigCategory voidTrade = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.voidtrade"));
+
+        voidTrade.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled"),
+                        config.voidTradeEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled.tooltip"))
+                .setSaveConsumer(value -> config.voidTradeEnabled = value)
+                .build());
+
+        voidTrade.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount"),
+                        config.voidTradeLoopCount)
+                .setMin(0).setMax(100000)
+                .setDefaultValue(0)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount.tooltip"))
+                .setSaveConsumer(value -> config.voidTradeLoopCount = value)
+                .build());
+
+        voidTrade.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout"),
+                        config.voidTradeStepTimeoutSeconds)
+                .setMin(5).setMax(3600)
+                .setDefaultValue(120)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout.tooltip"))
+                .setSaveConsumer(value -> config.voidTradeStepTimeoutSeconds = value)
+                .build());
+
+        voidTrade.addEntry(entryBuilder
+                .startIntField(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait"),
+                        config.voidTradeExtraWaitTicks)
+                .setMin(0).setMax(1200)
+                .setDefaultValue(0)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait.tooltip"))
+                .setSaveConsumer(value -> config.voidTradeExtraWaitTicks = value)
+                .build());
+
+        voidTrade.addEntry(new ButtonEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.workflow.button"),
+                button -> MinecraftClient.getInstance().setScreen(new VoidTradeWorkflowScreen(MinecraftClient.getInstance().currentScreen))
+        ));
+
+        voidTrade.addEntry(new KeyComboEntry(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.voidTradeToggle"),
+                config.voidTradeToggleKey,
+                new KeyCombo(-1, -1),
+                combo -> config.voidTradeToggleKey.copyFrom(combo)));
 
         builder.setSavingRunnable(config::save);
 

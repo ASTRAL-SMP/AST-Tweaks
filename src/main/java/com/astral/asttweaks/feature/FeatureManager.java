@@ -20,6 +20,7 @@ import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.syncertune.SyncerTuneFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
+import com.astral.asttweaks.feature.voidtrade.VoidTradeFeature;
 import com.astral.asttweaks.feature.worldborderfix.WorldBorderFixFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
@@ -69,6 +70,7 @@ public class FeatureManager {
         registerFeature(new PortalProtectFeature());
         registerFeature(new SyncerTuneFeature());
         registerFeature(new WorldBorderFixFeature());
+        registerFeature(new VoidTradeFeature());
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -251,5 +253,12 @@ public class FeatureManager {
      */
     public WorldBorderFixFeature getWorldBorderFixFeature() {
         return (WorldBorderFixFeature) getFeature("worldborderfix");
+    }
+
+    /**
+     * Get the void trade feature.
+     */
+    public VoidTradeFeature getVoidTradeFeature() {
+        return (VoidTradeFeature) getFeature("voidtrade");
     }
 }

@@ -8,6 +8,8 @@ import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
+import com.astral.asttweaks.feature.voidtrade.VoidTradePreset;
+import com.astral.asttweaks.feature.voidtrade.VoidTradeStep;
 import com.astral.asttweaks.util.KeyCombo;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -175,6 +177,14 @@ public class ModConfig {
     public int worldBorderFixCoordThreshold = 100000;       // |X| または |Z| のしきい値
     public boolean worldBorderFixAutoReenable = false;      // ゾーン離脱時に即時再ロードで Nvidium を復帰（一部環境でクラッシュ報告あり）
 
+    // Void Trade (座標指定のワークフローをループ実行してボイドトレードを自動化)
+    public boolean voidTradeEnabled = false;
+    public int voidTradeLoopCount = 0;                      // 0 = 停止するまで無限ループ
+    public int voidTradeStepTimeoutSeconds = 120;           // 移動・取引画面待ち等のタイムアウト
+    public int voidTradeExtraWaitTicks = 0;                 // 待機ステップに一律で足す tick 数（ラグ対策）
+    public List<VoidTradeStep> voidTradeSteps = new ArrayList<>();
+    public List<VoidTradePreset> voidTradePresets = new ArrayList<>();
+
     // キーコンボ設定（全キーバインド）
     public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
     public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
@@ -205,6 +215,7 @@ public class ModConfig {
     public KeyCombo autoRestockInventoryToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockShulkerToggleKey = new KeyCombo(-1, -1);
     public KeyCombo villagerLinkToggleKey = new KeyCombo(-1, -1);
+    public KeyCombo voidTradeToggleKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -418,6 +429,24 @@ public class ModConfig {
                         this.worldBorderFixCoordThreshold = loaded.worldBorderFixCoordThreshold;
                     }
                     this.worldBorderFixAutoReenable = loaded.worldBorderFixAutoReenable;
+                    this.voidTradeEnabled = loaded.voidTradeEnabled;
+                    this.voidTradeLoopCount = Math.max(0, loaded.voidTradeLoopCount);
+                    this.voidTradeExtraWaitTicks = Math.max(0, loaded.voidTradeExtraWaitTicks);
+                    if (loaded.voidTradeStepTimeoutSeconds > 0) {
+                        this.voidTradeStepTimeoutSeconds = loaded.voidTradeStepTimeoutSeconds;
+                    }
+                    if (loaded.voidTradeSteps != null) {
+                        this.voidTradeSteps = sanitizeSteps(loaded.voidTradeSteps);
+                    }
+                    if (loaded.voidTradePresets != null) {
+                        this.voidTradePresets = new ArrayList<>();
+                        for (VoidTradePreset preset : loaded.voidTradePresets) {
+                            if (preset != null && preset.name != null && preset.steps != null) {
+                                preset.steps = sanitizeSteps(preset.steps);
+                                this.voidTradePresets.add(preset);
+                            }
+                        }
+                    }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
@@ -506,6 +535,9 @@ public class ModConfig {
                     if (loaded.villagerLinkToggleKey != null) {
                         this.villagerLinkToggleKey.copyFrom(loaded.villagerLinkToggleKey);
                     }
+                    if (loaded.voidTradeToggleKey != null) {
+                        this.voidTradeToggleKey.copyFrom(loaded.voidTradeToggleKey);
+                    }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {
@@ -514,6 +546,19 @@ public class ModConfig {
         } else {
             save();
         }
+    }
+
+    /**
+     * 未知の種別（新しい版で保存された設定など）は Gson が null にするので捨て、欠けた値を補う。
+     */
+    private static List<VoidTradeStep> sanitizeSteps(List<VoidTradeStep> steps) {
+        List<VoidTradeStep> result = new ArrayList<>();
+        for (VoidTradeStep step : steps) {
+            if (step != null && step.sanitize()) {
+                result.add(step);
+            }
+        }
+        return result;
     }
 
     /**
