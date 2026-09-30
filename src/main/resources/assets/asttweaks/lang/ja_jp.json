@@ -411,6 +411,7 @@
   "config.asttweaks.syncertune.normalLimit": "通常時の Query Limit",
   "config.asttweaks.syncertune.normalLimit.tooltip": "通常時に適用する serverDataSyncerQueryLimit（TweakerMore 既定: 512）。",
 
+  "config.asttweaks.category.renderfix": "描画修正",
   "config.asttweaks.category.worldborderfix": "ワールドボーダー描画修正",
   "config.asttweaks.worldborderfix.enabled": "ワールドボーダー描画修正を有効化",
   "config.asttweaks.worldborderfix.enabled.tooltip": "ワールドボーダー付近で壁が透明になり X-ray のように見えるバグや、遠距離座標で地形が正しく読み込まれないバグへの対策です。対象エリアにいる間だけ原因となる Nvidium を一時無効化して Sodium 標準描画に切り替え、離れると自動で元に戻します。Nvidium 未導入の場合は何もしません。",

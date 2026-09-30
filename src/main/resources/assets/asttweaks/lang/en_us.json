@@ -411,6 +411,7 @@
   "config.asttweaks.syncertune.normalLimit": "Normal: Query Limit",
   "config.asttweaks.syncertune.normalLimit.tooltip": "serverDataSyncerQueryLimit applied in normal areas (TweakerMore default: 512).",
 
+  "config.asttweaks.category.renderfix": "Rendering Fixes",
   "config.asttweaks.category.worldborderfix": "World Border Fix",
   "config.asttweaks.worldborderfix.enabled": "Enable World Border Fix",
   "config.asttweaks.worldborderfix.enabled.tooltip": "Fixes rendering bugs near the world border (walls turning invisible like X-ray, terrain failing to load at far coordinates). While you are in the affected area, Nvidium is temporarily disabled and Sodium's default renderer is used; it is automatically re-enabled when you leave. Does nothing if Nvidium is not installed.",

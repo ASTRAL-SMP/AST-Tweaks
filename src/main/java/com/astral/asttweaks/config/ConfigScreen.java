@@ -1173,12 +1173,17 @@ public class ConfigScreen implements ModMenuApi {
                 .build());
 
         // ============================
-        // World Border Fix category (ボーダー付近の描画バグ対策)
+        // Render Fix category (描画バグ対策をまとめたタブ)
         // ============================
-        ConfigCategory worldBorderFix = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.worldborderfix"));
+        ConfigCategory renderFix = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.renderfix"));
 
-        worldBorderFix.addEntry(entryBuilder
+        // --- World Border Fix サブカテゴリ（ボーダー付近の描画バグ対策） ---
+        SubCategoryBuilder worldBorderFixSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.worldborderfix"))
+                .setExpanded(true);
+
+        worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled"),
                         config.worldBorderFixEnabled)
@@ -1187,7 +1192,7 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixEnabled = value)
                 .build());
 
-        worldBorderFix.addEntry(entryBuilder
+        worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray"),
                         config.worldBorderFixXray)
@@ -1196,7 +1201,7 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixXray = value)
                 .build());
 
-        worldBorderFix.addEntry(entryBuilder
+        worldBorderFixSub.add(entryBuilder
                 .startIntField(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance"),
                         config.worldBorderFixDistance)
@@ -1206,7 +1211,7 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixDistance = value)
                 .build());
 
-        worldBorderFix.addEntry(entryBuilder
+        worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords"),
                         config.worldBorderFixFarCoords)
@@ -1215,7 +1220,7 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixFarCoords = value)
                 .build());
 
-        worldBorderFix.addEntry(entryBuilder
+        worldBorderFixSub.add(entryBuilder
                 .startIntField(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold"),
                         config.worldBorderFixCoordThreshold)
@@ -1225,7 +1230,7 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixCoordThreshold = value)
                 .build());
 
-        worldBorderFix.addEntry(entryBuilder
+        worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable"),
                         config.worldBorderFixAutoReenable)
@@ -1234,13 +1239,14 @@ public class ConfigScreen implements ModMenuApi {
                 .setSaveConsumer(value -> config.worldBorderFixAutoReenable = value)
                 .build());
 
-        // ============================
-        // Nvidium Chunk Fix category (Nvidium が破棄した地形の再ビルド)
-        // ============================
-        ConfigCategory nvidiumChunkFix = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.nvidiumchunkfix"));
+        renderFix.addEntry(worldBorderFixSub.build());
 
-        nvidiumChunkFix.addEntry(entryBuilder
+        // --- Nvidium Chunk Fix サブカテゴリ（Nvidium が破棄した地形の再ビルド） ---
+        SubCategoryBuilder nvidiumChunkFixSub = entryBuilder.startSubCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.nvidiumchunkfix"))
+                .setExpanded(true);
+
+        nvidiumChunkFixSub.add(entryBuilder
                 .startBooleanToggle(
                         Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled"),
                         config.nvidiumChunkFixEnabled)
@@ -1248,6 +1254,8 @@ public class ConfigScreen implements ModMenuApi {
                 .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled.tooltip"))
                 .setSaveConsumer(value -> config.nvidiumChunkFixEnabled = value)
                 .build());
+
+        renderFix.addEntry(nvidiumChunkFixSub.build());
 
         // ============================
         // Void Trade category (座標指定ワークフローのループ実行)
