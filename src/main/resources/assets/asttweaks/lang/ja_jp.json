@@ -411,6 +411,7 @@
   "config.asttweaks.syncertune.normalLimit": "通常時の Query Limit",
   "config.asttweaks.syncertune.normalLimit.tooltip": "通常時に適用する serverDataSyncerQueryLimit（TweakerMore 既定: 512）。",
 
+  "config.asttweaks.category.renderfix": "描画修正",
   "config.asttweaks.category.worldborderfix": "ワールドボーダー描画修正",
   "config.asttweaks.worldborderfix.enabled": "ワールドボーダー描画修正を有効化",
   "config.asttweaks.worldborderfix.enabled.tooltip": "ワールドボーダー付近で壁が透明になり X-ray のように見えるバグや、遠距離座標で地形が正しく読み込まれないバグへの対策です。対象エリアにいる間だけ原因となる Nvidium を一時無効化して Sodium 標準描画に切り替え、離れると自動で元に戻します。Nvidium 未導入の場合は何もしません。",
@@ -427,6 +428,10 @@
   "message.asttweaks.worldborderfix.suppressed": "ワールドボーダー描画修正: Nvidium を一時無効化しました（チャンク再読み込み中）",
   "message.asttweaks.worldborderfix.restored": "ワールドボーダー描画修正: Nvidium を再有効化しました（チャンク再読み込み中）",
   "message.asttweaks.worldborderfix.restoredDeferred": "ワールドボーダー描画修正: Nvidium は次のチャンク再読み込み時（F3+A・ディメンション移動等）に復帰します",
+
+  "config.asttweaks.category.nvidiumchunkfix": "Nvidium チャンク抜け修正",
+  "config.asttweaks.nvidiumchunkfix.enabled": "Nvidium チャンク抜け修正を有効化",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Nvidium（特に Bobby 併用時）で、地形が 128×64×128 ブロック単位で抜け落ちたまま戻らない問題を修正します。主な原因は Nvidium 0.1.x の不具合で、この単位のブロックが 256 セクションすべて地形で埋まると（ネザー天井の層などで起きやすい）丸ごと描画されなくなります。また VRAM の上限で破棄された地形が再描画されない問題、読み込んだばかりの近くの地形が優先的に破棄される問題、破棄候補が無いときのクラッシュも防ぎます。有効化・無効化は次のチャンク再読み込み（F3+A・再ログイン・ディメンション移動）から反映されます。処理状況は F3 画面右側の「AST Chunk Fix」行に表示されます。対象は Nvidium 0.1.12〜0.1.15 で、未導入の場合は何もしません。",
 
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Void Trade を有効化",

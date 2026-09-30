@@ -52,6 +52,9 @@ dependencies {
     // Sodium (optional, for Mixin compatibility)
     modCompileOnly "maven.modrinth:sodium:mc1.19.4-0.4.10"
 
+    // Nvidium (optional, for the region eviction fix mixins)
+    modCompileOnly "maven.modrinth:nvidium:${project.nvidium_version}"
+
     // Litematica (optional, for drag-and-drop schematic import compatibility)
     modCompileOnly "maven.modrinth:litematica:${project.litematica_version}"
     modCompileOnly "maven.modrinth:malilib:${project.malilib_version}"

@@ -1,8 +1,14 @@
 package com.astral.asttweaks.compat;
 
 import com.astral.asttweaks.ASTTweaks;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.SemanticVersion;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.VersionParsingException;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 /**
  * Compatibility layer for Nvidium mod.
@@ -21,6 +27,12 @@ public class NvidiumCompat {
     private static boolean originalCaptured = false;
     private static boolean originallyCompatible = false;
     private static boolean suppressed = false;
+
+    // Nvidium Chunk Fix の mixin が前提とするリージョン管理（RenderPipeline.removeRegion 等）がある範囲。
+    // 0.1.12 で導入され、0.2.0 で Sodium 0.5 向けに作り直されている
+    private static final String REGION_PATCH_MIN_VERSION = "0.1.12-alpha";
+    private static final String REGION_PATCH_MAX_VERSION_EXCLUSIVE = "0.2.0-alpha";
+    private static Boolean regionPatchSupported = null;
 
     /**
      * Initialize Nvidium compatibility.
@@ -51,6 +63,32 @@ public class NvidiumCompat {
      */
     public static boolean isAvailable() {
         return available;
+    }
+
+    /**
+     * Whether the installed Nvidium matches the internals the Nvidium Chunk Fix mixins patch.
+     * Only uses loader metadata (no Nvidium classes), so it is safe to call from a mixin plugin.
+     */
+    public static boolean isRegionPatchSupported() {
+        if (regionPatchSupported == null) {
+            regionPatchSupported = detectRegionPatchSupport();
+        }
+        return regionPatchSupported;
+    }
+
+    private static boolean detectRegionPatchSupport() {
+        FabricLoader loader = FabricLoader.getInstance();
+        Optional<ModContainer> nvidium = loader.getModContainer("nvidium");
+        if (nvidium.isEmpty() || !loader.isModLoaded("sodium")) {
+            return false;
+        }
+        Version version = nvidium.get().getMetadata().getVersion();
+        try {
+            return version.compareTo(SemanticVersion.parse(REGION_PATCH_MIN_VERSION)) >= 0
+                    && version.compareTo(SemanticVersion.parse(REGION_PATCH_MAX_VERSION_EXCLUSIVE)) < 0;
+        } catch (VersionParsingException e) {
+            return false;
+        }
     }
 
     /**

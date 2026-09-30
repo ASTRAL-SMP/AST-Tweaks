@@ -411,6 +411,7 @@
   "config.asttweaks.syncertune.normalLimit": "Normal: Query Limit",
   "config.asttweaks.syncertune.normalLimit.tooltip": "serverDataSyncerQueryLimit applied in normal areas (TweakerMore default: 512).",
 
+  "config.asttweaks.category.renderfix": "Rendering Fixes",
   "config.asttweaks.category.worldborderfix": "World Border Fix",
   "config.asttweaks.worldborderfix.enabled": "Enable World Border Fix",
   "config.asttweaks.worldborderfix.enabled.tooltip": "Fixes rendering bugs near the world border (walls turning invisible like X-ray, terrain failing to load at far coordinates). While you are in the affected area, Nvidium is temporarily disabled and Sodium's default renderer is used; it is automatically re-enabled when you leave. Does nothing if Nvidium is not installed.",
@@ -427,6 +428,10 @@
   "message.asttweaks.worldborderfix.suppressed": "World Border Fix: Nvidium temporarily disabled, reloading chunks...",
   "message.asttweaks.worldborderfix.restored": "World Border Fix: Nvidium re-enabled, reloading chunks...",
   "message.asttweaks.worldborderfix.restoredDeferred": "World Border Fix: Nvidium will return on the next renderer reload (F3+A, dimension change, etc.)",
+
+  "config.asttweaks.category.nvidiumchunkfix": "Nvidium Chunk Fix",
+  "config.asttweaks.nvidiumchunkfix.enabled": "Enable Nvidium Chunk Fix",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Fixes terrain going missing in 128x64x128-block chunks with Nvidium (especially together with Bobby) and never coming back. The main cause is a bug in Nvidium 0.1.x: once all 256 sections of such a block are filled with terrain (common in the Nether ceiling layer), it is not drawn at all. It also restores terrain that Nvidium dropped at its VRAM limit, stops freshly loaded nearby terrain from being dropped first, and prevents the crash when there is nothing to drop. Turning it on or off takes effect on the next chunk reload (F3+A, rejoining, changing dimension). Status is shown in the \"AST Chunk Fix\" lines on the right side of the F3 screen. Supports Nvidium 0.1.12-0.1.15; does nothing if Nvidium is not installed.",
 
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Enable Void Trade",
