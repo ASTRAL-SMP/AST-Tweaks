@@ -34,6 +34,7 @@
   "mixins": [
     "asttweaks.mixins.json",
     "asttweaks.sodium.mixins.json",
+    "asttweaks.nvidium.mixins.json",
     "asttweaks.litematica.mixins.json"
   ],
   "depends": {

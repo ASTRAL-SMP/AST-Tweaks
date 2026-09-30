@@ -428,6 +428,10 @@
   "message.asttweaks.worldborderfix.restored": "World Border Fix: Nvidium re-enabled, reloading chunks...",
   "message.asttweaks.worldborderfix.restoredDeferred": "World Border Fix: Nvidium will return on the next renderer reload (F3+A, dimension change, etc.)",
 
+  "config.asttweaks.category.nvidiumchunkfix": "Nvidium Chunk Fix",
+  "config.asttweaks.nvidiumchunkfix.enabled": "Enable Nvidium Chunk Fix",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Fixes terrain going missing in 128x64x128-block chunks with Nvidium (especially together with Bobby) and never coming back. When terrain memory reaches its VRAM limit, Nvidium drops unseen terrain from the GPU without telling Sodium, so it is never rebuilt. This records the dropped terrain and rebuilds it automatically once it comes into view. It also stops freshly loaded nearby terrain from being dropped first, and prevents the crash when there is nothing to drop. Status is shown in the \"AST Chunk Fix\" line on the right side of the F3 screen. Supports Nvidium 0.1.12-0.1.15; does nothing if Nvidium is not installed.",
+
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Enable Void Trade",
   "config.asttweaks.voidtrade.enabled.tooltip": "Runs a list of coordinate-based steps (move, open villager trade, wait for unload, trade, close screen, ...) from top to bottom, then loops back to the first step. Automates void trading: if you walk far enough for the villager's chunk to unload while keeping the trade screen open, the trades that follow are not saved to the villager (no used-up trades, no price increase). Start/stop with the key below or the button in the workflow editor.",

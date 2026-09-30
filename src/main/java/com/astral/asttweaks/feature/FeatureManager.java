@@ -13,6 +13,7 @@ import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
+import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
 import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
 import com.astral.asttweaks.feature.portalprotect.PortalProtectFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
@@ -70,6 +71,7 @@ public class FeatureManager {
         registerFeature(new PortalProtectFeature());
         registerFeature(new SyncerTuneFeature());
         registerFeature(new WorldBorderFixFeature());
+        registerFeature(new NvidiumChunkFixFeature());
         registerFeature(new VoidTradeFeature());
 
         // Initialize all features
@@ -253,6 +255,13 @@ public class FeatureManager {
      */
     public WorldBorderFixFeature getWorldBorderFixFeature() {
         return (WorldBorderFixFeature) getFeature("worldborderfix");
+    }
+
+    /**
+     * Get the Nvidium chunk fix feature.
+     */
+    public NvidiumChunkFixFeature getNvidiumChunkFixFeature() {
+        return (NvidiumChunkFixFeature) getFeature("nvidiumchunkfix");
     }
 
     /**

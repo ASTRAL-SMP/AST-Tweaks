@@ -1235,6 +1235,21 @@ public class ConfigScreen implements ModMenuApi {
                 .build());
 
         // ============================
+        // Nvidium Chunk Fix category (Nvidium が破棄した地形の再ビルド)
+        // ============================
+        ConfigCategory nvidiumChunkFix = builder.getOrCreateCategory(
+                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.nvidiumchunkfix"));
+
+        nvidiumChunkFix.addEntry(entryBuilder
+                .startBooleanToggle(
+                        Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled"),
+                        config.nvidiumChunkFixEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled.tooltip"))
+                .setSaveConsumer(value -> config.nvidiumChunkFixEnabled = value)
+                .build());
+
+        // ============================
         // Void Trade category (座標指定ワークフローのループ実行)
         // ============================
         ConfigCategory voidTrade = builder.getOrCreateCategory(

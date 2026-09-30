@@ -177,6 +177,9 @@ public class ModConfig {
     public int worldBorderFixCoordThreshold = 100000;       // |X| または |Z| のしきい値
     public boolean worldBorderFixAutoReenable = false;      // ゾーン離脱時に即時再ロードで Nvidium を復帰（一部環境でクラッシュ報告あり）
 
+    // Nvidium Chunk Fix (Nvidium が VRAM 上限で破棄したリージョンが描画されないまま残る問題の修正)
+    public boolean nvidiumChunkFixEnabled = false;
+
     // Void Trade (座標指定のワークフローをループ実行してボイドトレードを自動化)
     public boolean voidTradeEnabled = false;
     public int voidTradeLoopCount = 0;                      // 0 = 停止するまで無限ループ
@@ -429,6 +432,7 @@ public class ModConfig {
                         this.worldBorderFixCoordThreshold = loaded.worldBorderFixCoordThreshold;
                     }
                     this.worldBorderFixAutoReenable = loaded.worldBorderFixAutoReenable;
+                    this.nvidiumChunkFixEnabled = loaded.nvidiumChunkFixEnabled;
                     this.voidTradeEnabled = loaded.voidTradeEnabled;
                     this.voidTradeLoopCount = Math.max(0, loaded.voidTradeLoopCount);
                     this.voidTradeExtraWaitTicks = Math.max(0, loaded.voidTradeExtraWaitTicks);

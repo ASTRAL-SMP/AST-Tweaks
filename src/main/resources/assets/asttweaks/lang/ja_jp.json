@@ -428,6 +428,10 @@
   "message.asttweaks.worldborderfix.restored": "ワールドボーダー描画修正: Nvidium を再有効化しました（チャンク再読み込み中）",
   "message.asttweaks.worldborderfix.restoredDeferred": "ワールドボーダー描画修正: Nvidium は次のチャンク再読み込み時（F3+A・ディメンション移動等）に復帰します",
 
+  "config.asttweaks.category.nvidiumchunkfix": "Nvidium チャンク抜け修正",
+  "config.asttweaks.nvidiumchunkfix.enabled": "Nvidium チャンク抜け修正を有効化",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Nvidium（特に Bobby 併用時）で、地形が 128×64×128 ブロック単位で抜け落ちたまま戻らない問題を修正します。Nvidium は地形メモリが VRAM の上限に達すると見えていない地形を GPU から破棄しますが、Sodium に通知しないため再描画されません。破棄された地形を記録し、視界に入った時点で自動的に再ビルドします。あわせて、読み込んだばかりの近くの地形が優先的に破棄される不具合と、破棄候補が無いときのクラッシュも防ぎます。処理状況は F3 画面右側の「AST Chunk Fix」行に表示されます。対象は Nvidium 0.1.12〜0.1.15 で、未導入の場合は何もしません。",
+
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Void Trade を有効化",
   "config.asttweaks.voidtrade.enabled.tooltip": "座標付きのステップ（移動・村人と取引を開く・アンロード待ち・取引・画面を閉じる など）を上から順に実行し、最後まで行ったら先頭に戻って繰り返します。取引画面を開いたまま村人のチャンクがアンロードされるまで離れると、その後の取引が村人に保存されない（取引回数や値上がりが残らない）ことを利用したボイドトレードの自動化用です。開始/停止は下のキー、またはワークフロー編集画面のボタンで行います。",
