@@ -6,7 +6,9 @@
   "plugin": "com.astral.asttweaks.mixin.nvidium.NvidiumMixinPlugin",
   "client": [
     "RegionManagerMixin",
+    "RegionMixin",
     "RenderPipelineMixin",
+    "ShaderLoaderMixin",
     "SodiumRenderSectionManagerMixin"
   ],
   "injectors": {

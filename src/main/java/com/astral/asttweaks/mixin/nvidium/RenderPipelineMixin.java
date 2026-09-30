@@ -4,6 +4,7 @@ import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.EvictedSections;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumRegionManagerExt;
+import com.astral.asttweaks.feature.nvidiumchunkfix.RegionCountFix;
 import me.cortex.nvidium.RenderPipeline;
 import me.cortex.nvidium.managers.RegionManager;
 import me.cortex.nvidium.managers.RegionVisibilityTracker;
@@ -36,6 +37,8 @@ public abstract class RenderPipelineMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void asttweaks$hookRegionRelease(CallbackInfo ci) {
+        // リージョン ID はパイプラインごとに振り直される（シェーダーの書き換え有無はコンストラクタ内で確定済み）
+        RegionCountFix.resetRegions();
         RegionVisibilityTracker tracker = this.regionVisibilityTracking;
         ((NvidiumRegionManagerExt) this.sectionManager.getRegionManager())
                 .asttweaks$setReleaseListener(tracker::resetRegion);
@@ -80,6 +83,8 @@ public abstract class RenderPipelineMixin {
         if (!asttweaks$isFixEnabled()) {
             return;
         }
+        info.add("AST Chunk Fix: full regions " + RegionCountFix.getFullRegionCount()
+                + (RegionCountFix.isActive() ? " (fixed)" : " (not fixed, press F3+A)"));
         info.add("AST Chunk Fix: evicted " + EvictedSections.getEvictedRegions()
                 + " regions, restored " + EvictedSections.getRestoredSections()
                 + " sections, pending " + EvictedSections.size());

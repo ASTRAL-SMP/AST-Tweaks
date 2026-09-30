@@ -3,6 +3,7 @@ package com.astral.asttweaks.mixin.nvidium;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumRegionManagerExt;
+import com.astral.asttweaks.feature.nvidiumchunkfix.RegionCountFix;
 import me.cortex.nvidium.managers.RegionManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,6 +34,7 @@ public abstract class RegionManagerMixin implements NvidiumRegionManagerExt {
         at = @At(value = "INVOKE", target = "Lme/cortex/nvidium/util/IdProvider;release(I)V")
     )
     private int asttweaks$onRegionIdReleased(int regionId) {
+        RegionCountFix.onRegionReleased(regionId);
         if (asttweaks$releaseListener != null) {
             NvidiumChunkFixFeature feature = FeatureManager.getInstance().getNvidiumChunkFixFeature();
             if (feature != null && feature.isEnabled()) {

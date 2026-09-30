@@ -431,7 +431,7 @@
 
   "config.asttweaks.category.nvidiumchunkfix": "Nvidium チャンク抜け修正",
   "config.asttweaks.nvidiumchunkfix.enabled": "Nvidium チャンク抜け修正を有効化",
-  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Nvidium（特に Bobby 併用時）で、地形が 128×64×128 ブロック単位で抜け落ちたまま戻らない問題を修正します。Nvidium は地形メモリが VRAM の上限に達すると見えていない地形を GPU から破棄しますが、Sodium に通知しないため再描画されません。破棄された地形を記録し、視界に入った時点で自動的に再ビルドします。あわせて、読み込んだばかりの近くの地形が優先的に破棄される不具合と、破棄候補が無いときのクラッシュも防ぎます。処理状況は F3 画面右側の「AST Chunk Fix」行に表示されます。対象は Nvidium 0.1.12〜0.1.15 で、未導入の場合は何もしません。",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Nvidium（特に Bobby 併用時）で、地形が 128×64×128 ブロック単位で抜け落ちたまま戻らない問題を修正します。主な原因は Nvidium 0.1.x の不具合で、この単位のブロックが 256 セクションすべて地形で埋まると（ネザー天井の層などで起きやすい）丸ごと描画されなくなります。また VRAM の上限で破棄された地形が再描画されない問題、読み込んだばかりの近くの地形が優先的に破棄される問題、破棄候補が無いときのクラッシュも防ぎます。有効化・無効化は次のチャンク再読み込み（F3+A・再ログイン・ディメンション移動）から反映されます。処理状況は F3 画面右側の「AST Chunk Fix」行に表示されます。対象は Nvidium 0.1.12〜0.1.15 で、未導入の場合は何もしません。",
 
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Void Trade を有効化",

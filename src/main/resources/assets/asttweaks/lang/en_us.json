@@ -431,7 +431,7 @@
 
   "config.asttweaks.category.nvidiumchunkfix": "Nvidium Chunk Fix",
   "config.asttweaks.nvidiumchunkfix.enabled": "Enable Nvidium Chunk Fix",
-  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Fixes terrain going missing in 128x64x128-block chunks with Nvidium (especially together with Bobby) and never coming back. When terrain memory reaches its VRAM limit, Nvidium drops unseen terrain from the GPU without telling Sodium, so it is never rebuilt. This records the dropped terrain and rebuilds it automatically once it comes into view. It also stops freshly loaded nearby terrain from being dropped first, and prevents the crash when there is nothing to drop. Status is shown in the \"AST Chunk Fix\" line on the right side of the F3 screen. Supports Nvidium 0.1.12-0.1.15; does nothing if Nvidium is not installed.",
+  "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Fixes terrain going missing in 128x64x128-block chunks with Nvidium (especially together with Bobby) and never coming back. The main cause is a bug in Nvidium 0.1.x: once all 256 sections of such a block are filled with terrain (common in the Nether ceiling layer), it is not drawn at all. It also restores terrain that Nvidium dropped at its VRAM limit, stops freshly loaded nearby terrain from being dropped first, and prevents the crash when there is nothing to drop. Turning it on or off takes effect on the next chunk reload (F3+A, rejoining, changing dimension). Status is shown in the \"AST Chunk Fix\" lines on the right side of the F3 screen. Supports Nvidium 0.1.12-0.1.15; does nothing if Nvidium is not installed.",
 
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Enable Void Trade",
