@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*'
 
+# 1.19.4 系（main）と 26.1 系（mc/26.1）のリリースが同じリポジトリに並ぶ。
+# タグは v<mod_version>（例: v1.1.30+mc1.19.4）で、jar 名の "mc1.19" でアップデートチェッカーが系統を見分ける。
+env:
+  # 1.1.29 以前の 1.19.4 版は /releases/latest の jar を無条件に取得するため、Latest は 1.19.4 系に固定する
+  MAKE_LATEST: 'true'
+  # リリースノートの差分起点にする同系統の直前タグ（見つからなければ直近の祖先タグ）
+  PREVIOUS_TAG_MATCH: 'v*+mc1.19*'
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -12,6 +20,21 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check tag matches mod_version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MOD_VERSION=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          if [ "$VERSION" != "$MOD_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match mod_version=$MOD_VERSION in gradle.properties"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "display=${VERSION%%+*}" >> "$GITHUB_OUTPUT"
+          echo "minecraft=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -34,13 +57,22 @@ jobs:
       - name: Build
         run: ./gradlew build
 
-      - name: Get version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Generate release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREVIOUS=$(git describe --tags --abbrev=0 --match "$PREVIOUS_TAG_MATCH" "$GITHUB_REF_NAME^" 2>/dev/null \
+            || git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          ARGS=(-f tag_name="$GITHUB_REF_NAME")
+          if [ -n "$PREVIOUS" ]; then
+            ARGS+=(-f previous_tag_name="$PREVIOUS")
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${ARGS[@]}" --jq .body > release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "AST-Tweaks v${{ steps.version.outputs.version }}"
+          name: "AST-Tweaks v${{ steps.version.outputs.display }} (Minecraft ${{ steps.version.outputs.minecraft }})"
           files: build/libs/ast-tweaks-${{ steps.version.outputs.version }}.jar
-          generate_release_notes: true
+          body_path: release-notes.md
+          make_latest: ${{ env.MAKE_LATEST }}

@@ -212,7 +212,8 @@ public class UpdateCheckerFeature implements Feature {
     }
 
     private String cleanVersionString(String version) {
-        return version.replaceFirst("^[vV]", "").trim();
+        // Build metadata such as "+mc1.19.4" only names the Minecraft version and must not affect ordering
+        return version.replaceFirst("^[vV]", "").replaceFirst("\\+.*$", "").trim();
     }
 
     private int parseVersionPart(String part) {
