@@ -4,14 +4,14 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.pickprotect.PickProtectConfig;
 import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Hotbar-only whitelist screen for the Pick Protect feature.
@@ -29,7 +29,7 @@ public class PickProtectSlotScreen extends Screen {
     private int gridY;
 
     public PickProtectSlotScreen(Screen parent) {
-        super(Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.title"));
+        super(Component.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.title"));
         this.parent = parent;
 
         PickProtectFeature feature = (PickProtectFeature) FeatureManager.getInstance().getFeature("pickprotect");
@@ -44,32 +44,30 @@ public class PickProtectSlotScreen extends Screen {
         gridX = (this.width - totalWidth) / 2;
         gridY = this.height / 2 - SLOT_SIZE / 2;
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 30, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        button -> this.minecraft.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 30, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        int titleWidth = this.font.width(this.title);
+        graphics.text(this.font, this.title,
+                this.width / 2 - titleWidth / 2, 20, 0xFFFFFFFF);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title,
-                this.width / 2 - titleWidth / 2, 20, 0xFFFFFF);
-
-        Text helpText = Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.help");
-        int helpWidth = this.textRenderer.getWidth(helpText);
-        this.textRenderer.drawWithShadow(matrices, helpText,
-                this.width / 2 - helpWidth / 2, 36, 0xAAAAAA);
+        Component helpText = Component.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.help");
+        int helpWidth = this.font.width(helpText);
+        graphics.text(this.font, helpText,
+                this.width / 2 - helpWidth / 2, 36, 0xFFAAAAAA);
 
         ItemStack hoveredStack = null;
         for (int slot = 0; slot < HOTBAR_SIZE; slot++) {
             int x = gridX + slot * (SLOT_SIZE + SLOT_SPACING);
             boolean hovered = mouseX >= x && mouseX < x + SLOT_SIZE
                     && mouseY >= gridY && mouseY < gridY + SLOT_SIZE;
-            ItemStack stack = drawSlot(matrices, x, gridY, slot, hovered);
+            ItemStack stack = drawSlot(graphics, x, gridY, slot, hovered);
             if (hovered && stack != null && !stack.isEmpty()) {
                 hoveredStack = stack;
             }
@@ -79,20 +77,20 @@ public class PickProtectSlotScreen extends Screen {
         for (int slot = 0; slot < HOTBAR_SIZE; slot++) {
             int x = gridX + slot * (SLOT_SIZE + SLOT_SPACING);
             String label = String.valueOf(slot + 1);
-            int lw = this.textRenderer.getWidth(label);
-            this.textRenderer.drawWithShadow(matrices, label,
+            int lw = this.font.width(label);
+            graphics.text(this.font, label,
                     x + (SLOT_SIZE - lw) / 2,
-                    gridY + SLOT_SIZE + 4, 0xCCCCCC);
+                    gridY + SLOT_SIZE + 4, 0xFFCCCCCC);
         }
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         if (hoveredStack != null) {
-            this.renderTooltip(matrices, hoveredStack, mouseX, mouseY);
+            graphics.setTooltipForNextFrame(this.font, hoveredStack, mouseX, mouseY);
         }
     }
 
-    private ItemStack drawSlot(MatrixStack matrices, int x, int y, int slot, boolean hovered) {
+    private ItemStack drawSlot(GuiGraphicsExtractor graphics, int x, int y, int slot, boolean hovered) {
         boolean protectedSlot = config != null && config.isSlotProtected(slot);
 
         int bgColor;
@@ -101,34 +99,36 @@ public class PickProtectSlotScreen extends Screen {
         } else {
             bgColor = hovered ? 0xFF666666 : 0xFF444444;
         }
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
+        graphics.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
 
         int borderColor = hovered ? 0xFFFFFFFF : 0xFF888888;
-        fill(matrices, x, y, x + SLOT_SIZE, y + 1, borderColor);
-        fill(matrices, x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
-        fill(matrices, x, y, x + 1, y + SLOT_SIZE, borderColor);
-        fill(matrices, x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
+        graphics.fill(x, y, x + SLOT_SIZE, y + 1, borderColor);
+        graphics.fill(x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
+        graphics.fill(x, y, x + 1, y + SLOT_SIZE, borderColor);
+        graphics.fill(x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
 
         ItemStack stack = ItemStack.EMPTY;
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
-            PlayerInventory inv = mc.player.getInventory();
-            stack = inv.getStack(slot);
+            Inventory inv = mc.player.getInventory();
+            stack = inv.getItem(slot);
         }
 
         if (!stack.isEmpty()) {
             int itemX = x + (SLOT_SIZE - 16) / 2;
             int itemY = y + (SLOT_SIZE - 16) / 2;
-            RenderSystem.enableDepthTest();
-            this.itemRenderer.renderInGui(matrices, stack, itemX, itemY);
-            this.itemRenderer.renderGuiItemOverlay(matrices, this.textRenderer, stack, itemX, itemY);
+            graphics.fakeItem(stack, itemX, itemY);
+            graphics.itemDecorations(this.font, stack, itemX, itemY);
         }
 
         return stack;
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0 && config != null) {
             for (int slot = 0; slot < HOTBAR_SIZE; slot++) {
                 int x = gridX + slot * (SLOT_SIZE + SLOT_SPACING);
@@ -139,11 +139,11 @@ public class PickProtectSlotScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(parent);
+    public void onClose() {
+        this.minecraft.setScreen(parent);
     }
 }

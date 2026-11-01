@@ -3,24 +3,28 @@ package com.astral.asttweaks.feature.autorestock.gui;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autorestock.AutoRestockConfig;
 import com.astral.asttweaks.feature.autorestock.AutoRestockFeature;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.featuretoggle.FeatureSet;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.ItemDisplay;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
  * Screen for configuring per-stack auto restock rules.
@@ -32,14 +36,14 @@ public class AutoRestockItemListScreen extends Screen {
     private final Screen parent;
     private final AutoRestockConfig config;
     private ItemListWidget itemListWidget;
-    private TextFieldWidget searchField;
+    private EditBox searchField;
     private String searchText = "";
     private List<ItemStack> allStacks = List.of();
     private ItemEntry activeCountEntry;
-    private TextFieldWidget activeCountField;
+    private EditBox activeCountField;
 
     public AutoRestockItemListScreen(Screen parent) {
-        super(Text.translatable("config.asttweaks.autorestock.itemlist.title"));
+        super(Component.translatable("config.asttweaks.autorestock.itemlist.title"));
         this.parent = parent;
         AutoRestockFeature feature = FeatureManager.getInstance().getAutoRestockFeature();
         this.config = feature != null ? feature.getConfig() : null;
@@ -49,54 +53,53 @@ public class AutoRestockItemListScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.itemListWidget = new ItemListWidget(this.client, this.width, this.height, 54, this.height - 32, 36);
-        this.addSelectableChild(this.itemListWidget);
+        this.itemListWidget = new ItemListWidget(this.minecraft, this.width, this.height - 32 - 54, 54, 36);
+        this.addWidget(this.itemListWidget);
 
         this.allStacks = buildAvailableStacks();
 
-        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 32, 200, 18,
-                Text.translatable("config.asttweaks.search.placeholder"));
-        this.searchField.setPlaceholder(Text.translatable("config.asttweaks.search.placeholder"));
-        this.searchField.setChangedListener(text -> {
+        this.searchField = new EditBox(this.font, this.width / 2 - 100, 32, 200, 18,
+                Component.translatable("config.asttweaks.search.placeholder"));
+        this.searchField.setHint(Component.translatable("config.asttweaks.search.placeholder"));
+        this.searchField.setResponder(text -> {
             this.searchText = text;
             rebuildList();
         });
-        this.searchField.setText(this.searchText);
-        this.addSelectableChild(this.searchField);
+        this.searchField.setValue(this.searchText);
+        this.addWidget(this.searchField);
 
         rebuildList();
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        b -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        b -> this.minecraft.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 27, 200, 20)
                 .build());
     }
 
-    @Override
-    public void tick() {
-        super.tick();
-        this.searchField.tick();
-        if (this.activeCountField != null) {
-            this.activeCountField.tick();
-        }
-    }
-
     private List<ItemStack> buildAvailableStacks() {
-        FeatureSet enabledFeatures = AutoRestockConfig.getDefaultEnabledFeatures();
-        DynamicRegistryManager lookup = AutoRestockConfig.getDefaultRegistryLookup();
-
-        if (this.client != null && this.client.getNetworkHandler() != null) {
-            enabledFeatures = this.client.getNetworkHandler().getEnabledFeatures();
-            lookup = this.client.getNetworkHandler().getRegistryManager();
-        } else if (this.client != null && this.client.world != null) {
-            enabledFeatures = this.client.world.getEnabledFeatures();
+        if (!ItemDisplay.componentsBound(Items.STONE)) {
+            return new ArrayList<>();
         }
 
-        ItemGroups.updateDisplayContext(enabledFeatures, false, lookup);
+        FeatureFlagSet enabledFeatures = AutoRestockConfig.getDefaultEnabledFeatures();
+        RegistryAccess lookup = AutoRestockConfig.getDefaultRegistryLookup();
+
+        if (this.minecraft != null && this.minecraft.getConnection() != null) {
+            enabledFeatures = this.minecraft.getConnection().enabledFeatures();
+            lookup = this.minecraft.getConnection().registryAccess();
+        } else if (this.minecraft != null && this.minecraft.level != null) {
+            enabledFeatures = this.minecraft.level.enabledFeatures();
+        }
+        if (lookup == RegistryAccess.EMPTY) {
+            // Creative tab generators look up dynamic registries (enchantments, paintings...)
+            return new ArrayList<>();
+        }
+
+        CreativeModeTabs.tryRebuildTabContents(enabledFeatures, false, lookup);
 
         LinkedHashMap<String, ItemStack> uniqueStacks = new LinkedHashMap<>();
-        for (ItemStack stack : ItemGroups.getSearchGroup().getSearchTabStacks()) {
+        for (ItemStack stack : CreativeModeTabs.searchTab().getSearchTabDisplayItems()) {
             if (stack.isEmpty() || !stack.isItemEnabled(enabledFeatures)) {
                 continue;
             }
@@ -109,13 +112,13 @@ public class AutoRestockItemListScreen extends Screen {
 
     private void rebuildList() {
         clearActiveCountField(true);
-        this.itemListWidget.children().clear();
+        this.itemListWidget.clear();
         String lowerSearch = searchText.toLowerCase(Locale.ROOT);
 
         allStacks.stream()
                 .filter(stack -> searchText.isEmpty()
-                        || stack.getName().getString().toLowerCase(Locale.ROOT).contains(lowerSearch)
-                        || Registries.ITEM.getId(stack.getItem()).toString().toLowerCase(Locale.ROOT).contains(lowerSearch))
+                        || stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(lowerSearch)
+                        || BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().toLowerCase(Locale.ROOT).contains(lowerSearch))
                 .sorted((a, b) -> {
                     boolean aConfigured = config != null && config.isStackConfigured(a);
                     boolean bConfigured = config != null && config.isStackConfigured(b);
@@ -123,7 +126,7 @@ public class AutoRestockItemListScreen extends Screen {
                         return aConfigured ? -1 : 1;
                     }
 
-                    int byName = a.getName().getString().compareToIgnoreCase(b.getName().getString());
+                    int byName = a.getHoverName().getString().compareToIgnoreCase(b.getHoverName().getString());
                     if (byName != 0) {
                         return byName;
                     }
@@ -158,12 +161,15 @@ public class AutoRestockItemListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0 && this.activeCountField != null && !this.activeCountField.isMouseOver(mouseX, mouseY)) {
             clearActiveCountField(true);
         }
 
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = super.mouseClicked(event, doubleClick);
         if (this.searchField.isFocused()) {
             clearActiveCountField(false);
         }
@@ -171,54 +177,56 @@ public class AutoRestockItemListScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (this.activeCountField != null && this.activeCountField.isFocused()) {
-            if (keyCode == 257 || keyCode == 335) {
+            if (event.key() == 257 || event.key() == 335) {
                 clearActiveCountField(true);
                 return true;
             }
-            if (this.activeCountField.keyPressed(keyCode, scanCode, modifiers)) {
+            if (this.activeCountField.keyPressed(event)) {
                 return true;
             }
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
         if (this.activeCountField != null && this.activeCountField.isFocused() &&
-                this.activeCountField.charTyped(chr, modifiers)) {
+                this.activeCountField.charTyped(event)) {
             return true;
         }
 
-        return super.charTyped(chr, modifiers);
+        return super.charTyped(event);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.itemListWidget.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        this.itemListWidget.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 10, 0xFFFFFF);
-
-        Text help = Text.translatable("config.asttweaks.autorestock.itemlist.help");
-        int helpWidth = this.textRenderer.getWidth(help);
-        this.textRenderer.drawWithShadow(matrices, help, this.width / 2 - helpWidth / 2, 20, 0xA0A0A0);
-
-        this.searchField.render(matrices, mouseX, mouseY, delta);
-        super.render(matrices, mouseX, mouseY, delta);
-    }
-
-    class ItemListWidget extends AlwaysSelectedEntryListWidget<ItemEntry> {
-        public ItemListWidget(MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
-            super(client, width, height, top, bottom, itemHeight);
+        if (!ItemDisplay.itemDataLoaded()) {
+            graphics.centeredText(this.font, ItemDisplay.NEEDS_WORLD, this.width / 2, this.height / 2, 0xFFFFAA00);
         }
 
-        @Override
-        protected int getScrollbarPositionX() {
-            return super.getScrollbarPositionX() + 60;
+        int titleWidth = this.font.width(this.title);
+        graphics.text(this.font, this.title, this.width / 2 - titleWidth / 2, 10, 0xFFFFFFFF);
+
+        Component help = Component.translatable("config.asttweaks.autorestock.itemlist.help");
+        int helpWidth = this.font.width(help);
+        graphics.text(this.font, help, this.width / 2 - helpWidth / 2, 20, 0xFFA0A0A0);
+
+        this.searchField.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    }
+
+    class ItemListWidget extends ObjectSelectionList<ItemEntry> {
+        public ItemListWidget(Minecraft client, int width, int height, int top, int itemHeight) {
+            super(client, width, height, top, itemHeight);
+        }
+
+        void clear() {
+            this.clearEntries();
         }
 
         @Override
@@ -232,16 +240,16 @@ public class AutoRestockItemListScreen extends Screen {
         }
     }
 
-    class ItemEntry extends AlwaysSelectedEntryListWidget.Entry<ItemEntry> {
+    class ItemEntry extends ObjectSelectionList.Entry<ItemEntry> {
         private final ItemStack stack;
-        private final ButtonWidget addRemoveButton;
-        private final ButtonWidget positionButton;
-        private final TextFieldWidget countField;
+        private final Button addRemoveButton;
+        private final Button positionButton;
+        private final EditBox countField;
         private boolean updatingCountField;
 
         public ItemEntry(ItemStack stack) {
             this.stack = stack;
-            this.addRemoveButton = ButtonWidget.builder(Text.literal(""), b -> {
+            this.addRemoveButton = Button.builder(Component.literal(""), b -> {
                         if (config == null) {
                             return;
                         }
@@ -254,21 +262,25 @@ public class AutoRestockItemListScreen extends Screen {
                         }
                         AutoRestockItemListScreen.this.rebuildList();
                     })
-                    .dimensions(0, 0, 52, 20)
+                    .bounds(0, 0, 52, 20)
                     .build();
-            this.positionButton = ButtonWidget.builder(
-                            Text.translatable("config.asttweaks.autorestock.itemlist.position"),
-                            b -> AutoRestockItemListScreen.this.client.setScreen(
+            this.positionButton = Button.builder(
+                            Component.translatable("config.asttweaks.autorestock.itemlist.position"),
+                            b -> AutoRestockItemListScreen.this.minecraft.setScreen(
                                     new AutoRestockTargetSlotScreen(AutoRestockItemListScreen.this, this.stack.copyWithCount(1))))
-                    .dimensions(0, 0, 88, 20)
+                    .bounds(0, 0, 88, 20)
                     .build();
-            this.countField = new TextFieldWidget(
-                    AutoRestockItemListScreen.this.textRenderer, 0, 0, COUNT_FIELD_WIDTH, 18,
-                    Text.translatable("config.asttweaks.autorestock.itemlist.count"));
+            this.countField = new EditBox(
+                    AutoRestockItemListScreen.this.font, 0, 0, COUNT_FIELD_WIDTH, 18,
+                    Component.translatable("config.asttweaks.autorestock.itemlist.count")) {
+                @Override
+                public void insertText(String input) {
+                    super.insertText(input.replaceAll("\\D", ""));
+                }
+            };
             this.countField.setMaxLength(COUNT_FIELD_MAX_LENGTH);
-            this.countField.setTextPredicate(text -> text.isEmpty() || text.matches("\\d{0," + COUNT_FIELD_MAX_LENGTH + "}"));
-            this.countField.setPlaceholder(Text.translatable("config.asttweaks.autorestock.itemlist.count"));
-            this.countField.setChangedListener(text -> {
+            this.countField.setHint(Component.translatable("config.asttweaks.autorestock.itemlist.count"));
+            this.countField.setResponder(text -> {
                 if (this.updatingCountField || config == null || !config.isStackConfigured(this.stack) || text.isEmpty()) {
                     return;
                 }
@@ -288,14 +300,14 @@ public class AutoRestockItemListScreen extends Screen {
 
         private void updateAddRemoveButton() {
             boolean configured = config != null && config.isStackConfigured(this.stack);
-            this.addRemoveButton.setMessage(Text.translatable(
+            this.addRemoveButton.setMessage(Component.translatable(
                     configured ? "config.asttweaks.autorestock.itemlist.remove"
                             : "config.asttweaks.autorestock.itemlist.add"));
         }
 
         private void setCountFieldText(String text) {
             this.updatingCountField = true;
-            this.countField.setText(text);
+            this.countField.setValue(text);
             this.updatingCountField = false;
         }
 
@@ -311,7 +323,7 @@ public class AutoRestockItemListScreen extends Screen {
                 return;
             }
 
-            String text = this.countField.getText();
+            String text = this.countField.getValue();
             if (text.isEmpty()) {
                 setCountFieldText(String.valueOf(config.getDesiredCount(this.stack)));
                 return;
@@ -331,50 +343,52 @@ public class AutoRestockItemListScreen extends Screen {
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int width, int height,
-                           int mouseX, int mouseY, boolean hovered, float delta) {
-            MinecraftClient client = AutoRestockItemListScreen.this.client;
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+            int x = this.getContentX();
+            int y = this.getContentY();
+            int width = this.getContentWidth();
+            Minecraft client = AutoRestockItemListScreen.this.minecraft;
             boolean configured = config != null && config.isStackConfigured(this.stack);
             updateAddRemoveButton();
             syncCountFieldText();
 
-            client.getItemRenderer().renderInGuiWithOverrides(matrices, this.stack, x + 5, y + 8);
-            client.getItemRenderer().renderGuiItemOverlay(matrices, client.textRenderer, this.stack, x + 5, y + 8);
+            graphics.item(this.stack, x + 5, y + 8);
+            graphics.itemDecorations(client.font, this.stack, x + 5, y + 8);
 
-            client.textRenderer.draw(matrices, this.stack.getName(), x + 30, y + 5, 0xFFFFFF);
-            Text itemId = Text.literal(Registries.ITEM.getId(this.stack.getItem()).toString()).formatted(Formatting.GRAY);
-            client.textRenderer.draw(matrices, itemId, x + 30, y + 16, 0xA0A0A0);
+            graphics.text(client.font, this.stack.getHoverName(), x + 30, y + 5, 0xFFFFFFFF, false);
+            Component itemId = Component.literal(BuiltInRegistries.ITEM.getKey(this.stack.getItem()).toString()).withStyle(ChatFormatting.GRAY);
+            graphics.text(client.font, itemId, x + 30, y + 16, 0xFFA0A0A0, false);
 
             int addRemoveX = x + width - 55;
             this.addRemoveButton.setPosition(addRemoveX, y + 7);
-            this.addRemoveButton.render(matrices, mouseX, mouseY, delta);
+            this.addRemoveButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
             if (configured) {
                 int positionButtonX = addRemoveX - 154;
                 this.positionButton.setPosition(positionButtonX, y + 7);
-                this.positionButton.render(matrices, mouseX, mouseY, delta);
+                this.positionButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
                 this.countField.setPosition(positionButtonX + 94, y + 8);
-                this.countField.render(matrices, mouseX, mouseY, delta);
+                this.countField.extractRenderState(graphics, mouseX, mouseY, delta);
             }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             boolean configured = config != null && config.isStackConfigured(this.stack);
-            if (configured && this.positionButton.mouseClicked(mouseX, mouseY, button)) {
+            if (configured && this.positionButton.mouseClicked(event, doubleClick)) {
                 return true;
             }
-            if (configured && this.countField.mouseClicked(mouseX, mouseY, button)) {
+            if (configured && this.countField.mouseClicked(event, doubleClick)) {
                 AutoRestockItemListScreen.this.setActiveCountField(this);
                 return true;
             }
-            return this.addRemoveButton.mouseClicked(mouseX, mouseY, button);
+            return this.addRemoveButton.mouseClicked(event, doubleClick);
         }
 
         @Override
-        public Text getNarration() {
-            return this.stack.getName();
+        public Component getNarration() {
+            return this.stack.getHoverName();
         }
     }
 }

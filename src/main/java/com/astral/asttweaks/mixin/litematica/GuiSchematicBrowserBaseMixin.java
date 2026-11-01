@@ -4,14 +4,14 @@ import com.astral.asttweaks.compat.LitematicaDropCompat;
 import com.astral.asttweaks.config.ModConfig;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
 import fi.dy.masa.malilib.gui.widgets.WidgetListBase;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /**
  * Handles schematic files dropped onto any Litematica schematic browser screen
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Mixin(targets = "fi.dy.masa.litematica.gui.GuiSchematicBrowserBase", remap = false)
 public abstract class GuiSchematicBrowserBaseMixin extends Screen {
-    protected GuiSchematicBrowserBaseMixin(Text title) {
+    protected GuiSchematicBrowserBaseMixin(Component title) {
         super(title);
     }
 
@@ -28,12 +28,12 @@ public abstract class GuiSchematicBrowserBaseMixin extends Screen {
     public abstract String getBrowserContext();
 
     @Shadow
-    public abstract File getDefaultDirectory();
+    public abstract Path getDefaultDirectory();
 
     @Override
-    public void filesDragged(List<Path> paths) {
+    public void onFilesDrop(List<Path> paths) {
         if (!ModConfig.getInstance().litematicaSchematicDropEnabled) {
-            super.filesDragged(paths);
+            super.onFilesDrop(paths);
             return;
         }
 

@@ -1,12 +1,26 @@
 package com.astral.asttweaks.feature.updatechecker;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * POJO matching the relevant subset of a GitHub release returned by
- * GET /repos/{owner}/{repo}/releases/latest.
+ * GET /repos/{owner}/{repo}/releases.
  */
 public class GitHubRelease {
+    /**
+     * Releases for different Minecraft versions share one repository, so a release
+     * only counts for this build if it ships a jar whose file name contains this
+     * marker (e.g. "mc26.1" for ast-tweaks-1.2.0+mc26.1.2.jar).
+     */
+    public static final String GAME_VERSION_MARKER = computeGameVersionMarker();
+    // "mc26.1" must not match "mc26.10"
+    private static final Pattern MARKER_PATTERN = Pattern.compile(Pattern.quote(GAME_VERSION_MARKER) + "(?![0-9])");
+
     private String tag_name;
     private String name;
     private String body;
@@ -41,6 +55,31 @@ public class GitHubRelease {
 
     public List<Asset> getAssets() {
         return assets;
+    }
+
+    public Optional<Asset> findJarAsset() {
+        if (assets == null) {
+            return Optional.empty();
+        }
+        return assets.stream()
+                .filter(a -> a.getName() != null)
+                .filter(a -> {
+                    String n = a.getName().toLowerCase(Locale.ROOT);
+                    return n.endsWith(".jar")
+                            && MARKER_PATTERN.matcher(n).find()
+                            && !n.contains("-sources") && !n.contains("-dev") && !n.contains("-javadoc");
+                })
+                .findFirst();
+    }
+
+    private static String computeGameVersionMarker() {
+        String mcVersion = FabricLoader.getInstance()
+                .getModContainer("minecraft")
+                .map(c -> c.getMetadata().getVersion().getFriendlyString())
+                .orElse("26.1");
+        String[] parts = mcVersion.split("\\.");
+        String majorMinor = parts.length >= 2 ? parts[0] + "." + parts[1] : mcVersion;
+        return "mc" + majorMinor.toLowerCase(Locale.ROOT);
     }
 
     /**

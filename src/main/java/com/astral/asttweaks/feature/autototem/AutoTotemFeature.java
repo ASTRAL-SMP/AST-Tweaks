@@ -3,12 +3,12 @@ package com.astral.asttweaks.feature.autototem;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
  * Auto totem restock feature that automatically moves a totem to the offhand
@@ -78,12 +78,12 @@ public class AutoTotemFeature implements Feature {
         }
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) {
             return;
         }
 
-        if (client.player == null || client.world == null || client.isPaused()) {
+        if (client.player == null || client.level == null || client.isPaused()) {
             resetState();
             return;
         }
@@ -91,8 +91,8 @@ public class AutoTotemFeature implements Feature {
         processStateMachine(client);
     }
 
-    private void processStateMachine(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    private void processStateMachine(Minecraft client) {
+        Player player = client.player;
 
         switch (currentState) {
             case IDLE:
@@ -118,11 +118,11 @@ public class AutoTotemFeature implements Feature {
         }
     }
 
-    private void restockTotem(MinecraftClient client, PlayerEntity player) {
-        PlayerInventory inventory = player.getInventory();
+    private void restockTotem(Minecraft client, Player player) {
+        Inventory inventory = player.getInventory();
 
         // Check if offhand already has a totem
-        ItemStack offhandStack = inventory.offHand.get(0);
+        ItemStack offhandStack = inventory.getItem(Inventory.SLOT_OFFHAND);
         if (offhandStack.getItem() == Items.TOTEM_OF_UNDYING) {
             ASTTweaks.LOGGER.debug("Offhand already has a totem");
             return;
@@ -145,59 +145,59 @@ public class AutoTotemFeature implements Feature {
         ASTTweaks.LOGGER.debug("No totem found in inventory");
     }
 
-    private int findTotemInHotbar(PlayerInventory inventory) {
+    private int findTotemInHotbar(Inventory inventory) {
         for (int i = 0; i < 9; i++) {
-            if (inventory.getStack(i).getItem() == Items.TOTEM_OF_UNDYING) {
+            if (inventory.getItem(i).getItem() == Items.TOTEM_OF_UNDYING) {
                 return i;
             }
         }
         return -1;
     }
 
-    private int findTotemInMainInventory(PlayerInventory inventory) {
+    private int findTotemInMainInventory(Inventory inventory) {
         for (int i = 9; i < 36; i++) {
-            if (inventory.getStack(i).getItem() == Items.TOTEM_OF_UNDYING) {
+            if (inventory.getItem(i).getItem() == Items.TOTEM_OF_UNDYING) {
                 return i;
             }
         }
         return -1;
     }
 
-    private void swapToOffhand(MinecraftClient client, PlayerEntity player, int hotbarSlot) {
+    private void swapToOffhand(Minecraft client, Player player, int hotbarSlot) {
         // Save current slot
-        int originalSlot = player.getInventory().selectedSlot;
+        int originalSlot = player.getInventory().getSelectedSlot();
 
         // Select the totem slot
-        player.getInventory().selectedSlot = hotbarSlot;
+        player.getInventory().setSelectedSlot(hotbarSlot);
 
         // Simulate pressing the swap key (F key)
-        if (client.interactionManager != null && client.player != null) {
+        if (client.gameMode != null && client.player != null) {
             // Use clickSlot to swap main hand with offhand
             // Slot 45 is the offhand slot in player inventory
             // We'll use a pickup + offhand swap approach
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     36 + hotbarSlot, // Hotbar slots in container start at 36
                     40, // Offhand slot
-                    SlotActionType.SWAP,
+                    ContainerInput.SWAP,
                     player
             );
         }
 
         // Restore original slot
-        player.getInventory().selectedSlot = originalSlot;
+        player.getInventory().setSelectedSlot(originalSlot);
 
         ASTTweaks.LOGGER.debug("Swapped totem from hotbar slot {} to offhand", hotbarSlot);
     }
 
-    private void moveTotemFromInventory(MinecraftClient client, PlayerEntity player, int inventorySlot) {
-        if (client.interactionManager != null) {
+    private void moveTotemFromInventory(Minecraft client, Player player, int inventorySlot) {
+        if (client.gameMode != null) {
             // Swap the inventory slot with offhand directly
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     inventorySlot, // Inventory slot
                     40, // Offhand slot
-                    SlotActionType.SWAP,
+                    ContainerInput.SWAP,
                     player
             );
             ASTTweaks.LOGGER.debug("Moved totem from inventory slot {} to offhand", inventorySlot);

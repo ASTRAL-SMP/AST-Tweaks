@@ -6,14 +6,13 @@ import fi.dy.masa.litematica.data.SchematicHolder;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.util.FileType;
 import fi.dy.masa.litematica.util.WorldUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 /**
  * Optional Litematica integration. This class is only referenced from the
@@ -33,13 +32,16 @@ public final class LitematicaDropCompat {
      * used as a fallback so a drop still follows the visible hierarchy even when
      * the list widget cannot be reached.
      */
-    public static File resolveBrowserDirectory(File currentDirectory, String browserContext, File defaultDirectory) {
+    public static File resolveBrowserDirectory(Path currentDirectoryPath, String browserContext, Path defaultDirectoryPath) {
+        File currentDirectory = toFile(currentDirectoryPath);
+        File defaultDirectory = toFile(defaultDirectoryPath);
+
         if (isUsableDirectory(currentDirectory)) {
             return currentDirectory;
         }
 
         if (browserContext != null) {
-            File cached = DataManager.getDirectoryCache().getCurrentDirectoryForContext(browserContext);
+            File cached = toFile(DataManager.getDirectoryCache().getCurrentDirectoryForContext(browserContext));
 
             if (isUsableDirectory(cached)) {
                 ASTTweaks.LOGGER.debug("Litematica drop: falling back to the cached browser directory for '{}'", browserContext);
@@ -78,7 +80,7 @@ public final class LitematicaDropCompat {
 
         for (Path path : paths) {
             File source = path.toFile();
-            FileType sourceType = FileType.fromFile(source);
+            FileType sourceType = FileType.fromFile(source.toPath());
 
             if (!isSupported(sourceType)) {
                 skipped++;
@@ -87,7 +89,7 @@ public final class LitematicaDropCompat {
 
             try {
                 File fileToLoad = importIfNeeded(source, destinationDir);
-                FileType loadType = FileType.fromFile(fileToLoad);
+                FileType loadType = FileType.fromFile(fileToLoad.toPath());
                 LitematicaSchematic schematic = loadSchematic(fileToLoad, loadType);
 
                 if (schematic == null) {
@@ -138,7 +140,7 @@ public final class LitematicaDropCompat {
      * falls back to the base directory.
      */
     private static File resolveDestinationDirectory(File targetDirectory) {
-        File baseDir = canonicalize(DataManager.getSchematicsBaseDirectory());
+        File baseDir = canonicalize(DataManager.getSchematicsBaseDirectory().toFile());
 
         if (targetDirectory == null) {
             return baseDir;
@@ -153,6 +155,10 @@ public final class LitematicaDropCompat {
         }
 
         return canonicalTarget;
+    }
+
+    private static File toFile(Path path) {
+        return path != null ? path.toFile() : null;
     }
 
     private static boolean isUsableDirectory(File directory) {
@@ -198,24 +204,24 @@ public final class LitematicaDropCompat {
 
     private static LitematicaSchematic loadSchematic(File file, FileType fileType) {
         if (fileType == FileType.LITEMATICA_SCHEMATIC) {
-            return LitematicaSchematic.createFromFile(file.getParentFile(), file.getName());
+            return LitematicaSchematic.createFromFile(file.getParentFile().toPath(), file.getName());
         }
 
         if (fileType == FileType.SCHEMATICA_SCHEMATIC) {
             return WorldUtils.convertSchematicaSchematicToLitematicaSchematic(
-                    file.getParentFile(),
+                    file.getParentFile().toPath(),
                     file.getName(),
                     false,
-                    message -> sendMessage(Text.translatable(message))
+                    message -> sendMessage(Component.translatable(message))
             );
         }
 
         if (fileType == FileType.SPONGE_SCHEMATIC) {
-            return WorldUtils.convertSpongeSchematicToLitematicaSchematic(file.getParentFile(), file.getName());
+            return WorldUtils.convertSpongeSchematicToLitematicaSchematic(file.getParentFile().toPath(), file.getName());
         }
 
         if (fileType == FileType.VANILLA_STRUCTURE) {
-            return WorldUtils.convertStructureToLitematicaSchematic(file.getParentFile(), file.getName());
+            return WorldUtils.convertStructureToLitematicaSchematic(file.getParentFile().toPath(), file.getName());
         }
 
         return null;
@@ -223,20 +229,20 @@ public final class LitematicaDropCompat {
 
     private static void sendSummary(int loaded, int imported, int skipped, int failed, File destinationDir) {
         if (loaded > 0) {
-            sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.loaded", loaded, imported));
+            sendMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.loaded", loaded, imported));
         }
 
         if (destinationDir != null) {
-            sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.importedInto",
+            sendMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.importedInto",
                     describeDestination(destinationDir)));
         }
 
         if (skipped > 0) {
-            sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.skipped", skipped));
+            sendMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.skipped", skipped));
         }
 
         if (failed > 0) {
-            sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.failed", failed));
+            sendMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".litematicaDrop.failed", failed));
         }
     }
 
@@ -245,7 +251,7 @@ public final class LitematicaDropCompat {
      * so the chat message stays short and matches what the browser shows.
      */
     private static String describeDestination(File destinationDir) {
-        File baseDir = canonicalize(DataManager.getSchematicsBaseDirectory());
+        File baseDir = canonicalize(DataManager.getSchematicsBaseDirectory().toFile());
 
         if (destinationDir.equals(baseDir)) {
             return "/";
@@ -258,13 +264,13 @@ public final class LitematicaDropCompat {
         return destinationDir.getAbsolutePath();
     }
 
-    private static void sendMessage(Text message) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    private static void sendMessage(Component message) {
+        Minecraft client = Minecraft.getInstance();
 
         if (client.player != null) {
-            client.player.sendMessage(message, false);
-        } else if (client.inGameHud != null) {
-            client.inGameHud.getChatHud().addMessage(message);
+            client.player.sendSystemMessage(message);
+        } else if (client.gui != null) {
+            client.gui.getChat().addClientSystemMessage(message);
         }
     }
 }

@@ -1,10 +1,9 @@
 package com.astral.asttweaks.feature.silktouchswitch;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.block.Block;
-import net.minecraft.registry.Registries;
-
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 
 /**
  * シルクタッチスイッチ機能の設定ラッパー。
@@ -22,18 +21,18 @@ public class SilkTouchSwitchConfig {
     }
 
     public boolean isInSilkTouchList(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         return ModConfig.getInstance().silkTouchSwitchBlockList.contains(id);
     }
 
     public void addToList(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         ModConfig.getInstance().silkTouchSwitchBlockList.add(id);
         ModConfig.getInstance().save();
     }
 
     public void removeFromList(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         ModConfig.getInstance().silkTouchSwitchBlockList.remove(id);
         ModConfig.getInstance().save();
     }

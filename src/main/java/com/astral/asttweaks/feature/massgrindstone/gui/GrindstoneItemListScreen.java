@@ -3,23 +3,24 @@ package com.astral.asttweaks.feature.massgrindstone.gui;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneConfig;
 import com.astral.asttweaks.feature.massgrindstone.MassGrindstoneFeature;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.ItemDisplay;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantable;
 
 /**
  * Screen for configuring mass grindstone item whitelist/blacklist.
@@ -30,7 +31,7 @@ public class GrindstoneItemListScreen extends Screen {
     private final MassGrindstoneConfig config;
 
     public GrindstoneItemListScreen(Screen parent) {
-        super(Text.translatable("config.asttweaks.massgrindstone.itemlist.title"));
+        super(Component.translatable("config.asttweaks.massgrindstone.itemlist.title"));
         this.parent = parent;
         MassGrindstoneFeature feature = (MassGrindstoneFeature) FeatureManager.getInstance().getFeature("massgrindstone");
         this.config = feature != null ? feature.getConfig() : null;
@@ -40,13 +41,13 @@ public class GrindstoneItemListScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.itemListWidget = new GrindstoneItemListWidget(this.client, this.width, this.height, 32, this.height - 32, 36);
-        this.addSelectableChild(this.itemListWidget);
+        this.itemListWidget = new GrindstoneItemListWidget(this.minecraft, this.width, this.height - 32 - 32, 32, 36);
+        this.addWidget(this.itemListWidget);
 
         // Get all enchantable items (items that can hold enchantments)
-        List<Item> enchantableItems = Registries.ITEM.stream()
+        List<Item> enchantableItems = BuiltInRegistries.ITEM.stream()
                 .filter(item -> {
-                    ItemStack stack = new ItemStack(item);
+                    ItemStack stack = ItemDisplay.stackOrEmpty(item);
                     // Include items that can be enchanted or are enchanted books
                     return stack.isEnchantable() || item == Items.ENCHANTED_BOOK;
                 })
@@ -56,7 +57,7 @@ public class GrindstoneItemListScreen extends Screen {
                     if (aInList != bInList) {
                         return aInList ? -1 : 1;
                     }
-                    return a.getName().getString().compareTo(b.getName().getString());
+                    return ItemDisplay.name(a).getString().compareTo(ItemDisplay.name(b).getString());
                 })
                 .collect(Collectors.toList());
 
@@ -64,42 +65,40 @@ public class GrindstoneItemListScreen extends Screen {
             this.itemListWidget.addEntry(new GrindstoneItemEntry(item));
         }
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        button -> this.minecraft.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 27, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.itemListWidget.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        this.itemListWidget.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 10, 16777215);
+        if (!ItemDisplay.itemDataLoaded()) {
+            graphics.centeredText(this.font, ItemDisplay.NEEDS_WORLD, this.width / 2, this.height / 2, 0xFFFFAA00);
+        }
+
+        int titleWidth = this.font.width(this.title);
+        graphics.text(this.font, this.title, this.width / 2 - titleWidth / 2, 10, 0xFFFFFFFF);
 
         // Show mode indicator
-        Text modeText;
+        Component modeText;
         if (config != null && config.isWhitelistMode()) {
-            modeText = Text.translatable("config.asttweaks.massgrindstone.itemlist.help.whitelist");
+            modeText = Component.translatable("config.asttweaks.massgrindstone.itemlist.help.whitelist");
         } else {
-            modeText = Text.translatable("config.asttweaks.massgrindstone.itemlist.help.blacklist");
+            modeText = Component.translatable("config.asttweaks.massgrindstone.itemlist.help.blacklist");
         }
-        int helpWidth = this.textRenderer.getWidth(modeText);
-        this.textRenderer.drawWithShadow(matrices, modeText, this.width / 2 - helpWidth / 2, 20, 10526880);
+        int helpWidth = this.font.width(modeText);
+        graphics.text(this.font, modeText, this.width / 2 - helpWidth / 2, 20, 0xFFA0A0A0);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
-    class GrindstoneItemListWidget extends AlwaysSelectedEntryListWidget<GrindstoneItemEntry> {
-        public GrindstoneItemListWidget(MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
-            super(client, width, height, top, bottom, itemHeight);
-        }
-
-        @Override
-        protected int getScrollbarPositionX() {
-            return super.getScrollbarPositionX() + 20;
+    class GrindstoneItemListWidget extends ObjectSelectionList<GrindstoneItemEntry> {
+        public GrindstoneItemListWidget(Minecraft client, int width, int height, int top, int itemHeight) {
+            super(client, width, height, top, itemHeight);
         }
 
         @Override
@@ -113,24 +112,24 @@ public class GrindstoneItemListScreen extends Screen {
         }
     }
 
-    class GrindstoneItemEntry extends AlwaysSelectedEntryListWidget.Entry<GrindstoneItemEntry> {
+    class GrindstoneItemEntry extends ObjectSelectionList.Entry<GrindstoneItemEntry> {
         private final Item item;
         private final ItemStack stack;
-        private final ButtonWidget toggleButton;
+        private final Button toggleButton;
 
         public GrindstoneItemEntry(Item item) {
             this.item = item;
-            this.stack = new ItemStack(item);
+            this.stack = ItemDisplay.stackOrEmpty(item);
 
-            this.toggleButton = ButtonWidget.builder(
-                            Text.literal(""),
+            this.toggleButton = Button.builder(
+                            Component.literal(""),
                             button -> {
                                 if (config != null) {
                                     config.toggleItem(item);
                                     updateButtonText();
                                 }
                             })
-                    .dimensions(0, 0, 80, 20)
+                    .bounds(0, 0, 80, 20)
                     .build();
 
             updateButtonText();
@@ -143,52 +142,56 @@ public class GrindstoneItemListScreen extends Screen {
             if (whitelistMode) {
                 // Whitelist mode: items in list are processed
                 this.toggleButton.setMessage(
-                        Text.translatable(inList ? "config.asttweaks.massgrindstone.willprocess" : "config.asttweaks.massgrindstone.wontprocess")
-                                .formatted(inList ? Formatting.GREEN : Formatting.GRAY)
+                        Component.translatable(inList ? "config.asttweaks.massgrindstone.willprocess" : "config.asttweaks.massgrindstone.wontprocess")
+                                .withStyle(inList ? ChatFormatting.GREEN : ChatFormatting.GRAY)
                 );
             } else {
                 // Blacklist mode: items in list are NOT processed
                 this.toggleButton.setMessage(
-                        Text.translatable(inList ? "config.asttweaks.massgrindstone.wontprocess" : "config.asttweaks.massgrindstone.willprocess")
-                                .formatted(inList ? Formatting.RED : Formatting.GREEN)
+                        Component.translatable(inList ? "config.asttweaks.massgrindstone.wontprocess" : "config.asttweaks.massgrindstone.willprocess")
+                                .withStyle(inList ? ChatFormatting.RED : ChatFormatting.GREEN)
                 );
             }
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            MinecraftClient client = GrindstoneItemListScreen.this.client;
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            int x = this.getContentX();
+            int y = this.getContentY();
+            int entryWidth = this.getContentWidth();
+            Minecraft client = GrindstoneItemListScreen.this.minecraft;
 
-            client.getItemRenderer().renderInGuiWithOverrides(matrices, stack, x + 5, y + 8);
-            client.getItemRenderer().renderGuiItemOverlay(matrices, client.textRenderer, stack, x + 5, y + 8);
+            graphics.item(stack, x + 5, y + 8);
+            graphics.itemDecorations(client.font, stack, x + 5, y + 8);
 
-            Text itemName = item.getName();
-            client.textRenderer.draw(matrices, itemName, x + 30, y + 5, 16777215);
+            Component itemName = ItemDisplay.name(item);
+            graphics.text(client.font, itemName, x + 30, y + 5, 0xFFFFFFFF, false);
 
             // Show enchantability info
-            Text enchantInfo;
+            Component enchantInfo;
             if (item == Items.ENCHANTED_BOOK) {
-                enchantInfo = Text.translatable("config.asttweaks.massgrindstone.enchantedbook")
-                        .formatted(Formatting.LIGHT_PURPLE);
+                enchantInfo = Component.translatable("config.asttweaks.massgrindstone.enchantedbook")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE);
             } else {
-                int enchantability = stack.getItem().getEnchantability();
-                enchantInfo = Text.literal(String.format("Enchantability: %d", enchantability))
-                        .formatted(Formatting.GRAY);
+                Enchantable enchantable = stack.get(DataComponents.ENCHANTABLE);
+                int enchantability = enchantable != null ? enchantable.value() : 0;
+                enchantInfo = Component.literal(String.format("Enchantability: %d", enchantability))
+                        .withStyle(ChatFormatting.GRAY);
             }
-            client.textRenderer.draw(matrices, enchantInfo, x + 30, y + 16, 10526880);
+            graphics.text(client.font, enchantInfo, x + 30, y + 16, 0xFFA0A0A0, false);
 
             this.toggleButton.setPosition(x + entryWidth - 85, y + 7);
-            this.toggleButton.render(matrices, mouseX, mouseY, tickDelta);
+            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, tickDelta);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return this.toggleButton.mouseClicked(mouseX, mouseY, button);
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            return this.toggleButton.mouseClicked(event, doubleClick);
         }
 
         @Override
-        public Text getNarration() {
-            return Text.literal(item.getName().getString());
+        public Component getNarration() {
+            return ItemDisplay.name(item);
         }
     }
 }

@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'mc/**']
   push:
-    branches: [main]
+    branches: [main, 'mc/**']
 
 jobs:
   build:
@@ -12,22 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Loom がプロジェクト内に作る Access Widener 適用済み Minecraft と remap 済み mod。
+      # Loom がプロジェクト内に作る Minecraft のキャッシュ。
       # setup-gradle は ~/.gradle しかキャッシュしないため、これが無いと毎回作り直しになる
       - name: Cache Loom
         uses: actions/cache@v4
         with:
           path: .gradle/loom-cache
-          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle', 'settings.gradle', 'gradle.properties', 'src/main/resources/*.accesswidener') }}
+          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle', 'settings.gradle', 'gradle.properties') }}
           restore-keys: loom-${{ runner.os }}-
 
       - name: Build

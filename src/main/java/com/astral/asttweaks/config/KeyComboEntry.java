@@ -2,14 +2,16 @@ package com.astral.asttweaks.config;
 
 import com.astral.asttweaks.util.KeyCombo;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -32,8 +34,8 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     private final KeyCombo defaultValue;
     private final KeyCombo originalValue; // 画面オープン時の値（isEdited比較用）
     private final Consumer<KeyCombo> saveConsumer;
-    private final ButtonWidget bindButton;
-    private final ButtonWidget resetButton;
+    private final Button bindButton;
+    private final Button resetButton;
     private boolean listening = false;
     private int firstKey = -1;               // 1キー目（押して離した後に記録）
     private String firstKeyType = KeyCombo.TYPE_KEY; // 1キー目の種別 ("key" or "mouse")
@@ -47,14 +49,14 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
         return activeListenerCount > 0;
     }
 
-    public KeyComboEntry(Text fieldName, KeyCombo currentValue, KeyCombo defaultValue, Consumer<KeyCombo> saveConsumer) {
+    public KeyComboEntry(Component fieldName, KeyCombo currentValue, KeyCombo defaultValue, Consumer<KeyCombo> saveConsumer) {
         super(fieldName, null);
         this.value = currentValue.copy();
         this.defaultValue = defaultValue.copy();
         this.originalValue = currentValue.copy();
         this.saveConsumer = saveConsumer;
 
-        this.bindButton = ButtonWidget.builder(Text.literal(value.getDisplayName()), button -> {
+        this.bindButton = Button.builder(Component.literal(value.getDisplayName()), button -> {
             if (!listening) {
                 activeListenerCount++;
             }
@@ -65,9 +67,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             updateButtonText();
         }).build();
         // ホバー時に操作説明（特に ESC=未割り当て）が見えるようにする
-        this.bindButton.setTooltip(Tooltip.of(Text.translatable("config.asttweaks.keybind.bindButton.tooltip")));
+        this.bindButton.setTooltip(Tooltip.create(Component.translatable("config.asttweaks.keybind.bindButton.tooltip")));
 
-        this.resetButton = ButtonWidget.builder(Text.translatable("controls.reset"), button -> {
+        this.resetButton = Button.builder(Component.translatable("controls.reset"), button -> {
             value.copyFrom(defaultValue);
             // リスニング中にリセットされた場合はカウンタも巻き戻す
             if (listening) {
@@ -88,25 +90,26 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             if (firstKey != -1) {
                 // 1キー目確定済み — 2キー目 or Enter 待ち
                 this.bindButton.setMessage(
-                        Text.literal(KeyCombo.getInputName(firstKey, firstKeyType) + " + ?")
-                                .formatted(Formatting.YELLOW));
+                        Component.literal(KeyCombo.getInputName(firstKey, firstKeyType) + " + ?")
+                                .withStyle(ChatFormatting.YELLOW));
             } else {
                 // ESC で未割り当てにできる旨を、リスニングモードのプロンプト上で常時掲示する（機能の発見性向上）
                 this.bindButton.setMessage(
-                        Text.translatable("config.asttweaks.keybind.listening_prompt").formatted(Formatting.YELLOW));
+                        Component.translatable("config.asttweaks.keybind.listening_prompt").withStyle(ChatFormatting.YELLOW));
             }
         } else if (value.mainKey == -1) {
             // 未割り当て状態を視認しやすく
             this.bindButton.setMessage(
-                    Text.translatable("config.asttweaks.keybind.unbound").formatted(Formatting.GRAY, Formatting.ITALIC));
+                    Component.translatable("config.asttweaks.keybind.unbound").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         } else {
-            this.bindButton.setMessage(Text.literal(value.getDisplayName()));
+            this.bindButton.setMessage(Component.literal(value.getDisplayName()));
         }
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!listening) return false;
+        int keyCode = event.key();
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             // ESC で未割り当て (None) に設定
@@ -145,8 +148,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(KeyEvent event) {
         if (!listening) return false;
+        int keyCode = event.key();
 
         // 1キー目の離しを検知 — waitingRelease を解除するだけ
         // （2キー目の入力を引き続き待つ）
@@ -158,8 +162,9 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (listening) {
+            int button = event.button();
             if (firstKey == -1) {
                 // 1キー目をマウスボタンとして記録
                 firstKey = button;
@@ -176,12 +181,13 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             }
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         if (listening) {
+            int button = event.button();
             // 1キー目がマウスだった場合の離し検知
             if (waitingRelease && firstKey != -1 && KeyCombo.TYPE_MOUSE.equals(firstKeyType) && button == firstKey) {
                 waitingRelease = false;
@@ -189,7 +195,7 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
             }
             return false;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     private void finishListening() {
@@ -204,36 +210,36 @@ public class KeyComboEntry extends TooltipListEntry<KeyCombo> {
     }
 
     @Override
-    public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-        super.render(matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isSelected, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
+        super.extractRenderState(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isSelected, delta);
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         int right = x + entryWidth;
 
         // リセットボタン幅をテキストに合わせて動的計算（標準 Cloth Config と同じ）
-        int resetWidth = client.textRenderer.getWidth(this.resetButton.getMessage()) + 6;
+        int resetWidth = client.font.width(this.resetButton.getMessage()) + 6;
         this.resetButton.setWidth(resetWidth);
         this.resetButton.setX(right - resetWidth);
         this.resetButton.setY(y);
-        this.resetButton.render(matrices, mouseX, mouseY, delta);
+        this.resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // バインドボタン（150px枠内でリセットボタンの残り領域、標準と同じ配置）
         this.bindButton.setWidth(150 - resetWidth - 2);
         this.bindButton.setX(right - 150);
         this.bindButton.setY(y);
-        this.bindButton.render(matrices, mouseX, mouseY, delta);
+        this.bindButton.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // フィールド名を左側に描画
-        client.textRenderer.drawWithShadow(matrices, this.getFieldName(), x, y + 6, 16777215);
+        graphics.text(client.font, this.getFieldName(), x, y + 6, 0xFFFFFFFF);
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return List.of(this.bindButton, this.resetButton);
     }
 
     @Override
-    public List<ClickableWidget> narratables() {
+    public List<AbstractWidget> narratables() {
         return List.of(this.bindButton, this.resetButton);
     }
 

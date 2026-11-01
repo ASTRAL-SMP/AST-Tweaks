@@ -2,7 +2,7 @@ name: Code Review
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'mc/**']
     types: [opened, synchronize, reopened]
 
 permissions:

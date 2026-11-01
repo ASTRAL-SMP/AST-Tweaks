@@ -1,7 +1,7 @@
 package com.astral.asttweaks.feature.updatechecker;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 /**
  * Handles displaying update notifications using chat messages.
@@ -14,16 +14,15 @@ public class UpdateNotification {
      * @param currentVersion The current version string
      */
     public static void showCurrentVersion(String currentVersion) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
         }
 
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message.asttweaks.updatechecker.chat.current", currentVersion),
-                        false
+                client.player.sendSystemMessage(
+                        Component.translatable("message.asttweaks.updatechecker.chat.current", currentVersion)
                 );
             }
         });
@@ -36,7 +35,7 @@ public class UpdateNotification {
      * @param currentVersion The current version string
      */
     public static void show(String newVersion, String currentVersion) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
         }
@@ -44,9 +43,8 @@ public class UpdateNotification {
         // Schedule on the main thread
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message.asttweaks.updatechecker.chat.available", newVersion),
-                        false  // false = チャット欄に表示
+                client.player.sendSystemMessage(
+                        Component.translatable("message.asttweaks.updatechecker.chat.available", newVersion)
                 );
             }
         });
@@ -59,16 +57,15 @@ public class UpdateNotification {
      * @param newVersion The new version string
      */
     public static void showWithModName(String modName, String newVersion) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
         }
 
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message.asttweaks.updatechecker.chat.available_named", modName, newVersion),
-                        false
+                client.player.sendSystemMessage(
+                        Component.translatable("message.asttweaks.updatechecker.chat.available_named", modName, newVersion)
                 );
             }
         });
@@ -78,16 +75,15 @@ public class UpdateNotification {
      * Show a notification that no update is available (for manual checks).
      */
     public static void showUpToDate() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
         }
 
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message.asttweaks.updatechecker.chat.uptodate"),
-                        false
+                client.player.sendSystemMessage(
+                        Component.translatable("message.asttweaks.updatechecker.chat.uptodate")
                 );
             }
         });
@@ -97,16 +93,15 @@ public class UpdateNotification {
      * Show an error notification.
      */
     public static void showError() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
         }
 
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message.asttweaks.updatechecker.chat.error"),
-                        false
+                client.player.sendSystemMessage(
+                        Component.translatable("message.asttweaks.updatechecker.chat.error")
                 );
             }
         });

@@ -2,9 +2,10 @@ package com.astral.asttweaks.feature.scoreboard;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
 
 /**
  * Scoreboard enhancement feature with paging support.
@@ -60,10 +61,10 @@ public class ScoreboardFeature implements Feature {
      * Go to next page.
      */
     public void pageDown() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return;
 
-        ScoreboardObjective objective = getSidebarObjective();
+        Objective objective = getSidebarObjective();
         if (objective != null) {
             int totalEntries = renderer.getTotalEntries(objective);
             config.nextPage(totalEntries);
@@ -83,8 +84,8 @@ public class ScoreboardFeature implements Feature {
      * Render the custom scoreboard.
      * Returns true if vanilla rendering should be cancelled.
      */
-    public boolean render(MatrixStack matrices, ScoreboardObjective objective) {
-        return renderer.render(matrices, objective);
+    public boolean render(GuiGraphicsExtractor graphics, Objective objective) {
+        return renderer.render(graphics, objective);
     }
 
     /**
@@ -97,11 +98,10 @@ public class ScoreboardFeature implements Feature {
     /**
      * Get the current sidebar objective.
      */
-    private ScoreboardObjective getSidebarObjective() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) return null;
-        // In 1.19.4, sidebar slot is 1
-        return client.world.getScoreboard().getObjectiveForSlot(1);
+    private Objective getSidebarObjective() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return null;
+        return client.level.getScoreboard().getDisplayObjective(DisplaySlot.SIDEBAR);
     }
 
     public ScoreboardConfig getConfig() {

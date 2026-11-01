@@ -4,16 +4,15 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.config.ModConfig;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -50,22 +49,22 @@ public class AutoDropFeature implements Feature {
         ASTTweaks.LOGGER.info("Auto Drop feature initialized");
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) {
             reset();
             return;
         }
-        if (client.player == null || client.world == null || client.interactionManager == null) {
+        if (client.player == null || client.level == null || client.gameMode == null) {
             reset();
             return;
         }
 
         AutoDropMode mode = config.getMode();
-        boolean isContainerOpen = client.currentScreen instanceof HandledScreen<?>;
+        boolean isContainerOpen = client.screen instanceof AbstractContainerScreen<?>;
 
         if (mode == AutoDropMode.EXECUTE_KEY) {
             if (isContainerOpen && client.getWindow() != null) {
-                long window = client.getWindow().getHandle();
+                long window = client.getWindow().handle();
                 boolean executeDown = ModConfig.getInstance().autoDropExecuteKey.isPressed(window);
                 if (executeDown && !wasExecuteKeyDown) {
                     enqueueDrops(client);
@@ -102,8 +101,8 @@ public class AutoDropFeature implements Feature {
         triggeredThisSession = false;
     }
 
-    private void enqueueDrops(MinecraftClient client) {
-        ScreenHandler handler = client.player.currentScreenHandler;
+    private void enqueueDrops(Minecraft client) {
+        AbstractContainerMenu handler = client.player.containerMenu;
         dropQueue.clear();
 
         // ハンドラレイアウトに依存せず、PlayerInventory に属するスロットのみを対象にする。
@@ -111,37 +110,36 @@ public class AutoDropFeature implements Feature {
         // コンテナ側スロット（Chest, Crafting grid 等）は slot.inventory が PlayerInventory ではないため除外される。
         for (int screenSlot = 0; screenSlot < handler.slots.size(); screenSlot++) {
             Slot slot = handler.getSlot(screenSlot);
-            if (!(slot.inventory instanceof PlayerInventory)) continue;
+            if (!(slot.container instanceof Inventory)) continue;
 
-            int invIndex = slot.getIndex();
+            int invIndex = slot.getContainerSlot();
             if (invIndex >= 36 && invIndex <= 39) continue; // armor: always protected
 
-            ItemStack stack = slot.getStack();
+            ItemStack stack = slot.getItem();
             if (stack.isEmpty()) continue;
 
             if (config.isSlotProtected(invIndex)) continue;
 
-            String itemId = Registries.ITEM.getId(stack.getItem()).toString();
+            String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
             if (config.isItemExcluded(itemId)) continue;
 
             dropQueue.add(screenSlot);
         }
 
         if (!dropQueue.isEmpty()) {
-            client.player.sendMessage(
-                    Text.translatable("message." + ASTTweaks.MOD_ID + ".autodrop.started", dropQueue.size()),
-                    true);
+            client.player.sendOverlayMessage(
+                    Component.translatable("message." + ASTTweaks.MOD_ID + ".autodrop.started", dropQueue.size()));
         }
     }
 
-    private void processQueue(MinecraftClient client) {
+    private void processQueue(Minecraft client) {
         int limit = config.getOperationsPerTick();
-        int syncId = client.player.currentScreenHandler.syncId;
+        int syncId = client.player.containerMenu.containerId;
 
         for (int i = 0; i < limit && !dropQueue.isEmpty(); i++) {
             int screenSlot = dropQueue.poll();
             // button=1 in THROW drops the full stack (vanilla Ctrl+Q equivalent)
-            client.interactionManager.clickSlot(syncId, screenSlot, 1, SlotActionType.THROW, client.player);
+            client.gameMode.handleContainerInput(syncId, screenSlot, 1, ContainerInput.THROW, client.player);
         }
     }
 

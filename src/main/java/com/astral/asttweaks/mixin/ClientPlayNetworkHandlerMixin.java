@@ -2,24 +2,24 @@ package com.astral.asttweaks.mixin;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autorestock.AutoRestockFeature;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(ClientPacketListener.class)
 public abstract class ClientPlayNetworkHandlerMixin {
-    @Inject(method = "onInventory", at = @At("TAIL"))
-    private void astTweaks$tryHideAutoRestockScreenAfterInventorySync(InventoryS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleContainerContent", at = @At("TAIL"))
+    private void astTweaks$tryHideAutoRestockScreenAfterInventorySync(ClientboundContainerSetContentPacket packet, CallbackInfo ci) {
         astTweaks$tryHideVisibleAutoRestockScreen();
     }
 
-    @Inject(method = "onScreenHandlerSlotUpdate", at = @At("TAIL"))
-    private void astTweaks$tryHideAutoRestockScreenAfterSlotUpdate(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleContainerSetSlot", at = @At("TAIL"))
+    private void astTweaks$tryHideAutoRestockScreenAfterSlotUpdate(ClientboundContainerSetSlotPacket packet, CallbackInfo ci) {
         astTweaks$tryHideVisibleAutoRestockScreen();
     }
 

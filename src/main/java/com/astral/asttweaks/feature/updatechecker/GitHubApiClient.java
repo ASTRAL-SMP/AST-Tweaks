@@ -23,6 +23,8 @@ public class GitHubApiClient {
     private static final Gson GSON = new GsonBuilder().create();
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
+    // Releases of the other Minecraft line are interleaved, so look further back than the default 30
+    private static final int RELEASES_PER_PAGE = 100;
 
     private final HttpClient httpClient;
 
@@ -42,7 +44,10 @@ public class GitHubApiClient {
     }
 
     /**
-     * Fetch the latest published (non-draft, non-prerelease) release for a repository.
+     * Fetch the newest published (non-draft, non-prerelease) release that ships a jar
+     * for the running Minecraft version (see {@link GitHubRelease#GAME_VERSION_MARKER}).
+     * {@code /releases/latest} is not used because the repository's "latest" release
+     * may belong to a different Minecraft version.
      *
      * @param ownerRepo a string of the form "owner/repo"
      */
@@ -61,7 +66,7 @@ public class GitHubApiClient {
         if (ownerRepo == null || ownerRepo.isBlank() || !ownerRepo.contains("/")) {
             throw new IOException("Invalid GitHub repo format (expected owner/repo): " + ownerRepo);
         }
-        String url = API_BASE + "/repos/" + ownerRepo.trim() + "/releases/latest";
+        String url = API_BASE + "/repos/" + ownerRepo.trim() + "/releases?per_page=" + RELEASES_PER_PAGE;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -81,6 +86,18 @@ public class GitHubApiClient {
             throw new IOException("GitHub API returned status " + status);
         }
 
-        return GSON.fromJson(response.body(), GitHubRelease.class);
+        GitHubRelease[] releases = GSON.fromJson(response.body(), GitHubRelease[].class);
+        if (releases == null) {
+            return null;
+        }
+        for (GitHubRelease release : releases) {
+            if (release == null || release.isDraft() || release.isPrerelease()) {
+                continue;
+            }
+            if (release.findJarAsset().isPresent()) {
+                return release;
+            }
+        }
+        return null;
     }
 }

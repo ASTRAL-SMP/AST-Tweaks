@@ -4,11 +4,11 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
  * Block entity が密集した場所では TweakerMore の ServerDataSyncer の
@@ -67,15 +67,15 @@ public class SyncerTuneFeature implements Feature {
         return config;
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) {
             return;
         }
         if (!TweakerooCompat.isServerDataSyncerConfigAvailable()) {
             return;
         }
-        ClientPlayerEntity player = client.player;
-        ClientWorld world = client.world;
+        LocalPlayer player = client.player;
+        ClientLevel world = client.level;
         if (player == null || world == null) {
             return;
         }
@@ -91,7 +91,7 @@ public class SyncerTuneFeature implements Feature {
         }
         tickCounter = 0;
 
-        int count = countNearbyBlockEntities(world, player.getBlockPos(), config.getDetectionChunkRadius());
+        int count = countNearbyBlockEntities(world, player.blockPosition(), config.getDetectionChunkRadius());
         boolean shouldBeHigh = count >= config.getHighDensityThreshold();
 
         if (shouldBeHigh && currentMode != Mode.HIGH) {
@@ -117,15 +117,15 @@ public class SyncerTuneFeature implements Feature {
         currentMode = Mode.NORMAL;
     }
 
-    private int countNearbyBlockEntities(ClientWorld world, BlockPos playerPos, int chunkRadius) {
+    private int countNearbyBlockEntities(ClientLevel world, BlockPos playerPos, int chunkRadius) {
         int count = 0;
         int playerChunkX = playerPos.getX() >> 4;
         int playerChunkZ = playerPos.getZ() >> 4;
         for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
             for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
-                WorldChunk chunk = world.getChunkManager().getWorldChunk(playerChunkX + dx, playerChunkZ + dz);
+                LevelChunk chunk = world.getChunkSource().getChunkNow(playerChunkX + dx, playerChunkZ + dz);
                 if (chunk != null) {
-                    count += chunk.getBlockEntityPositions().size();
+                    count += chunk.getBlockEntitiesPos().size();
                 }
             }
         }

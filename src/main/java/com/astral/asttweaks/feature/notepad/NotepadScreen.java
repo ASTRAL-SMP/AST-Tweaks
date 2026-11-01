@@ -1,15 +1,16 @@
 package com.astral.asttweaks.feature.notepad;
 
 import com.astral.asttweaks.ASTTweaks;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 /**
  * Notepad screen with multi-line text input using TextFieldWidgets.
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public class NotepadScreen extends Screen {
     private final NotepadStorage storage;
-    private final List<TextFieldWidget> textFields = new ArrayList<>();
+    private final List<EditBox> textFields = new ArrayList<>();
 
     // UI constants
     private static final int PADDING = 20;
@@ -49,7 +50,7 @@ public class NotepadScreen extends Screen {
     private int dragStartOffset;
 
     public NotepadScreen(NotepadStorage storage) {
-        super(Text.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.title"));
+        super(Component.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.title"));
         this.storage = storage;
     }
 
@@ -79,26 +80,26 @@ public class NotepadScreen extends Screen {
 
         // Create text fields for all lines
         for (int i = 0; i < MAX_TOTAL_LINES; i++) {
-            TextFieldWidget textField = new TextFieldWidget(
-                    this.textRenderer,
+            EditBox textField = new EditBox(
+                    this.font,
                     textAreaX,
                     editorY + EDITOR_PADDING + i * LINE_HEIGHT,
                     textAreaWidth,
                     LINE_HEIGHT - 2,
-                    Text.literal("")
+                    Component.literal("")
             );
             textField.setMaxLength(500);
-            textField.setDrawsBackground(false);  // Disable individual backgrounds
+            textField.setBordered(false);  // Disable individual backgrounds
 
             // Set initial text if available
             if (i < lines.length) {
-                textField.setText(lines[i]);
+                textField.setValue(lines[i]);
             }
 
             final int lineIndex = i;
-            textField.setChangedListener(text -> onLineChanged(lineIndex, text));
+            textField.setResponder(text -> onLineChanged(lineIndex, text));
 
-            this.addDrawableChild(textField);
+            this.addRenderableWidget(textField);
             textFields.add(textField);
         }
 
@@ -116,21 +117,21 @@ public class NotepadScreen extends Screen {
         int buttonStartX = (this.width - totalButtonWidth) / 2;
 
         // Save button
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.save"),
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.save"),
                 button -> saveAndClose()
-        ).dimensions(buttonStartX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        ).bounds(buttonStartX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
         // Close button
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.close"),
-                button -> close()
-        ).dimensions(buttonStartX + BUTTON_WIDTH + BUTTON_SPACING, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".notepad.close"),
+                button -> onClose()
+        ).bounds(buttonStartX + BUTTON_WIDTH + BUTTON_SPACING, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
     }
 
     private void updateVisibleFields() {
         for (int i = 0; i < textFields.size(); i++) {
-            TextFieldWidget field = textFields.get(i);
+            EditBox field = textFields.get(i);
             boolean isVisible = i >= scrollOffset && i < scrollOffset + visibleLines;
 
             if (isVisible) {
@@ -154,7 +155,7 @@ public class NotepadScreen extends Screen {
         if (text.contains("\n")) {
             // Remove newline and move to next line
             String cleanText = text.replace("\n", "");
-            textFields.get(lineIndex).setText(cleanText);
+            textFields.get(lineIndex).setValue(cleanText);
 
             // Move focus to next line
             if (lineIndex + 1 < textFields.size()) {
@@ -173,18 +174,19 @@ public class NotepadScreen extends Screen {
             updateVisibleFields();
         }
 
-        TextFieldWidget field = textFields.get(lineIndex);
+        EditBox field = textFields.get(lineIndex);
         if (toStart) {
-            field.setCursorToStart();
+            field.moveCursorToStart(false);
         }
         setFocused(field);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
         // Handle Enter key to move to next line
         if (keyCode == 257 || keyCode == 335) { // Enter or Numpad Enter
-            TextFieldWidget focused = getFocusedTextField();
+            EditBox focused = getFocusedTextField();
             if (focused != null) {
                 int index = textFields.indexOf(focused);
                 if (index >= 0 && index + 1 < textFields.size()) {
@@ -196,7 +198,7 @@ public class NotepadScreen extends Screen {
 
         // Handle Up arrow to move to previous line
         if (keyCode == 265) { // Up arrow
-            TextFieldWidget focused = getFocusedTextField();
+            EditBox focused = getFocusedTextField();
             if (focused != null) {
                 int index = textFields.indexOf(focused);
                 if (index > 0) {
@@ -208,7 +210,7 @@ public class NotepadScreen extends Screen {
 
         // Handle Down arrow to move to next line
         if (keyCode == 264) { // Down arrow
-            TextFieldWidget focused = getFocusedTextField();
+            EditBox focused = getFocusedTextField();
             if (focused != null) {
                 int index = textFields.indexOf(focused);
                 if (index >= 0 && index + 1 < textFields.size()) {
@@ -232,54 +234,55 @@ public class NotepadScreen extends Screen {
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double amount) {
         if (isMouseInEditor(mouseX, mouseY)) {
             int scrollAmount = (int) (-amount * 3);
-            scrollOffset = MathHelper.clamp(scrollOffset + scrollAmount, 0, getMaxScroll());
+            scrollOffset = Mth.clamp(scrollOffset + scrollAmount, 0, getMaxScroll());
             updateVisibleFields();
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, amount);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         // Check if clicking on scrollbar
-        if (button == 0 && isMouseOnScrollbar(mouseX, mouseY)) {
+        if (event.button() == 0 && isMouseOnScrollbar(event.x(), event.y())) {
             isDraggingScrollbar = true;
-            dragStartY = mouseY;
+            dragStartY = event.y();
             dragStartOffset = scrollOffset;
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && isDraggingScrollbar) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0 && isDraggingScrollbar) {
             isDraggingScrollbar = false;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        double mouseY = event.y();
         if (isDraggingScrollbar) {
             int trackHeight = editorHeight - EDITOR_PADDING * 2 - getScrollbarHeight();
             if (trackHeight > 0) {
                 double dragDelta = mouseY - dragStartY;
                 int scrollDelta = (int) (dragDelta * getMaxScroll() / trackHeight);
-                scrollOffset = MathHelper.clamp(dragStartOffset + scrollDelta, 0, getMaxScroll());
+                scrollOffset = Mth.clamp(dragStartOffset + scrollDelta, 0, getMaxScroll());
                 updateVisibleFields();
             }
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(event, deltaX, deltaY);
     }
 
     private boolean isMouseInEditor(double mouseX, double mouseY) {
@@ -310,8 +313,8 @@ public class NotepadScreen extends Screen {
         return Math.max(20, (int) (trackHeight * ratio));
     }
 
-    private TextFieldWidget getFocusedTextField() {
-        for (TextFieldWidget field : textFields) {
+    private EditBox getFocusedTextField() {
+        for (EditBox field : textFields) {
             if (field.isFocused()) {
                 return field;
             }
@@ -335,7 +338,7 @@ public class NotepadScreen extends Screen {
             if (i > 0) {
                 sb.append("\n");
             }
-            sb.append(textFields.get(i).getText());
+            sb.append(textFields.get(i).getValue());
         }
 
         // Trim trailing empty lines but preserve intentional content
@@ -343,48 +346,45 @@ public class NotepadScreen extends Screen {
 
         storage.setContent(content);
         storage.save();
-        close();
+        onClose();
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
-
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // Draw title
-        drawCenteredTextWithShadow(
-                matrices,
-                this.textRenderer,
+        graphics.centeredText(
+                this.font,
                 this.title,
                 this.width / 2,
                 PADDING / 2 + 4,
-                0xFFFFFF
+                0xFFFFFFFF
         );
 
         // Draw editor background
-        renderEditorBackground(matrices);
+        renderEditorBackground(graphics);
 
         // Draw line numbers
-        renderLineNumbers(matrices);
+        renderLineNumbers(graphics);
 
         // Draw scrollbar
-        renderScrollbar(matrices);
+        renderScrollbar(graphics);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
-    private void renderEditorBackground(MatrixStack matrices) {
+    private void renderEditorBackground(GuiGraphicsExtractor graphics) {
         // Main background (light cream/notepad color)
-        fill(matrices, editorX, editorY,
+        graphics.fill(editorX, editorY,
                 editorX + editorWidth, editorY + editorHeight,
                 0xFFFFFFF0);
 
         // Line number area (slightly darker)
-        fill(matrices, editorX, editorY,
+        graphics.fill(editorX, editorY,
                 editorX + LINE_NUMBER_WIDTH, editorY + editorHeight,
                 0xFFE8E8E0);
 
         // Separator line between line numbers and text
-        fill(matrices, editorX + LINE_NUMBER_WIDTH, editorY,
+        graphics.fill(editorX + LINE_NUMBER_WIDTH, editorY,
                 editorX + LINE_NUMBER_WIDTH + 1, editorY + editorHeight,
                 0xFFD0D0C0);
 
@@ -392,25 +392,25 @@ public class NotepadScreen extends Screen {
         int focusedLine = getFocusedLineIndex();
         if (focusedLine >= scrollOffset && focusedLine < scrollOffset + visibleLines) {
             int highlightY = editorY + EDITOR_PADDING + (focusedLine - scrollOffset) * LINE_HEIGHT;
-            fill(matrices, editorX + LINE_NUMBER_WIDTH + 1, highlightY,
+            graphics.fill(editorX + LINE_NUMBER_WIDTH + 1, highlightY,
                     editorX + editorWidth - SCROLLBAR_WIDTH - 2, highlightY + LINE_HEIGHT,
                     0x30000080);  // Semi-transparent blue
         }
 
         // Border
-        drawHorizontalLine(matrices, editorX - 1, editorX + editorWidth, editorY - 1, 0xFF808080);
-        drawHorizontalLine(matrices, editorX - 1, editorX + editorWidth, editorY + editorHeight, 0xFF808080);
-        drawVerticalLine(matrices, editorX - 1, editorY - 1, editorY + editorHeight, 0xFF808080);
-        drawVerticalLine(matrices, editorX + editorWidth, editorY - 1, editorY + editorHeight, 0xFF808080);
+        graphics.horizontalLine(editorX - 1, editorX + editorWidth, editorY - 1, 0xFF808080);
+        graphics.horizontalLine(editorX - 1, editorX + editorWidth, editorY + editorHeight, 0xFF808080);
+        graphics.verticalLine(editorX - 1, editorY - 1, editorY + editorHeight, 0xFF808080);
+        graphics.verticalLine(editorX + editorWidth, editorY - 1, editorY + editorHeight, 0xFF808080);
     }
 
-    private void renderLineNumbers(MatrixStack matrices) {
+    private void renderLineNumbers(GuiGraphicsExtractor graphics) {
         for (int i = 0; i < visibleLines; i++) {
             int lineNumber = scrollOffset + i + 1;
             if (lineNumber > MAX_TOTAL_LINES) break;
 
             String lineNumStr = String.valueOf(lineNumber);
-            int lineNumWidth = this.textRenderer.getWidth(lineNumStr);
+            int lineNumWidth = this.font.width(lineNumStr);
             int x = editorX + LINE_NUMBER_WIDTH - lineNumWidth - 4;
             int y = editorY + EDITOR_PADDING + i * LINE_HEIGHT + 3;
 
@@ -418,17 +418,17 @@ public class NotepadScreen extends Screen {
             int focusedLine = getFocusedLineIndex();
             int color = (focusedLine == scrollOffset + i) ? 0xFF404080 : 0xFF808080;
 
-            this.textRenderer.draw(matrices, lineNumStr, x, y, color);
+            graphics.text(this.font, lineNumStr, x, y, color, false);
         }
     }
 
-    private void renderScrollbar(MatrixStack matrices) {
+    private void renderScrollbar(GuiGraphicsExtractor graphics) {
         int scrollbarX = editorX + editorWidth - SCROLLBAR_WIDTH - 2;
         int trackY = editorY + EDITOR_PADDING;
         int trackHeight = editorHeight - EDITOR_PADDING * 2;
 
         // Scrollbar track
-        fill(matrices, scrollbarX, trackY,
+        graphics.fill(scrollbarX, trackY,
                 scrollbarX + SCROLLBAR_WIDTH, trackY + trackHeight,
                 0xFFD0D0D0);
 
@@ -437,20 +437,20 @@ public class NotepadScreen extends Screen {
         int thumbHeight = getScrollbarHeight();
         int thumbColor = isDraggingScrollbar ? 0xFF606060 : 0xFF909090;
 
-        fill(matrices, scrollbarX + 1, thumbY,
+        graphics.fill(scrollbarX + 1, thumbY,
                 scrollbarX + SCROLLBAR_WIDTH - 1, thumbY + thumbHeight,
                 thumbColor);
     }
 
     @Override
-    public void close() {
-        if (this.client != null) {
-            this.client.setScreen(null);
+    public void onClose() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(null);
         }
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 }
