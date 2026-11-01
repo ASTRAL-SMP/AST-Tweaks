@@ -144,7 +144,7 @@ public class UpdateAvailableScreen extends Screen {
         if (url == null || url.isBlank()) {
             String repo = feature.getConfig().getGithubRepo();
             if (repo == null || repo.isBlank()) return;
-            url = "https://github.com/" + repo + "/releases/latest";
+            url = "https://github.com/" + repo + "/releases";
         }
         if (this.client == null) {
             return;
