@@ -1,11 +1,10 @@
 package com.astral.asttweaks.feature.autoeat;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 
 /**
  * Configuration wrapper for auto-eat feature.
@@ -41,18 +40,18 @@ public class AutoEatConfig {
     }
 
     public boolean isBlacklisted(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         return ModConfig.getInstance().autoEatBlacklist.contains(id.toString());
     }
 
     public void addToBlacklist(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         ModConfig.getInstance().autoEatBlacklist.add(id.toString());
         ModConfig.getInstance().save();
     }
 
     public void removeFromBlacklist(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         ModConfig.getInstance().autoEatBlacklist.remove(id.toString());
         ModConfig.getInstance().save();
     }

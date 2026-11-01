@@ -6,10 +6,10 @@
 
 **Minecraft Fabric クライアントサイドMod — 便利機能・自動化ツール集**
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.19.4-green?logo=mojang-studios)](https://www.minecraft.net/)
-[![Fabric](https://img.shields.io/badge/Fabric-Loader_0.14.21-blue)](https://fabricmc.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2-green?logo=mojang-studios)](https://www.minecraft.net/)
+[![Fabric](https://img.shields.io/badge/Fabric-Loader_0.18.4-blue)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellow)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-17-orange)](https://adoptium.net/)
+[![Java](https://img.shields.io/badge/Java-25-orange)](https://adoptium.net/)
 
 </div>
 
@@ -17,7 +17,7 @@
 
 ## 概要
 
-AST-Tweaks は、Minecraft 1.19.4 向けの Fabric クライアントサイド Mod です。  
+AST-Tweaks は、Minecraft 26.1.2 向けの Fabric クライアントサイド Mod です。  
 サバイバルプレイを快適にする自動化機能やユーティリティを多数搭載しています。
 
 ## 機能一覧
@@ -43,22 +43,22 @@ AST-Tweaks は、Minecraft 1.19.4 向けの Fabric クライアントサイド M
 
 ### 前提Mod
 
-- [Fabric Loader](https://fabricmc.net/) 0.14.21 以上
-- [Fabric API](https://modrinth.com/mod/fabric-api) 0.87.0+1.19.4
+- [Fabric Loader](https://fabricmc.net/) 0.18.4 以上
+- [Fabric API](https://modrinth.com/mod/fabric-api) 0.155.3+26.1.2
 
 ### 推奨Mod
 
-- [Mod Menu](https://modrinth.com/mod/modmenu) 6.0.0 以上 — 設定画面へのアクセス
-- [Cloth Config](https://modrinth.com/mod/cloth-config) 10.0.0 以上 — 設定UIライブラリ（JARに同梱済み）
+- [Mod Menu](https://modrinth.com/mod/modmenu) 18.0.0 以上 — 設定画面へのアクセス
+- [Cloth Config](https://modrinth.com/mod/cloth-config) 26.1 以上 — 設定UIライブラリ（JARに同梱済み）
 
 ### 互換性
 
-- [Sodium](https://modrinth.com/mod/sodium) 0.4.10 — 流体レンダリング互換Mixin対応
+- [Sodium](https://modrinth.com/mod/sodium) 0.9.2 — Lava Highlight は Sodium 環境でもそのまま動作
 - [Tweakeroo](https://www.curseforge.com/minecraft/mc-mods/tweakeroo) — Auto Repair / Silk Touch Switch 連携
 
 ### 手順
 
-1. [Releases](https://github.com/ASTRAL-SMP/AST-Tweaks/releases) から最新の `.jar` をダウンロード
+1. [Releases](https://github.com/ASTRAL-SMP/AST-Tweaks/releases) からファイル名に `mc26.1` を含む最新の `.jar` をダウンロード
 2. `.minecraft/mods/` フォルダに配置
 3. Fabric Loader で Minecraft を起動
 

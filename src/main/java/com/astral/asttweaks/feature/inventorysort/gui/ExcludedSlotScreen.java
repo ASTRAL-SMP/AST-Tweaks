@@ -4,10 +4,11 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.inventorysort.InventorySortConfig;
 import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 /**
  * Screen for configuring excluded inventory slots from sorting.
@@ -27,7 +28,7 @@ public class ExcludedSlotScreen extends Screen {
     private int gridY;
 
     public ExcludedSlotScreen(Screen parent) {
-        super(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.title"));
+        super(Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.title"));
         this.parent = parent;
 
         InventorySortFeature feature = (InventorySortFeature) FeatureManager.getInstance().getFeature("inventorysort");
@@ -45,25 +46,23 @@ public class ExcludedSlotScreen extends Screen {
         gridY = (this.height - totalHeight) / 2 - 20;
 
         // Done button
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 30, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        button -> this.minecraft.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 30, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // Title
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFF);
+        int titleWidth = this.font.width(this.title);
+        graphics.text(this.font, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFFFF);
 
         // Help text
-        Text helpText = Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.help");
-        int helpWidth = this.textRenderer.getWidth(helpText);
-        this.textRenderer.drawWithShadow(matrices, helpText, this.width / 2 - helpWidth / 2, 30, 0xAAAAAA);
+        Component helpText = Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.help");
+        int helpWidth = this.font.width(helpText);
+        graphics.text(this.font, helpText, this.width / 2 - helpWidth / 2, 30, 0xFFAAAAAA);
 
         // Draw main inventory slots (rows 1-3, slots 9-35)
         int mainY = gridY;
@@ -72,7 +71,7 @@ public class ExcludedSlotScreen extends Screen {
                 int slot = 9 + row * GRID_WIDTH + col;
                 int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
                 int y = mainY + row * (SLOT_SIZE + SLOT_SPACING);
-                drawSlot(matrices, x, y, slot, mouseX, mouseY);
+                drawSlot(graphics, x, y, slot, mouseX, mouseY);
             }
         }
 
@@ -84,20 +83,20 @@ public class ExcludedSlotScreen extends Screen {
             int slot = col;
             int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
             int y = hotbarY;
-            drawSlot(matrices, x, y, slot, mouseX, mouseY);
+            drawSlot(graphics, x, y, slot, mouseX, mouseY);
         }
 
         // Row labels
-        Text mainLabel = Text.literal("Main (9-35)");
-        this.textRenderer.drawWithShadow(matrices, mainLabel, gridX - 5 - this.textRenderer.getWidth(mainLabel), mainY + SLOT_SIZE / 2 - 4, 0x888888);
+        Component mainLabel = Component.literal("Main (9-35)");
+        graphics.text(this.font, mainLabel, gridX - 5 - this.font.width(mainLabel), mainY + SLOT_SIZE / 2 - 4, 0xFF888888);
 
-        Text hotbarLabel = Text.literal("Hotbar (0-8)");
-        this.textRenderer.drawWithShadow(matrices, hotbarLabel, gridX - 5 - this.textRenderer.getWidth(hotbarLabel), hotbarY + SLOT_SIZE / 2 - 4, 0x888888);
+        Component hotbarLabel = Component.literal("Hotbar (0-8)");
+        graphics.text(this.font, hotbarLabel, gridX - 5 - this.font.width(hotbarLabel), hotbarY + SLOT_SIZE / 2 - 4, 0xFF888888);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
-    private void drawSlot(MatrixStack matrices, int x, int y, int slot, int mouseX, int mouseY) {
+    private void drawSlot(GuiGraphicsExtractor graphics, int x, int y, int slot, int mouseX, int mouseY) {
         boolean excluded = config != null && config.isSlotExcluded(slot);
         boolean hovered = mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE;
 
@@ -110,31 +109,34 @@ public class ExcludedSlotScreen extends Screen {
         }
 
         // Draw background
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
+        graphics.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
 
         // Draw border
         int borderColor = hovered ? 0xFFFFFFFF : 0xFF888888;
         // Top
-        fill(matrices, x, y, x + SLOT_SIZE, y + 1, borderColor);
+        graphics.fill(x, y, x + SLOT_SIZE, y + 1, borderColor);
         // Bottom
-        fill(matrices, x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
+        graphics.fill(x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
         // Left
-        fill(matrices, x, y, x + 1, y + SLOT_SIZE, borderColor);
+        graphics.fill(x, y, x + 1, y + SLOT_SIZE, borderColor);
         // Right
-        fill(matrices, x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
+        graphics.fill(x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
 
         // Draw slot number
         String slotText = String.valueOf(slot);
-        int textWidth = this.textRenderer.getWidth(slotText);
-        int textColor = excluded ? 0xFFFFFF : 0xCCCCCC;
-        this.textRenderer.drawWithShadow(matrices, slotText,
+        int textWidth = this.font.width(slotText);
+        int textColor = excluded ? 0xFFFFFFFF : 0xFFCCCCCC;
+        graphics.text(this.font, slotText,
                 x + (SLOT_SIZE - textWidth) / 2,
                 y + (SLOT_SIZE - 8) / 2,
                 textColor);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0 && config != null) {
             // Check main inventory slots
             int mainY = gridY;
@@ -165,11 +167,11 @@ public class ExcludedSlotScreen extends Screen {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(parent);
+    public void onClose() {
+        this.minecraft.setScreen(parent);
     }
 }

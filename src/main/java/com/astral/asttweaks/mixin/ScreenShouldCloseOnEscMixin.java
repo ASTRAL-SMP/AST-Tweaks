@@ -2,7 +2,7 @@ package com.astral.asttweaks.mixin;
 
 import com.astral.asttweaks.config.KeyComboEntry;
 import me.shedaniel.clothconfig2.gui.AbstractConfigScreen;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

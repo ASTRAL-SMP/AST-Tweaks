@@ -18,8 +18,8 @@ import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 /**
  * キーバインド管理。
@@ -59,12 +59,12 @@ public class KeyBindings {
         // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) return;
-            long window = client.getWindow().getHandle();
+            long window = client.getWindow().handle();
             ModConfig config = ModConfig.getInstance();
 
             // GUI画面が開いているときはカスタムキーコンボを処理しない
             // （massGrindstone, inventorySort は各Featureクラス内で直接処理）
-            if (client.currentScreen != null) return;
+            if (client.screen != null) return;
 
             // スコアボードトグル
             boolean scoreboardToggleDown = config.scoreboardToggleKey.isPressed(window);
@@ -103,9 +103,8 @@ public class KeyBindings {
                 if (autoEat != null) {
                     boolean newState = !autoEat.isEnabled();
                     autoEat.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoEatToggleDown = autoEatDown;
@@ -116,9 +115,8 @@ public class KeyBindings {
                 AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
                 if (autoMove != null) {
                     autoMove.toggle();
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove." + (autoMove.isMoving() ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove." + (autoMove.isMoving() ? "enabled" : "disabled")));
                 }
             }
             wasAutoMoveToggleDown = autoMoveDown;
@@ -163,9 +161,8 @@ public class KeyBindings {
                 if (autoTotem != null) {
                     boolean newState = !autoTotem.isEnabled();
                     autoTotem.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoTotemToggleDown = autoTotemDown;
@@ -177,9 +174,8 @@ public class KeyBindings {
                 if (autoRepair != null) {
                     boolean newState = !autoRepair.isEnabled();
                     autoRepair.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRepairToggleDown = autoRepairDown;
@@ -191,9 +187,8 @@ public class KeyBindings {
                 if (boneMealFilter != null) {
                     boolean newState = !boneMealFilter.isEnabled();
                     boneMealFilter.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasBoneMealFilterToggleDown = boneMealDown;
@@ -205,9 +200,8 @@ public class KeyBindings {
                 if (silkTouchSwitch != null) {
                     boolean newState = !silkTouchSwitch.isEnabled();
                     silkTouchSwitch.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasSilkTouchSwitchToggleDown = silkTouchDown;
@@ -229,13 +223,11 @@ public class KeyBindings {
                 if (mouseSens != null && mouseSens.isEnabled()) {
                     int sensitivity = mouseSens.toggle();
                     if (mouseSens.isToggled()) {
-                        client.player.sendMessage(
-                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.activated", sensitivity),
-                                true);
+                        client.player.sendOverlayMessage(
+                                Component.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.activated", sensitivity));
                     } else {
-                        client.player.sendMessage(
-                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.deactivated", sensitivity),
-                                true);
+                        client.player.sendOverlayMessage(
+                                Component.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.deactivated", sensitivity));
                     }
                 }
             }
@@ -248,9 +240,8 @@ public class KeyBindings {
                 if (autoDrop != null) {
                     boolean newState = !autoDrop.isEnabled();
                     autoDrop.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autodrop." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autodrop." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoDropToggleDown = autoDropDown;
@@ -262,9 +253,8 @@ public class KeyBindings {
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.isEnabled();
                     autoRestock.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockToggleDown = autoRestockDown;
@@ -276,9 +266,8 @@ public class KeyBindings {
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.getConfig().isInventoryRestockEnabled();
                     autoRestock.getConfig().setInventoryRestockEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.inventory." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.inventory." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockInventoryToggleDown = autoRestockInventoryDown;
@@ -290,9 +279,8 @@ public class KeyBindings {
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.getConfig().isShulkerRestockEnabled();
                     autoRestock.getConfig().setShulkerRestockEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.shulker." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.shulker." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockShulkerToggleDown = autoRestockShulkerDown;
@@ -304,9 +292,8 @@ public class KeyBindings {
                 if (villagerLink != null) {
                     boolean newState = !villagerLink.isEnabled();
                     villagerLink.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".villagerlink." + (newState ? "enabled" : "disabled")),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".villagerlink." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasVillagerLinkToggleDown = villagerLinkDown;
@@ -326,7 +313,7 @@ public class KeyBindings {
         });
     }
 
-    private static void handleAutoMoveDirection(MinecraftClient client, ModConfig config,
+    private static void handleAutoMoveDirection(Minecraft client, ModConfig config,
             long window, MoveDirection direction, KeyCombo keyCombo, boolean wasDown) {
         boolean isDown = keyCombo.isPressed(window);
         if (isDown && !wasDown) {
@@ -335,14 +322,12 @@ public class KeyBindings {
                 autoMove.toggleWithDirection(direction);
                 String dirKey = "config." + ASTTweaks.MOD_ID + ".automove.direction." + direction.getId();
                 if (autoMove.isMoving()) {
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.enabled.direction",
-                                    Text.translatable(dirKey)),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove.enabled.direction",
+                                    Component.translatable(dirKey)));
                 } else {
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.disabled"),
-                            true);
+                    client.player.sendOverlayMessage(
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove.disabled"));
                 }
             }
         }

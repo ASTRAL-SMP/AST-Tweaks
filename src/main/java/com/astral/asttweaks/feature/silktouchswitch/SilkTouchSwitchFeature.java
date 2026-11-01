@@ -3,13 +3,14 @@ package com.astral.asttweaks.feature.silktouchswitch;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.feature.Feature;
-import net.minecraft.block.Block;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Block;
 
 /**
  * シルクタッチスイッチ機能。
@@ -65,24 +66,24 @@ public class SilkTouchSwitchFeature implements Feature {
         if (!config.isEnabled()) return;
         if (!TweakerooCompat.isToolSwitchEnabled()) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null || client.player == null) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null || client.player == null) return;
 
-        Block block = client.world.getBlockState(pos).getBlock();
+        Block block = client.level.getBlockState(pos).getBlock();
         if (!config.isInSilkTouchList(block)) return;
 
         int slot = findSilkTouchToolSlot(client.player);
         if (slot >= 0) {
-            client.player.getInventory().selectedSlot = slot;
+            client.player.getInventory().setSelectedSlot(slot);
         }
     }
 
     /**
      * ホットバー (0-8) からシルクタッチ付きツールを探す。
      */
-    private int findSilkTouchToolSlot(ClientPlayerEntity player) {
+    private int findSilkTouchToolSlot(LocalPlayer player) {
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = player.getInventory().getStack(i);
+            ItemStack stack = player.getInventory().getItem(i);
             if (!stack.isEmpty() && hasSilkTouch(stack)) {
                 return i;
             }
@@ -91,6 +92,11 @@ public class SilkTouchSwitchFeature implements Feature {
     }
 
     private boolean hasSilkTouch(ItemStack stack) {
-        return EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0;
+        for (Holder<Enchantment> enchantment : stack.getEnchantments().keySet()) {
+            if (enchantment.is(Enchantments.SILK_TOUCH)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

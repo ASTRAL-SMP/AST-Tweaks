@@ -1,60 +1,62 @@
 package com.astral.asttweaks.feature.villagerlink;
 
 import com.astral.asttweaks.ASTTweaks;
+import com.astral.asttweaks.compat.EntityDataSyncCompat;
 import com.astral.asttweaks.feature.Feature;
-import com.astral.asttweaks.mixin.VillageDebugRendererAccessor;
-import com.astral.asttweaks.mixin.VillageDebugRendererBrainAccessor;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.render.debug.VillageDebugRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.village.VillagerProfession;
-import net.minecraft.world.poi.PointOfInterestType;
-import net.minecraft.world.poi.PointOfInterestTypes;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.Holder;
+import net.minecraft.gizmos.GizmoProperties;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.gizmos.Gizmos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.debug.DebugBrainDump;
+import net.minecraft.util.debug.DebugSubscriptions;
+import net.minecraft.util.debug.DebugValueAccess;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.village.poi.PoiType;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 /**
  * Visualizes the relationship between villagers and their job site blocks
  * by drawing lines between matched pairs.
  *
- * Primary source: vanilla {@code VillageDebugRenderer} brain debug data,
- * which the server broadcasts via {@code DebugInfoSender.sendBrainDebugData}.
- * This is authoritative — each Brain carries the actual claimed POI set.
+ * Primary source: vanilla brain debug values ({@link DebugSubscriptions#BRAINS}),
+ * which the client subscribes to while this feature is enabled. This is
+ * authoritative — each brain dump carries the actual claimed POI set. The
+ * server only sends them to players with debug permission (op, or the
+ * singleplayer owner; see {@code ServerDebugSubscribersMixin}).
  *
- * Fallback: when the server doesn't broadcast brain debug packets (some
- * server software filters them), the original heuristic kicks in — we
+ * Second source: the villager's {@code job_site} memory from server NBT synced by
+ * Tweakeroo's entityDataSync (Servux) or TweakerMore's serverDataSyncer, when
+ * either is installed and enabled.
+ *
+ * Fallback: when neither is available, the original heuristic kicks in — we
  * scan a small radius around the villager and pick the nearest POI block
  * matching the profession's workstation predicate.
  */
@@ -64,7 +66,7 @@ public class VillagerLinkFeature implements Feature {
     private static final int UPDATE_INTERVAL_TICKS = 20;
 
     private final VillagerLinkConfig config;
-    private final Map<VillagerEntity, BlockPos> cachedLinks = new HashMap<>();
+    private final Map<Villager, BlockPos> cachedLinks = new HashMap<>();
 
     private int tickCounter = 0;
 
@@ -84,8 +86,9 @@ public class VillagerLinkFeature implements Feature {
 
     @Override
     public void init() {
-        WorldRenderEvents.AFTER_TRANSLUCENT.register(this::renderLinks);
-        HudRenderCallback.EVENT.register(this::renderJobSiteOverlay);
+        LevelRenderEvents.END_EXTRACTION.register(this::renderLinks);
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(ASTTweaks.MOD_ID, "villagerlink_jobsite"),
+                this::renderJobSiteOverlay);
         ASTTweaks.LOGGER.info("VillagerLink feature initialized");
     }
 
@@ -119,32 +122,35 @@ public class VillagerLinkFeature implements Feature {
     private void updateLinks() {
         cachedLinks.clear();
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientWorld world = client.world;
+        Minecraft client = Minecraft.getInstance();
+        ClientLevel world = client.level;
         if (world == null || client.player == null) {
             return;
         }
 
         int range = Math.max(1, config.getRange());
-        Box searchBox = new Box(client.player.getPos(), client.player.getPos()).expand(range);
-        List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class, searchBox, e -> !e.isRemoved());
+        AABB searchBox = new AABB(client.player.position(), client.player.position()).inflate(range);
+        List<Villager> villagers = world.getEntitiesOfClass(Villager.class, searchBox, e -> !e.isRemoved());
 
-        Map<UUID, VillageDebugRenderer.Brain> brains = getDebugBrains(client);
+        DebugValueAccess brains = getDebugBrains(client);
 
-        for (VillagerEntity villager : villagers) {
-            VillagerProfession profession = villager.getVillagerData().getProfession();
-            if (profession == VillagerProfession.NONE || profession == VillagerProfession.NITWIT) {
+        for (Villager villager : villagers) {
+            Holder<VillagerProfession> profession = villager.getVillagerData().profession();
+            if (profession.is(VillagerProfession.NONE) || profession.is(VillagerProfession.NITWIT)) {
                 continue;
             }
 
-            Predicate<RegistryEntry<PointOfInterestType>> predicate = profession.heldWorkstation();
+            Predicate<Holder<PoiType>> predicate = profession.value().heldJobSite();
             if (predicate == null) {
                 continue;
             }
 
             BlockPos jobSite = findJobSiteFromDebugData(brains, villager, world, predicate);
             if (jobSite == null) {
-                jobSite = findClosestJobSite(world, villager.getBlockPos(), predicate);
+                jobSite = findJobSiteFromEntityData(villager, world, predicate);
+            }
+            if (jobSite == null) {
+                jobSite = findClosestJobSite(world, villager.blockPosition(), predicate);
             }
             if (jobSite != null) {
                 cachedLinks.put(villager, jobSite);
@@ -152,42 +158,66 @@ public class VillagerLinkFeature implements Feature {
         }
     }
 
-    private Map<UUID, VillageDebugRenderer.Brain> getDebugBrains(MinecraftClient client) {
-        if (client.debugRenderer == null || client.debugRenderer.villageDebugRenderer == null) {
-            return null;
-        }
-        return ((VillageDebugRendererAccessor) client.debugRenderer.villageDebugRenderer).getBrains();
+    private DebugValueAccess getDebugBrains(Minecraft client) {
+        ClientPacketListener connection = client.getConnection();
+        return connection != null ? connection.createDebugValueAccess() : null;
     }
 
-    private BlockPos findJobSiteFromDebugData(Map<UUID, VillageDebugRenderer.Brain> brains, VillagerEntity villager,
-                                               ClientWorld world, Predicate<RegistryEntry<PointOfInterestType>> predicate) {
-        if (brains == null || brains.isEmpty()) {
+    private BlockPos findJobSiteFromDebugData(DebugValueAccess brains, Villager villager,
+                                               ClientLevel world, Predicate<Holder<PoiType>> predicate) {
+        if (brains == null) {
             return null;
         }
-        VillageDebugRenderer.Brain brain = brains.get(villager.getUuid());
+        DebugBrainDump brain = brains.getEntityValue(DebugSubscriptions.BRAINS, villager);
         if (brain == null) {
             return null;
         }
-        Set<BlockPos> claimed = ((VillageDebugRendererBrainAccessor) brain).getPointsOfInterest();
+        Set<BlockPos> claimed = brain.pois();
         if (claimed == null || claimed.isEmpty()) {
             return null;
         }
         for (BlockPos pos : claimed) {
-            BlockState state = world.getBlockState(pos);
-            if (state.isAir()) continue;
-            Optional<RegistryEntry<PointOfInterestType>> poi = PointOfInterestTypes.getTypeForState(state);
-            if (poi.isEmpty()) continue;
-            if (predicate.test(poi.get())) {
-                return pos.toImmutable();
+            if (isJobSiteBlock(world, pos, predicate)) {
+                return pos.immutable();
             }
         }
         return null;
     }
 
-    private BlockPos findClosestJobSite(ClientWorld world, BlockPos origin, Predicate<RegistryEntry<PointOfInterestType>> predicate) {
+    /**
+     * Reads the villager's {@code job_site} brain memory from server NBT synced by
+     * Tweakeroo (entityDataSync / Servux) or TweakerMore (serverDataSyncer).
+     */
+    private BlockPos findJobSiteFromEntityData(Villager villager, ClientLevel world, Predicate<Holder<PoiType>> predicate) {
+        CompoundTag nbt = EntityDataSyncCompat.getEntityNbt(villager);
+        if (nbt == null) {
+            return null;
+        }
+        CompoundTag jobSiteMemory = nbt.getCompoundOrEmpty("Brain")
+                .getCompoundOrEmpty("memories")
+                .getCompoundOrEmpty("minecraft:job_site")
+                .getCompoundOrEmpty("value");
+        Optional<GlobalPos> jobSite = GlobalPos.CODEC.parse(NbtOps.INSTANCE, jobSiteMemory).result();
+        if (jobSite.isEmpty() || !jobSite.get().dimension().equals(world.dimension())) {
+            return null;
+        }
+        BlockPos pos = jobSite.get().pos();
+        return isJobSiteBlock(world, pos, predicate) ? pos : null;
+    }
+
+    private static boolean isJobSiteBlock(ClientLevel world, BlockPos pos, Predicate<Holder<PoiType>> predicate) {
+        BlockState state = world.getBlockState(pos);
+        if (state.isAir()) {
+            return false;
+        }
+        Optional<Holder<PoiType>> poi = PoiTypes.forState(state);
+        return poi.isPresent() && predicate.test(poi.get());
+    }
+
+    private BlockPos findClosestJobSite(ClientLevel world, BlockPos origin, Predicate<Holder<PoiType>> predicate) {
         BlockPos closest = null;
         double closestDistSq = Double.MAX_VALUE;
-        BlockPos.Mutable cursor = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 
         int r = BLOCK_SEARCH_RADIUS;
         for (int dx = -r; dx <= r; dx++) {
@@ -197,14 +227,14 @@ public class VillagerLinkFeature implements Feature {
                     BlockState state = world.getBlockState(cursor);
                     if (state.isAir()) continue;
 
-                    Optional<RegistryEntry<PointOfInterestType>> poi = PointOfInterestTypes.getTypeForState(state);
+                    Optional<Holder<PoiType>> poi = PoiTypes.forState(state);
                     if (poi.isEmpty()) continue;
                     if (!predicate.test(poi.get())) continue;
 
-                    double distSq = origin.getSquaredDistance(cursor);
+                    double distSq = origin.distSqr(cursor);
                     if (distSq < closestDistSq) {
                         closestDistSq = distSq;
-                        closest = cursor.toImmutable();
+                        closest = cursor.immutable();
                     }
                 }
             }
@@ -212,126 +242,64 @@ public class VillagerLinkFeature implements Feature {
         return closest;
     }
 
-    private void renderLinks(WorldRenderContext context) {
+    private void renderLinks(LevelExtractionContext context) {
         if (!isEnabled() || cachedLinks.isEmpty()) {
             return;
         }
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) {
-            return;
-        }
-
-        Camera camera = context.camera();
-        Vec3d camPos = camera.getPos();
-        float tickDelta = context.tickDelta();
+        float tickDelta = context.deltaTracker().getGameTimeDeltaPartialTick(false);
 
         int color = config.getLineColor();
-        float a = ((color >> 24) & 0xFF) / 255f;
-        if (a <= 0f) a = 1.0f;
-        float r = ((color >> 16) & 0xFF) / 255f;
-        float g = ((color >> 8) & 0xFF) / 255f;
-        float b = (color & 0xFF) / 255f;
+        if ((color >>> 24) == 0) {
+            color |= 0xFF000000;
+        }
 
         boolean seeThrough = config.isSeeThrough();
 
-        MatrixStack matrices = context.matrixStack();
-        matrices.push();
-        matrices.translate(-camPos.x, -camPos.y, -camPos.z);
-
-        RenderSystem.disableCull();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.lineWidth(2.0f);
-        if (seeThrough) {
-            RenderSystem.disableDepthTest();
-        }
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
-
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-
-        Matrix4f positionMatrix = matrices.peek().getPositionMatrix();
-        Matrix3f normalMatrix = matrices.peek().getNormalMatrix();
-
-        for (Map.Entry<VillagerEntity, BlockPos> entry : cachedLinks.entrySet()) {
-            VillagerEntity villager = entry.getKey();
+        for (Map.Entry<Villager, BlockPos> entry : cachedLinks.entrySet()) {
+            Villager villager = entry.getKey();
             if (villager.isRemoved()) continue;
 
-            double vx = MathHelper.lerp(tickDelta, villager.prevX, villager.getX());
-            double vy = MathHelper.lerp(tickDelta, villager.prevY, villager.getY()) + villager.getHeight() * 0.5;
-            double vz = MathHelper.lerp(tickDelta, villager.prevZ, villager.getZ());
+            Vec3 villagerPos = villager.getPosition(tickDelta).add(0.0, villager.getBbHeight() * 0.5, 0.0);
+            Vec3 blockPos = Vec3.atCenterOf(entry.getValue());
 
-            BlockPos blockPos = entry.getValue();
-            double bx = blockPos.getX() + 0.5;
-            double by = blockPos.getY() + 0.5;
-            double bz = blockPos.getZ() + 0.5;
-
-            float dx = (float) (bx - vx);
-            float dy = (float) (by - vy);
-            float dz = (float) (bz - vz);
-            float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (len > 0.0001f) {
-                dx /= len;
-                dy /= len;
-                dz /= len;
-            } else {
-                dx = 0f; dy = 1f; dz = 0f;
+            GizmoProperties line = Gizmos.line(villagerPos, blockPos, color, 2.0f);
+            if (seeThrough) {
+                line.setAlwaysOnTop();
             }
-
-            buffer.vertex(positionMatrix, (float) vx, (float) vy, (float) vz)
-                    .color(r, g, b, a)
-                    .normal(normalMatrix, dx, dy, dz)
-                    .next();
-            buffer.vertex(positionMatrix, (float) bx, (float) by, (float) bz)
-                    .color(r, g, b, a)
-                    .normal(normalMatrix, dx, dy, dz)
-                    .next();
         }
-
-        tessellator.draw();
-
-        if (seeThrough) {
-            RenderSystem.enableDepthTest();
-        }
-        RenderSystem.disableBlend();
-        RenderSystem.enableCull();
-        RenderSystem.lineWidth(1.0f);
-
-        matrices.pop();
     }
 
-    private void renderJobSiteOverlay(MatrixStack matrices, float tickDelta) {
+    private void renderJobSiteOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         if (!isEnabled()) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.world == null) return;
-        if (client.options.hudHidden) return;
-        if (client.currentScreen != null) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || client.level == null) return;
+        if (client.options.hideGui) return;
+        if (client.screen != null) return;
 
-        HitResult target = client.crosshairTarget;
+        HitResult target = client.hitResult;
         if (target == null || target.getType() != HitResult.Type.ENTITY) return;
         Entity entity = ((EntityHitResult) target).getEntity();
-        if (!(entity instanceof VillagerEntity villager)) return;
+        if (!(entity instanceof Villager villager)) return;
 
         BlockPos linked = cachedLinks.get(villager);
         if (linked == null) return;
 
-        TextRenderer textRenderer = client.textRenderer;
-        Text text = Text.translatable(
+        Font textRenderer = client.font;
+        Component text = Component.translatable(
                 "hud." + ASTTweaks.MOD_ID + ".villagerlink.jobsite",
                 linked.getX(), linked.getY(), linked.getZ());
-        int textWidth = textRenderer.getWidth(text);
+        int textWidth = textRenderer.width(text);
 
-        int screenWidth = client.getWindow().getScaledWidth();
-        int screenHeight = client.getWindow().getScaledHeight();
+        int screenWidth = graphics.guiWidth();
+        int screenHeight = graphics.guiHeight();
 
         // ホットバー上部に配置（ホットバー本体: 22px + HP/満腹度バー: 約10px + 余白）
         int x = (screenWidth - textWidth) / 2;
         int y = screenHeight - 59;
 
-        DrawableHelper.fill(matrices, x - 4, y - 2, x + textWidth + 4, y + textRenderer.fontHeight + 2, 0x80000000);
-        textRenderer.drawWithShadow(matrices, text, x, y, 0xFFFFFFFF);
+        graphics.fill(x - 4, y - 2, x + textWidth + 4, y + textRenderer.lineHeight + 2, 0x80000000);
+        graphics.text(textRenderer, text, x, y, 0xFFFFFFFF);
     }
 }

@@ -5,13 +5,13 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.DoubleConsumer;
@@ -96,19 +96,7 @@ public class UpdateDownloader {
     }
 
     private static Optional<GitHubRelease.Asset> pickJarAsset(GitHubRelease release) {
-        List<GitHubRelease.Asset> assets = release.getAssets();
-        if (assets == null || assets.isEmpty()) {
-            return Optional.empty();
-        }
-        // Prefer the .jar matching the mod's archives_base_name, but fall back
-        // to any .jar (excluding -sources/-dev/-javadoc).
-        return assets.stream()
-                .filter(a -> a.getName() != null && a.getName().toLowerCase().endsWith(".jar"))
-                .filter(a -> {
-                    String n = a.getName().toLowerCase();
-                    return !n.contains("-sources") && !n.contains("-dev") && !n.contains("-javadoc");
-                })
-                .findFirst();
+        return release.findJarAsset();
     }
 
     private static void downloadToFile(String url, Path target, long expectedSize, DoubleConsumer progress) throws IOException {

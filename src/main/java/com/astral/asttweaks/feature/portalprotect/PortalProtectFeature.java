@@ -3,21 +3,21 @@ package com.astral.asttweaks.feature.portalprotect;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.NetherPortalBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NetherPortalBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.BlockHitResult;
 
 /**
  * Prevents block placement at positions that would trigger a nether portal's
@@ -56,33 +56,33 @@ public class PortalProtectFeature implements Feature {
 
     public PortalProtectConfig getConfig() { return config; }
 
-    private ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
-        if (!world.isClient()) return ActionResult.PASS;
-        if (!config.isEnabled()) return ActionResult.PASS;
+    private InteractionResult onUseBlock(Player player, Level world, InteractionHand hand, BlockHitResult hit) {
+        if (!world.isClientSide()) return InteractionResult.PASS;
+        if (!config.isEnabled()) return InteractionResult.PASS;
 
-        ItemStack stack = player.getStackInHand(hand);
-        if (!(stack.getItem() instanceof BlockItem)) return ActionResult.PASS;
+        ItemStack stack = player.getItemInHand(hand);
+        if (!(stack.getItem() instanceof BlockItem)) return InteractionResult.PASS;
 
-        ItemPlacementContext ctx = new ItemPlacementContext(
-                new ItemUsageContext(player, hand, hit));
-        if (!ctx.canPlace()) return ActionResult.PASS;
+        BlockPlaceContext ctx = new BlockPlaceContext(
+                new UseOnContext(player, hand, hit));
+        if (!ctx.canPlace()) return InteractionResult.PASS;
 
-        BlockPos placePos = ctx.getBlockPos();
+        BlockPos placePos = ctx.getClickedPos();
 
         // Defensive: replacing the portal block itself.
         BlockState placeState = world.getBlockState(placePos);
         if (placeState.getBlock() instanceof NetherPortalBlock) {
             notify(player);
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
 
         // Only cancel if the placement would change a neighbor on a side that
         // triggers the portal's validity check (in-plane horizontal or vertical).
         for (Direction d : Direction.values()) {
-            BlockState neighborState = world.getBlockState(placePos.offset(d));
+            BlockState neighborState = world.getBlockState(placePos.relative(d));
             if (!(neighborState.getBlock() instanceof NetherPortalBlock)) continue;
 
-            Direction.Axis portalAxis = neighborState.get(Properties.HORIZONTAL_AXIS);
+            Direction.Axis portalAxis = neighborState.getValue(BlockStateProperties.HORIZONTAL_AXIS);
             Direction.Axis placementAxis = d.getAxis();
 
             // Mirrors NetherPortalBlock.getStateForNeighborUpdate:
@@ -91,14 +91,14 @@ public class PortalProtectFeature implements Feature {
             boolean safe = placementAxis != portalAxis && placementAxis.isHorizontal();
             if (!safe) {
                 notify(player);
-                return ActionResult.FAIL;
+                return InteractionResult.FAIL;
             }
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    private static void notify(PlayerEntity player) {
-        player.sendMessage(Text.translatable(
-                "message." + ASTTweaks.MOD_ID + ".portalprotect.blocked"), true);
+    private static void notify(Player player) {
+        player.sendOverlayMessage(Component.translatable(
+                "message." + ASTTweaks.MOD_ID + ".portalprotect.blocked"));
     }
 }

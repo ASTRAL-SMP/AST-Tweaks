@@ -1,10 +1,9 @@
 package com.astral.asttweaks.feature.bonemealfilter;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.block.Block;
-import net.minecraft.registry.Registries;
-
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 
 /**
  * Configuration wrapper for bone meal filter feature.
@@ -22,18 +21,18 @@ public class BoneMealFilterConfig {
     }
 
     public boolean isWhitelisted(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         return ModConfig.getInstance().boneMealFilterWhitelist.contains(id);
     }
 
     public void addToWhitelist(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         ModConfig.getInstance().boneMealFilterWhitelist.add(id);
         ModConfig.getInstance().save();
     }
 
     public void removeFromWhitelist(Block block) {
-        String id = Registries.BLOCK.getId(block).toString();
+        String id = BuiltInRegistries.BLOCK.getKey(block).toString();
         ModConfig.getInstance().boneMealFilterWhitelist.remove(id);
         ModConfig.getInstance().save();
     }

@@ -1,8 +1,7 @@
 package com.astral.asttweaks.util;
 
-import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
-
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.Objects;
 
 /**
@@ -69,9 +68,9 @@ public class KeyCombo {
     public static String getInputName(int code, String type) {
         if (code == -1) return "---";
         if (TYPE_MOUSE.equals(type)) {
-            return InputUtil.Type.MOUSE.createFromCode(code).getLocalizedText().getString();
+            return InputConstants.Type.MOUSE.getOrCreate(code).getDisplayName().getString();
         }
-        return InputUtil.fromKeyCode(code, 0).getLocalizedText().getString();
+        return InputConstants.Type.KEYSYM.getOrCreate(code).getDisplayName().getString();
     }
 
     /**

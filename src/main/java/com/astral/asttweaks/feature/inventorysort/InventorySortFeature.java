@@ -3,21 +3,22 @@ package com.astral.asttweaks.feature.inventorysort;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.block.Block;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.*;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 import java.util.*;
 
 /**
@@ -50,11 +51,11 @@ public class InventorySortFeature implements Feature {
         ASTTweaks.LOGGER.info("Inventory Sort feature initialized");
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) return;
-        if (client.player == null || client.world == null) return;
+        if (client.player == null || client.level == null) return;
 
-        if (client.currentScreen instanceof HandledScreen) {
+        if (client.screen instanceof AbstractContainerScreen) {
             if (processQueuedSort(client)) {
                 keyWasPressed = isKeyPressed(client);
                 containerKeyWasPressed = isContainerKeyPressed(client);
@@ -79,15 +80,15 @@ public class InventorySortFeature implements Feature {
         }
     }
 
-    private boolean isKeyPressed(MinecraftClient client) {
+    private boolean isKeyPressed(Minecraft client) {
         if (client.getWindow() == null) return false;
-        long windowHandle = client.getWindow().getHandle();
+        long windowHandle = client.getWindow().handle();
         return com.astral.asttweaks.config.ModConfig.getInstance().inventorySortExecuteKey.isPressed(windowHandle);
     }
 
-    private boolean isContainerKeyPressed(MinecraftClient client) {
+    private boolean isContainerKeyPressed(Minecraft client) {
         if (client.getWindow() == null) return false;
-        long windowHandle = client.getWindow().getHandle();
+        long windowHandle = client.getWindow().handle();
         return com.astral.asttweaks.config.ModConfig.getInstance().inventorySortContainerExecuteKey.isPressed(windowHandle);
     }
 
@@ -98,11 +99,11 @@ public class InventorySortFeature implements Feature {
     public boolean isSorting() { return sorting; }
 
     public void performSort() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (!canSort(client)) return;
         if (sorting) return;
 
-        ScreenHandler handler = client.player.currentScreenHandler;
+        AbstractContainerMenu handler = client.player.containerMenu;
         int playerInvStart = findPlayerInventoryStart(handler);
         int containerSlots = getContainerSlotCount(handler, playerInvStart);
 
@@ -124,28 +125,28 @@ public class InventorySortFeature implements Feature {
         }
 
         if (!queued) {
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+            client.player.sendOverlayMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"));
         }
     }
 
     public void performPlayerSort() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (!canSort(client)) return;
         if (sorting) return;
 
-        ScreenHandler handler = client.player.currentScreenHandler;
+        AbstractContainerMenu handler = client.player.containerMenu;
         int playerInvStart = findPlayerInventoryStart(handler);
 
         sortPlayerInventory(client, playerInvStart);
-        client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+        client.player.sendOverlayMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"));
     }
 
     public void performContainerSort() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (!canSort(client)) return;
         if (sorting) return;
 
-        ScreenHandler handler = client.player.currentScreenHandler;
+        AbstractContainerMenu handler = client.player.containerMenu;
         int playerInvStart = findPlayerInventoryStart(handler);
         int containerSlots = getContainerSlotCount(handler, playerInvStart);
 
@@ -153,24 +154,24 @@ public class InventorySortFeature implements Feature {
 
         boolean queued = sortContainer(client, containerSlots);
         if (!queued) {
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+            client.player.sendOverlayMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"));
         }
     }
 
-    private boolean canSort(MinecraftClient client) {
+    private boolean canSort(Minecraft client) {
         return config.isEnabled() &&
                client.player != null &&
-               client.interactionManager != null &&
-               client.currentScreen instanceof HandledScreen;
+               client.gameMode != null &&
+               client.screen instanceof AbstractContainerScreen;
     }
 
     /**
      * Sort player inventory instantly.
      * @param playerInvStart the screen slot index where player inventory starts (main inventory, not hotbar)
      */
-    private void sortPlayerInventory(MinecraftClient client, int playerInvStart) {
-        PlayerInventory inv = client.player.getInventory();
-        ScreenHandler handler = client.player.currentScreenHandler;
+    private void sortPlayerInventory(Minecraft client, int playerInvStart) {
+        Inventory inv = client.player.getInventory();
+        AbstractContainerMenu handler = client.player.containerMenu;
         SortRange range = config.getSortRange();
 
         // Collect sortable slots (excluding excluded slots)
@@ -189,7 +190,7 @@ public class InventorySortFeature implements Feature {
         // Step 2: Re-collect items after merge
         List<SortEntry> entries = new ArrayList<>();
         for (int slot : slots) {
-            ItemStack stack = inv.getStack(slot);
+            ItemStack stack = inv.getItem(slot);
             if (!stack.isEmpty()) {
                 entries.add(new SortEntry(slot, stack.copy()));
             }
@@ -207,8 +208,8 @@ public class InventorySortFeature implements Feature {
     /**
      * Sort container instantly.
      */
-    private boolean sortContainer(MinecraftClient client, int containerSlots) {
-        ScreenHandler handler = client.player.currentScreenHandler;
+    private boolean sortContainer(Minecraft client, int containerSlots) {
+        AbstractContainerMenu handler = client.player.containerMenu;
         boolean queueClicks = shouldUseQueuedShulkerSort(handler, containerSlots);
 
         // Collect all container slots
@@ -225,7 +226,7 @@ public class InventorySortFeature implements Feature {
         // Step 2: Re-collect items after merge
         List<SortEntry> entries = new ArrayList<>();
         for (int slot : slots) {
-            ItemStack stack = handler.getSlot(slot).getStack();
+            ItemStack stack = handler.getSlot(slot).getItem();
             if (!stack.isEmpty()) {
                 entries.add(new SortEntry(slot, stack.copy()));
             }
@@ -281,27 +282,28 @@ public class InventorySortFeature implements Feature {
                 return contentKey;
             }
         }
-        return Registries.ITEM.getId(stack.getItem()).toString();
+        return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
     }
 
     private String getItemNameSortKey(ItemStack stack) {
         // Sort by the stack's own display name. Shulker boxes are intentionally
         // keyed by their own name (not their contents) so they cluster together
         // instead of scattering across unrelated items.
-        return stack.getName().getString();
+        return stack.getHoverName().getString();
     }
 
     private int getStackCategory(ItemStack stack) {
         ItemStack primaryContent = getPrimaryShulkerContent(stack);
-        return getCategory(primaryContent.isEmpty() ? stack.getItem() : primaryContent.getItem());
+        return getCategory(primaryContent.isEmpty() ? stack : primaryContent);
     }
 
-    private int getCategory(Item item) {
-        if (item instanceof SwordItem || item instanceof AxeItem) return 0;
-        if (item instanceof ToolItem) return 1;
-        if (item instanceof ArmorItem) return 2;
-        if (item.getFoodComponent() != null) return 3;
-        if (item instanceof BlockItem) return 4;
+    private int getCategory(ItemStack stack) {
+        if (stack.is(ItemTags.SWORDS) || stack.is(ItemTags.AXES)) return 0;
+        if (stack.is(ItemTags.PICKAXES) || stack.is(ItemTags.SHOVELS) || stack.is(ItemTags.HOES)) return 1;
+        if (stack.is(ItemTags.HEAD_ARMOR) || stack.is(ItemTags.CHEST_ARMOR)
+                || stack.is(ItemTags.LEG_ARMOR) || stack.is(ItemTags.FOOT_ARMOR)) return 2;
+        if (stack.has(DataComponents.FOOD)) return 3;
+        if (stack.getItem() instanceof BlockItem) return 4;
         return 5;
     }
 
@@ -309,7 +311,7 @@ public class InventorySortFeature implements Feature {
      * Execute the sort by swapping items to their target positions.
      * @param playerInvStart for player inventory: screen slot where main inventory starts; for container: unused
      */
-    private void executeSort(MinecraftClient client, ScreenHandler handler,
+    private void executeSort(Minecraft client, AbstractContainerMenu handler,
                               List<SortEntry> sortedEntries, List<Integer> availableSlots,
                               int playerInvStart, boolean isContainer) {
         executeSort(client, handler, sortedEntries, availableSlots, playerInvStart, isContainer, false);
@@ -319,10 +321,10 @@ public class InventorySortFeature implements Feature {
      * Execute the sort by swapping items to their target positions.
      * @param playerInvStart for player inventory: screen slot where main inventory starts; for container: unused
      */
-    private void executeSort(MinecraftClient client, ScreenHandler handler,
+    private void executeSort(Minecraft client, AbstractContainerMenu handler,
                               List<SortEntry> sortedEntries, List<Integer> availableSlots,
                               int playerInvStart, boolean isContainer, boolean queueClicks) {
-        int syncId = handler.syncId;
+        int syncId = handler.containerId;
         List<Integer> clickSlots = new ArrayList<>();
 
         // Build current state: which item index is at which slot
@@ -378,10 +380,10 @@ public class InventorySortFeature implements Feature {
      * Physically merge partial stacks of the same item type by clicking.
      * This performs actual inventory operations to combine items.
      */
-    private void mergePartialStacks(MinecraftClient client, ScreenHandler handler,
+    private void mergePartialStacks(Minecraft client, AbstractContainerMenu handler,
                                      List<Integer> slots, int playerInvStart, boolean isContainer) {
-        PlayerInventory inv = client.player.getInventory();
-        int syncId = handler.syncId;
+        Inventory inv = client.player.getInventory();
+        int syncId = handler.containerId;
 
         // Keep merging until no more merges are possible
         boolean merged;
@@ -396,10 +398,10 @@ public class InventorySortFeature implements Feature {
             Map<String, List<Integer>> partialStacks = new LinkedHashMap<>();
             for (int slot : slots) {
                 ItemStack stack = isContainer ?
-                        handler.getSlot(slot).getStack() :
-                        inv.getStack(slot);
+                        handler.getSlot(slot).getItem() :
+                        inv.getItem(slot);
 
-                if (!stack.isEmpty() && stack.getCount() < stack.getMaxCount()) {
+                if (!stack.isEmpty() && stack.getCount() < stack.getMaxStackSize()) {
                     String key = getItemIdentityKey(stack);
                     partialStacks.computeIfAbsent(key, k -> new ArrayList<>()).add(slot);
                 }
@@ -434,20 +436,26 @@ public class InventorySortFeature implements Feature {
      * Items with the same key can be merged.
      */
     private String getItemIdentityKey(ItemStack stack) {
-        String key = Registries.ITEM.getId(stack.getItem()).toString();
-        if (stack.hasNbt()) {
-            key += "|" + stack.getNbt().toString();
+        String key = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        String components = componentsKey(stack);
+        if (!components.isEmpty()) {
+            key += "|" + components;
         }
         return key;
     }
 
-    private boolean shouldUseQueuedShulkerSort(ScreenHandler handler, int containerSlots) {
+    private static String componentsKey(ItemStack stack) {
+        DataComponentPatch patch = stack.getComponentsPatch();
+        return patch.isEmpty() ? "" : patch.toString();
+    }
+
+    private boolean shouldUseQueuedShulkerSort(AbstractContainerMenu handler, int containerSlots) {
         if (containerSlots != LARGE_CONTAINER_SLOTS) {
             return false;
         }
 
         for (int i = 0; i < containerSlots; i++) {
-            if (isShulkerBox(handler.getSlot(i).getStack())) {
+            if (isShulkerBox(handler.getSlot(i).getItem())) {
                 return true;
             }
         }
@@ -495,24 +503,13 @@ public class InventorySortFeature implements Feature {
             return ItemStack.EMPTY;
         }
 
-        NbtCompound blockEntityTag = stack.getSubNbt("BlockEntityTag");
-        if (blockEntityTag == null || !blockEntityTag.contains("Items", NbtElement.LIST_TYPE)) {
-            return ItemStack.EMPTY;
-        }
-
-        NbtList items = blockEntityTag.getList("Items", NbtElement.COMPOUND_TYPE);
+        ItemContainerContents contents = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
         ItemStack bestStack = ItemStack.EMPTY;
         String bestId = "";
         int bestCount = -1;
 
-        for (int i = 0; i < items.size(); i++) {
-            NbtCompound itemNbt = items.getCompound(i);
-            ItemStack contentStack = ItemStack.fromNbt(itemNbt);
-            if (contentStack.isEmpty()) {
-                continue;
-            }
-
-            String id = Registries.ITEM.getId(contentStack.getItem()).toString();
+        for (ItemStack contentStack : (Iterable<ItemStack>) contents.nonEmptyItemCopyStream()::iterator) {
+            String id = BuiltInRegistries.ITEM.getKey(contentStack.getItem()).toString();
             int count = contentStack.getCount();
             if (count > bestCount || (count == bestCount && id.compareTo(bestId) < 0)) {
                 bestStack = contentStack;
@@ -525,25 +522,16 @@ public class InventorySortFeature implements Feature {
     }
 
     private List<ContainedItemSummary> getShulkerContentSummaries(ItemStack stack) {
-        NbtCompound blockEntityTag = stack.getSubNbt("BlockEntityTag");
-        if (blockEntityTag == null || !blockEntityTag.contains("Items", NbtElement.LIST_TYPE)) {
+        ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
+        if (contents == null) {
             return Collections.emptyList();
         }
 
-        NbtList items = blockEntityTag.getList("Items", NbtElement.COMPOUND_TYPE);
         Map<String, ContainedItemSummary> summaries = new HashMap<>();
 
-        for (int i = 0; i < items.size(); i++) {
-            NbtCompound itemNbt = items.getCompound(i);
-            String id = itemNbt.getString("id");
-            if (id.isEmpty()) {
-                continue;
-            }
-
-            String nbt = "";
-            if (itemNbt.contains("tag", NbtElement.COMPOUND_TYPE)) {
-                nbt = itemNbt.getCompound("tag").toString();
-            }
+        for (ItemStack contentStack : (Iterable<ItemStack>) contents.nonEmptyItemCopyStream()::iterator) {
+            String id = BuiltInRegistries.ITEM.getKey(contentStack.getItem()).toString();
+            String nbt = componentsKey(contentStack);
 
             String key = id + "|" + nbt;
             String summaryId = id;
@@ -552,20 +540,20 @@ public class InventorySortFeature implements Feature {
                     key,
                     ignored -> new ContainedItemSummary(summaryId, summaryNbt)
             );
-            summary.totalCount += Byte.toUnsignedInt(itemNbt.getByte("Count"));
+            summary.totalCount += contentStack.getCount();
         }
 
         return new ArrayList<>(summaries.values());
     }
 
-    private boolean processQueuedSort(MinecraftClient client) {
+    private boolean processQueuedSort(Minecraft client) {
         if (!sorting) {
             return false;
         }
 
         if (client.player == null
-                || client.interactionManager == null
-                || client.player.currentScreenHandler.syncId != queuedSyncId) {
+                || client.gameMode == null
+                || client.player.containerMenu.containerId != queuedSyncId) {
             clearQueuedSort();
             return false;
         }
@@ -577,7 +565,7 @@ public class InventorySortFeature implements Feature {
 
         if (queuedClicks.isEmpty()) {
             clearQueuedSort();
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"), true);
+            client.player.sendOverlayMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".inventorysort.completed"));
         }
 
         return true;
@@ -604,12 +592,12 @@ public class InventorySortFeature implements Feature {
      * Find the screen slot index where the player's main inventory starts.
      * This correctly handles both container screens and player inventory screen.
      */
-    private int findPlayerInventoryStart(ScreenHandler handler) {
+    private int findPlayerInventoryStart(AbstractContainerMenu handler) {
         // Find the first slot that belongs to PlayerInventory and is a main inventory slot (index 9-35)
         for (int i = 0; i < handler.slots.size(); i++) {
             Slot slot = handler.getSlot(i);
-            if (slot.inventory instanceof PlayerInventory) {
-                int invIndex = slot.getIndex();
+            if (slot.container instanceof Inventory) {
+                int invIndex = slot.getContainerSlot();
                 // Main inventory slots are 9-35 in PlayerInventory
                 if (invIndex >= 9 && invIndex <= 35) {
                     // This screen slot corresponds to main inventory slot 9
@@ -626,12 +614,12 @@ public class InventorySortFeature implements Feature {
      * Get the number of container slots (slots before player inventory).
      * Returns 0 if this is a player inventory screen with no external container.
      */
-    private int getContainerSlotCount(ScreenHandler handler, int playerInvStart) {
+    private int getContainerSlotCount(AbstractContainerMenu handler, int playerInvStart) {
         // Count slots before player inventory that are NOT part of PlayerInventory
         int count = 0;
         for (int i = 0; i < playerInvStart; i++) {
             Slot slot = handler.getSlot(i);
-            if (!(slot.inventory instanceof PlayerInventory)) {
+            if (!(slot.container instanceof Inventory)) {
                 count++;
             }
         }
@@ -657,8 +645,8 @@ public class InventorySortFeature implements Feature {
     /**
      * Perform a left click on a slot.
      */
-    private void click(MinecraftClient client, int syncId, int slot) {
-        client.interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, client.player);
+    private void click(Minecraft client, int syncId, int slot) {
+        client.gameMode.handleContainerInput(syncId, slot, 0, ContainerInput.PICKUP, client.player);
     }
 
     private static class SortEntry {

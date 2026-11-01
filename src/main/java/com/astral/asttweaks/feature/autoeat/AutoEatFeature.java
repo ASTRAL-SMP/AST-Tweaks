@@ -3,13 +3,14 @@ package com.astral.asttweaks.feature.autoeat;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.FoodComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Auto-eat feature that automatically consumes food when hunger is low.
@@ -90,8 +91,8 @@ public class AutoEatFeature implements Feature {
         return currentState == AutoEatState.EATING && hasStartedEating;
     }
 
-    private void onClientTick(MinecraftClient client) {
-        if (client.player == null || client.world == null || client.isPaused()) {
+    private void onClientTick(Minecraft client) {
+        if (client.player == null || client.level == null || client.isPaused()) {
             if (currentState != AutoEatState.MONITORING) {
                 resetToMonitoring();
             }
@@ -99,7 +100,7 @@ public class AutoEatFeature implements Feature {
         }
 
         // GUI画面が開いている場合は処理しない（AutoRepairFeature・AutoMoveFeatureと同パターン）
-        if (client.currentScreen != null) {
+        if (client.screen != null) {
             if (currentState != AutoEatState.MONITORING) {
                 ASTTweaks.LOGGER.debug("AutoEat: GUI screen open, resetting to MONITORING");
                 resetToMonitoring();
@@ -120,8 +121,8 @@ public class AutoEatFeature implements Feature {
         }
     }
 
-    private void processAutoEat(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    private void processAutoEat(Minecraft client) {
+        Player player = client.player;
 
         switch (currentState) {
             case MONITORING:
@@ -136,10 +137,10 @@ public class AutoEatFeature implements Feature {
         }
     }
 
-    private void handleMonitoring(MinecraftClient client, PlayerEntity player) {
-        if (player.getHungerManager().getFoodLevel() <= config.getHungerThreshold()) {
+    private void handleMonitoring(Minecraft client, Player player) {
+        if (player.getFoodData().getFoodLevel() <= config.getHungerThreshold()) {
             ASTTweaks.LOGGER.debug("Hunger below threshold: {} <= {}",
-                    player.getHungerManager().getFoodLevel(), config.getHungerThreshold());
+                    player.getFoodData().getFoodLevel(), config.getHungerThreshold());
 
             if (!canEatNow(player)) {
                 return;
@@ -152,16 +153,16 @@ public class AutoEatFeature implements Feature {
         }
     }
 
-    private boolean canEatNow(PlayerEntity player) {
+    private boolean canEatNow(Player player) {
         if (player.isCreative() || player.isSpectator()) {
             ASTTweaks.LOGGER.debug("AutoEat: canEatNow=false (creative or spectator)");
             return false;
         }
 
         if (!config.isEatWhileAction()) {
-            if (player.isSprinting() || player.isSneaking() || player.isUsingItem()) {
+            if (player.isSprinting() || player.isShiftKeyDown() || player.isUsingItem()) {
                 ASTTweaks.LOGGER.debug("AutoEat: canEatNow=false (action in progress: sprinting={}, sneaking={}, usingItem={})",
-                        player.isSprinting(), player.isSneaking(), player.isUsingItem());
+                        player.isSprinting(), player.isShiftKeyDown(), player.isUsingItem());
                 return false;
             }
         } else {
@@ -174,12 +175,12 @@ public class AutoEatFeature implements Feature {
         return true;
     }
 
-    private void handleEating(MinecraftClient client, PlayerEntity player) {
+    private void handleEating(Minecraft client, Player player) {
         eatingTicks++;
 
-        player.getInventory().selectedSlot = eatingSlot;
+        player.getInventory().setSelectedSlot(eatingSlot);
 
-        ItemStack currentStack = player.getInventory().getStack(eatingSlot);
+        ItemStack currentStack = player.getInventory().getItem(eatingSlot);
         if (!canEat(currentStack, player)) {
             ASTTweaks.LOGGER.debug("AutoEat: canEat() returned false during EATING, resetting");
             resetToMonitoring();
@@ -201,12 +202,12 @@ public class AutoEatFeature implements Feature {
             return;
         }
 
-        // hasStartedEating == true: Mixinが stopUsingItem() をキャンセルして食事を維持
+        // hasStartedEating == true: Mixinが releaseUsingItem() をキャンセルして食事を維持
         ticksSinceStartedEating++;
 
         if (player.isUsingItem()) {
             // 食事進行中: アイテム消費 or 満腹度上昇で完了を検出
-            int currentHunger = player.getHungerManager().getFoodLevel();
+            int currentHunger = player.getFoodData().getFoodLevel();
             if ((itemCountBeforeEating != -1 && currentStack.getCount() < itemCountBeforeEating)
                     || (currentHunger > hungerBeforeEating)) {
                 ASTTweaks.LOGGER.debug("AutoEat: eating completed (item consumed or hunger restored), transitioning to COMPLETING");
@@ -223,7 +224,7 @@ public class AutoEatFeature implements Feature {
             }
 
             // 猶予期間後: 食事の証拠を確認
-            int currentHunger = player.getHungerManager().getFoodLevel();
+            int currentHunger = player.getFoodData().getFoodLevel();
             boolean itemConsumed = itemCountBeforeEating != -1
                     && currentStack.getCount() < itemCountBeforeEating;
             boolean hungerRestored = currentHunger > hungerBeforeEating;
@@ -256,10 +257,10 @@ public class AutoEatFeature implements Feature {
         }
     }
 
-    private void handleCompleting(MinecraftClient client, PlayerEntity player) {
+    private void handleCompleting(Minecraft client, Player player) {
         eatingTicks++;
 
-        int currentHunger = player.getHungerManager().getFoodLevel();
+        int currentHunger = player.getFoodData().getFoodLevel();
         if (currentHunger > config.getHungerThreshold()) {
             finishEating(client);
         } else if (eatingTicks >= 60) {
@@ -267,9 +268,9 @@ public class AutoEatFeature implements Feature {
         }
     }
 
-    private int findEatableFoodInHotbar(PlayerEntity player) {
+    private int findEatableFoodInHotbar(Player player) {
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = player.getInventory().getStack(i);
+            ItemStack stack = player.getInventory().getItem(i);
             if (!stack.isEmpty() && canEat(stack, player)) {
                 ASTTweaks.LOGGER.debug("AutoEat: found eatable food in hotbar slot {}: {}",
                         i, stack.getItem());
@@ -280,35 +281,35 @@ public class AutoEatFeature implements Feature {
         return -1;
     }
 
-    private void startEating(MinecraftClient client, int slot) {
-        PlayerEntity player = client.player;
+    private void startEating(Minecraft client, int slot) {
+        Player player = client.player;
 
         ASTTweaks.LOGGER.debug("AutoEat: transitioning MONITORING -> EATING (slot={}, hunger={})",
-                slot, player.getHungerManager().getFoodLevel());
+                slot, player.getFoodData().getFoodLevel());
 
         currentState = AutoEatState.EATING;
-        originalHotbarSlot = player.getInventory().selectedSlot;
+        originalHotbarSlot = player.getInventory().getSelectedSlot();
         eatingSlot = slot;
-        hungerBeforeEating = player.getHungerManager().getFoodLevel();
-        itemCountBeforeEating = player.getInventory().getStack(slot).getCount();
+        hungerBeforeEating = player.getFoodData().getFoodLevel();
+        itemCountBeforeEating = player.getInventory().getItem(slot).getCount();
         eatingTicks = 0;
         hasStartedEating = false;
         eatRetryCount = 0;
         ticksSinceStartedEating = 0;
 
-        player.getInventory().selectedSlot = slot;
+        player.getInventory().setSelectedSlot(slot);
     }
 
 
-    private boolean tryStartEating(MinecraftClient client, PlayerEntity player) {
-        if (client.interactionManager == null) {
+    private boolean tryStartEating(Minecraft client, Player player) {
+        if (client.gameMode == null) {
             ASTTweaks.LOGGER.debug("AutoEat: tryStartEating failed (interactionManager is null)");
             return false;
         }
 
-        ActionResult result = client.interactionManager.interactItem(player, Hand.MAIN_HAND);
+        InteractionResult result = client.gameMode.useItem(player, InteractionHand.MAIN_HAND);
         ASTTweaks.LOGGER.debug("AutoEat: interactItem result={}", result);
-        if (result.isAccepted()) {
+        if (result.consumesAction()) {
             hasStartedEating = true;
             ticksSinceStartedEating = 0;
             return true;
@@ -317,16 +318,16 @@ public class AutoEatFeature implements Feature {
         return false;
     }
 
-    private void finishEating(MinecraftClient client) {
+    private void finishEating(Minecraft client) {
         resetToMonitoring();
         eatCooldown = 60;
     }
 
     private void resetToMonitoring() {
         // スロット復元
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player != null && originalHotbarSlot != -1) {
-            client.player.getInventory().selectedSlot = originalHotbarSlot;
+            client.player.getInventory().setSelectedSlot(originalHotbarSlot);
         }
         currentState = AutoEatState.MONITORING;
         originalHotbarSlot = -1;
@@ -339,20 +340,20 @@ public class AutoEatFeature implements Feature {
         ticksSinceStartedEating = 0;
     }
 
-    private boolean canEat(ItemStack stack, PlayerEntity player) {
+    private boolean canEat(ItemStack stack, Player player) {
         Item item = stack.getItem();
         if (config.isBlacklisted(item)) {
             ASTTweaks.LOGGER.debug("AutoEat: canEat=false (item {} is blacklisted)", item);
             return false;
         }
-        FoodComponent food = item.getFoodComponent();
+        FoodProperties food = stack.get(DataComponents.FOOD);
         if (food == null) {
             ASTTweaks.LOGGER.debug("AutoEat: canEat=false (item {} has no food component)", item);
             return false;
         }
-        boolean canConsume = player.canConsume(food.isAlwaysEdible());
+        boolean canConsume = player.canEat(food.canAlwaysEat());
         if (!canConsume) {
-            ASTTweaks.LOGGER.debug("AutoEat: canEat=false (player cannot consume, alwaysEdible={})", food.isAlwaysEdible());
+            ASTTweaks.LOGGER.debug("AutoEat: canEat=false (player cannot consume, alwaysEdible={})", food.canAlwaysEat());
         }
         return canConsume;
     }
