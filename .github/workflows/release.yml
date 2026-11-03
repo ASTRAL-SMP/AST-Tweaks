@@ -51,16 +51,32 @@ jobs:
       - name: Build all versions
         run: ./gradlew chiseledBuild
 
+      # CHANGELOG.md の "## [<version>]" の節をノートの先頭に置き、その下に GitHub が自動生成する PR 一覧を続ける。
+      # CHANGELOG.md に該当バージョンの節が無ければ自動生成分だけにする
       - name: Generate release notes
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          awk -v ver="$VERSION" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            found && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            found { print }
+          ' CHANGELOG.md > changelog-section.md
+
           PREVIOUS=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
           ARGS=(-f tag_name="$GITHUB_REF_NAME")
           if [ -n "$PREVIOUS" ]; then
             ARGS+=(-f previous_tag_name="$PREVIOUS")
           fi
-          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${ARGS[@]}" --jq .body > release-notes.md
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${ARGS[@]}" --jq .body > generated-notes.md
+
+          if grep -q '[^[:space:]]' changelog-section.md; then
+            { cat changelog-section.md; printf '\n---\n\n'; cat generated-notes.md; } > release-notes.md
+          else
+            echo "::warning::CHANGELOG.md has no section for $VERSION; using generated notes only"
+            cp generated-notes.md release-notes.md
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
