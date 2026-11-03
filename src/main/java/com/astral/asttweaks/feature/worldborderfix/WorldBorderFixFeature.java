@@ -3,12 +3,13 @@ package com.astral.asttweaks.feature.worldborderfix;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.NvidiumCompat;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
-import net.minecraft.world.border.WorldBorder;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.border.WorldBorder;
 
 /**
  * ワールドボーダー付近で発生する描画バグへの対策。
@@ -21,7 +22,7 @@ import net.minecraft.world.border.WorldBorder;
  * 破綻することが原因のため、対象エリアにいる間だけ Nvidium を一時無効化して
  * Sodium 標準の描画パスに切り替える。Nvidium 未導入時は no-op。
  *
- * Nvidium 0.1.x はランタイム切替を公式サポートしておらず、レンダラー再ロードを
+ * Nvidium はランタイム切替を公式サポートしておらず、レンダラー再ロードを
  * 伴う切替（特に再有効化方向）は一部環境でネイティブクラッシュを起こすため、
  * 再ロードは必要最小限に抑える:
  * - 抑制時のみ再ロード（それも Nvidium が実際に動作中の場合のみ）
@@ -87,7 +88,7 @@ public class WorldBorderFixFeature implements Feature {
         return config;
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (reloadCooldown > 0) {
             reloadCooldown--;
         }
@@ -100,8 +101,8 @@ public class WorldBorderFixFeature implements Feature {
             return;
         }
 
-        ClientPlayerEntity player = client.player;
-        ClientWorld world = client.world;
+        LocalPlayer player = client.player;
+        ClientLevel world = client.level;
         if (player == null || world == null) {
             // ワールド退出時はレンダラー再ロード不要、フラグだけ元に戻す
             NvidiumCompat.restore();
@@ -149,28 +150,28 @@ public class WorldBorderFixFeature implements Feature {
         }
 
         if (needsReload) {
-            client.worldRenderer.reload();
+            McClient.reloadLevelRenderer();
             reloadCooldown = RELOAD_COOLDOWN_TICKS;
         }
         if (desired) {
             if (needsReload) {
-                player.sendMessage(Text.translatable(
-                        "message." + ASTTweaks.MOD_ID + ".worldborderfix.suppressed"), true);
+                McClient.overlay(player, Component.translatable(
+                        "message." + ASTTweaks.MOD_ID + ".worldborderfix.suppressed"));
             }
             ASTTweaks.LOGGER.info("WorldBorderFix: Nvidium temporarily disabled (near world border / far coordinates, reload={})", needsReload);
         } else {
-            player.sendMessage(Text.translatable(
+            McClient.overlay(player, Component.translatable(
                     "message." + ASTTweaks.MOD_ID + (needsReload
                             ? ".worldborderfix.restored"
-                            : ".worldborderfix.restoredDeferred")), true);
+                            : ".worldborderfix.restoredDeferred")));
             ASTTweaks.LOGGER.info("WorldBorderFix: Nvidium restore (immediate reload={})", needsReload);
         }
     }
 
-    private boolean shouldSuppress(WorldBorder border, ClientPlayerEntity player, boolean currentlySuppressed) {
+    private boolean shouldSuppress(WorldBorder border, LocalPlayer player, boolean currentlySuppressed) {
         if (config.isXrayFixEnabled()) {
             // ボーダーの外側（負値）も含めてしきい値未満なら発動
-            double distance = border.getDistanceInsideBorder(player);
+            double distance = border.getDistanceToBorder(player);
             double threshold = config.getBorderDistance() + (currentlySuppressed ? BORDER_EXIT_MARGIN : 0);
             if (distance < threshold) {
                 return true;

@@ -1,14 +1,15 @@
-package com.astral.asttweaks.feature.nvidiumchunkfix;
+//? if <1.20 {
+/*package com.astral.asttweaks.feature.nvidiumchunkfix;
 
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-/**
+/^*
  * Nvidium が GPU から破棄したセクションのうち、まだ Sodium に再ビルドを予約していないものを保持する。
  * キーは {@code ChunkSectionPos.asLong} 形式。描画スレッドからのみ触る。
  *
  * Nvidium / Sodium のクラスを参照しないこと（未導入環境でも Feature 経由でロードされるため）。
- */
+ ^/
 public final class EvictedSections {
     private static final LongOpenHashSet PENDING = new LongOpenHashSet();
 
@@ -31,9 +32,9 @@ public final class EvictedSections {
         return PENDING.size();
     }
 
-    /**
+    /^*
      * 保留中のセクションを走査する。処理済みのものは {@link LongIterator#remove()} で取り除く。
-     */
+     ^/
     public static LongIterator iterator() {
         return PENDING.iterator();
     }
@@ -54,12 +55,13 @@ public final class EvictedSections {
         return restoredSections;
     }
 
-    /**
+    /^*
      * レンダラー破棄時・機能無効化時に呼ぶ。再ロード後は Sodium が全セクションを最初からビルドするので保留分は不要。
-     */
+     ^/
     public static void reset() {
         PENDING.clear();
         evictedRegions = 0;
         restoredSections = 0;
     }
 }
+*///?}

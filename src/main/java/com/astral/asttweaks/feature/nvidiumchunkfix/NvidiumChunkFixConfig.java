@@ -1,10 +1,11 @@
-package com.astral.asttweaks.feature.nvidiumchunkfix;
+//? if <1.20 {
+/*package com.astral.asttweaks.feature.nvidiumchunkfix;
 
 import com.astral.asttweaks.config.ModConfig;
 
-/**
+/^*
  * Configuration wrapper for the Nvidium Chunk Fix feature.
- */
+ ^/
 public class NvidiumChunkFixConfig {
 
     public boolean isEnabled() {
@@ -16,3 +17,4 @@ public class NvidiumChunkFixConfig {
         ModConfig.getInstance().save();
     }
 }
+*///?}

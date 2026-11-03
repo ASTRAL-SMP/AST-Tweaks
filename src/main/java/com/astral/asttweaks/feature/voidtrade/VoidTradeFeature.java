@@ -1,4 +1,5 @@
-package com.astral.asttweaks.feature.voidtrade;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.ItemScrollerCompat;
@@ -7,33 +8,33 @@ import com.astral.asttweaks.feature.Feature;
 import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.mixin.MerchantScreenAccessor;
 import com.astral.asttweaks.mixin.MerchantScreenHandlerAccessor;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.MerchantScreen;
-import net.minecraft.client.input.Input;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.MerchantEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
-import net.minecraft.screen.MerchantScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TradeOfferList;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.MerchantScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.Input;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
+/^*
  * Void Trade（ボイドトレード）自動化。
  *
  * 1.19.4 のサーバーは取引相手が離れても取引画面を閉じない（MerchantScreenHandler#canUse は
@@ -51,7 +52,7 @@ import java.util.Set;
  *
  * 座標付きのステップ列（移動 → 取引を開く → 離れる → アンロード待ち → 取引 → 閉じる → 戻る …）を
  * 1 tick に 1 ステップずつ進め、末尾まで来たら先頭に戻ってループする。
- */
+ ^/
 public class VoidTradeFeature implements Feature {
     private static final double ARRIVE_DISTANCE = 0.35;
     private static final double SPRINT_STOP_DISTANCE = 1.5;
@@ -81,19 +82,19 @@ public class VoidTradeFeature implements Feature {
 
     // 直前に取引を開いた村人（アンロード検知用）
     private int merchantEntityId = -1;
-    private ClientWorld merchantWorld;
+    private ClientLevel merchantWorld;
     private int lastInteractTick;
 
     // 移動制御（VoidTradeInputMixin から参照）
-    private Vec3d moveTarget;
+    private Vec3 moveTarget;
     private boolean moveSprint;
     private boolean moveKeepFacing;
-    private Vec3d lastTickPos;              // テレポート検知用（前 tick の位置）
-    private ClientWorld lastTickWorld;
+    private Vec3 lastTickPos;              // テレポート検知用（前 tick の位置）
+    private ClientLevel lastTickWorld;
     private MoveDirection nudgeDirection;   // 「少し歩く」ステップ中の方向（null なら無効）
 
     // 取引ステップの状態
-    private List<TradeOffer> tradeQueue;    // このステップで取引する取引（お気に入りなら複数）
+    private List<MerchantOffer> tradeQueue;    // このステップで取引する取引（お気に入りなら複数）
     private int tradeQueuePos;
     private boolean offerSelected;
     private int tradedCount;
@@ -101,7 +102,7 @@ public class VoidTradeFeature implements Feature {
     private boolean inventoryFull;
     private String firstFinishReason;
     private int currentOfferTraded;
-    private final List<MutableText> skippedOffers = new ArrayList<>();   // 1 回も取引できなかったお気に入り
+    private final List<MutableComponent> skippedOffers = new ArrayList<>();   // 1 回も取引できなかったお気に入り
     private final Set<Integer> warnedSkipSteps = new HashSet<>();         // 取引できなかったお気に入りを知らせたステップ
     // 取引ステップ・取引ごとの、最初に画面を開いたときの取引回数（ボイド不成立の検出用）
     private final Map<String, Integer> baselineUses = new HashMap<>();
@@ -153,9 +154,9 @@ public class VoidTradeFeature implements Feature {
         return running;
     }
 
-    /**
+    /^*
      * 実行中のステップ番号（0 始まり）。停止中は -1。
-     */
+     ^/
     public int getCurrentStepIndex() {
         return running ? stepIndex : -1;
     }
@@ -169,16 +170,16 @@ public class VoidTradeFeature implements Feature {
     }
 
     public void start() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null || running) {
             return;
         }
         if (!isEnabled()) {
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.disabled"), true);
+            client.player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.disabled"), true);
             return;
         }
         if (config.getSteps().isEmpty()) {
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.empty"), true);
+            client.player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.empty"), true);
             return;
         }
 
@@ -192,7 +193,7 @@ public class VoidTradeFeature implements Feature {
         merchantWorld = null;
         baselineUses.clear();
         warnedSkipSteps.clear();
-        client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.started"), true);
+        client.player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.started"), true);
         ASTTweaks.LOGGER.info("VoidTrade: started ({} steps)", config.getSteps().size());
     }
 
@@ -201,9 +202,9 @@ public class VoidTradeFeature implements Feature {
             return;
         }
         reset();
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player != null) {
-            client.player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.stopped", loopsCompleted), true);
+            client.player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.stopped", loopsCompleted), true);
         }
         ASTTweaks.LOGGER.info("VoidTrade: stopped after {} loops", loopsCompleted);
     }
@@ -215,8 +216,8 @@ public class VoidTradeFeature implements Feature {
         nudgeDirection = null;
     }
 
-    private void onClientTick(MinecraftClient client) {
-        if (client.player == null || client.world == null) {
+    private void onClientTick(Minecraft client) {
+        if (client.player == null || client.level == null) {
             // 切断時は黙って止める
             reset();
             wasToggleKeyDown = false;
@@ -230,9 +231,9 @@ public class VoidTradeFeature implements Feature {
         }
 
         // 取引画面を開いたまま動かすので、画面表示中もキーを拾う（テキスト入力のある画面は除外）
-        boolean keyDown = ModConfig.getInstance().voidTradeToggleKey.isPressed(client.getWindow().getHandle());
+        boolean keyDown = ModConfig.getInstance().voidTradeToggleKey.isPressed();
         if (keyDown && !wasToggleKeyDown
-                && (client.currentScreen == null || client.currentScreen instanceof MerchantScreen)) {
+                && (McClient.screen() == null || McClient.screen() instanceof MerchantScreen)) {
             toggle();
         }
         wasToggleKeyDown = keyDown;
@@ -243,14 +244,14 @@ public class VoidTradeFeature implements Feature {
         }
     }
 
-    private void runTick(MinecraftClient client) {
+    private void runTick(Minecraft client) {
         List<VoidTradeStep> steps = config.getSteps();
         if (steps.isEmpty()) {
             stop();
             return;
         }
-        if (client.player.isDead()) {
-            failWith(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.reason.dead"));
+        if (client.player.isDeadOrDying()) {
+            failWith(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.reason.dead"));
             return;
         }
         if (cooldownTicks > 0) {
@@ -300,13 +301,13 @@ public class VoidTradeFeature implements Feature {
         }
     }
 
-    private void beginStep(MinecraftClient client, VoidTradeStep step) {
+    private void beginStep(Minecraft client, VoidTradeStep step) {
         stepStarted = true;
         stepTicks = 0;
         waitReason = null;
         moveTarget = null;
-        lastTickPos = client.player.getPos();
-        lastTickWorld = client.world;
+        lastTickPos = client.player.position();
+        lastTickWorld = client.level;
         nudgeDirection = null;
         lastInteractTick = -1;
         tradeQueue = null;
@@ -321,14 +322,14 @@ public class VoidTradeFeature implements Feature {
         showStatus(client, step);
     }
 
-    private void endStep(MinecraftClient client, VoidTradeStep step) {
+    private void endStep(Minecraft client, VoidTradeStep step) {
         stepStarted = false;
         moveTarget = null;
         nudgeDirection = null;
         if (step.getType() == VoidTradeStepType.TRADE && inventoryFull && client.player != null) {
-            client.player.sendMessage(
-                    Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.inventoryFull", tradedCount)
-                            .formatted(Formatting.YELLOW),
+            client.player.displayClientMessage(
+                    Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.inventoryFull", tradedCount)
+                            .withStyle(ChatFormatting.YELLOW),
                     false);
         }
     }
@@ -341,11 +342,11 @@ public class VoidTradeFeature implements Feature {
         int limit = config.getLoopCount();
         if (limit > 0 && loopsCompleted >= limit) {
             reset();
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
             if (client.player != null) {
-                client.player.sendMessage(
-                        Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.completed", loopsCompleted)
-                                .formatted(Formatting.GREEN),
+                client.player.displayClientMessage(
+                        Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.completed", loopsCompleted)
+                                .withStyle(ChatFormatting.GREEN),
                         false);
             }
             ASTTweaks.LOGGER.info("VoidTrade: completed {} loops", loopsCompleted);
@@ -359,45 +360,45 @@ public class VoidTradeFeature implements Feature {
     }
 
     private StepResult fail(String reasonKey) {
-        failWith(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.reason." + reasonKey));
+        failWith(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.reason." + reasonKey));
         return StepResult.FAILED;
     }
 
-    private void failWith(Text reason) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    private void failWith(Component reason) {
+        Minecraft client = Minecraft.getInstance();
         List<VoidTradeStep> steps = config.getSteps();
-        Text stepText = stepIndex < steps.size() ? steps.get(stepIndex).describe() : Text.literal("-");
+        Component stepText = stepIndex < steps.size() ? steps.get(stepIndex).describe() : Component.literal("-");
         if (client.player != null) {
-            client.player.sendMessage(
-                    Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.failed", stepIndex + 1, stepText, reason)
-                            .formatted(Formatting.RED),
+            client.player.displayClientMessage(
+                    Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.failed", stepIndex + 1, stepText, reason)
+                            .withStyle(ChatFormatting.RED),
                     false);
         }
         ASTTweaks.LOGGER.warn("VoidTrade: stopped at step {} ({}): {}", stepIndex + 1, stepText.getString(), reason.getString());
         reset();
     }
 
-    private void showStatus(MinecraftClient client, VoidTradeStep step) {
+    private void showStatus(Minecraft client, VoidTradeStep step) {
         if (client.player == null) {
             return;
         }
         int limit = config.getLoopCount();
         String loop = (loopsCompleted + 1) + "/" + (limit > 0 ? String.valueOf(limit) : "∞");
-        MutableText detail = step.describe();
+        MutableComponent detail = step.describe();
         if (moveTarget != null) {
             double distance = Math.sqrt(squaredHorizontalDistance(client.player, moveTarget));
-            detail.append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.progress.distance",
+            detail.append(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.progress.distance",
                     String.format("%.1f", distance)));
         } else if (step.getType() == VoidTradeStepType.TRADE && tradedCount > 0) {
-            detail.append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.progress.trades", tradedCount));
+            detail.append(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.progress.trades", tradedCount));
         }
-        client.player.sendMessage(
-                Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.status",
+        client.player.displayClientMessage(
+                Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.status",
                         loop, stepIndex + 1, config.getSteps().size(), detail),
                 true);
     }
 
-    private StepResult executeStep(MinecraftClient client, VoidTradeStep step) {
+    private StepResult executeStep(Minecraft client, VoidTradeStep step) {
         return switch (step.getType()) {
             case MOVE_TO -> tickMoveTo(client, step);
             case NUDGE -> tickNudge(client, step);
@@ -415,14 +416,14 @@ public class VoidTradeFeature implements Feature {
     // 移動
     // ------------------------------------------------------------
 
-    private StepResult tickMoveTo(MinecraftClient client, VoidTradeStep step) {
+    private StepResult tickMoveTo(Minecraft client, VoidTradeStep step) {
         if (teleportedSinceLastTick(client)) {
             // ゲートウェイやポータルに入って飛ばされた = 目的地（の入口）に着いた。飛ばされた先で歩き続けない
             moveTarget = null;
             return StepResult.DONE;
         }
 
-        Vec3d target = new Vec3d(step.x + 0.5, step.y, step.z + 0.5);
+        Vec3 target = new Vec3(step.x + 0.5, step.y, step.z + 0.5);
         double distanceSq = squaredHorizontalDistance(client.player, target);
         if (distanceSq <= ARRIVE_DISTANCE * ARRIVE_DISTANCE) {
             moveTarget = null;
@@ -436,10 +437,10 @@ public class VoidTradeFeature implements Feature {
         return StepResult.CONTINUE;
     }
 
-    /**
+    /^*
      * 移動キーを数 tick だけ押したのと同じ動き（AHK の {a down}{a up} 相当）。向きは変えない。
-     */
-    private StepResult tickNudge(MinecraftClient client, VoidTradeStep step) {
+     ^/
+    private StepResult tickNudge(Minecraft client, VoidTradeStep step) {
         if (stepTicks > Math.max(1, step.nudgeTicks) || teleportedSinceLastTick(client)) {
             nudgeDirection = null;
             return StepResult.DONE;
@@ -448,24 +449,24 @@ public class VoidTradeFeature implements Feature {
         return StepResult.CONTINUE;
     }
 
-    /**
+    /^*
      * VoidTradeInputMixin から毎 tick（Input#tick 直後）呼ばれる。
      * 移動ステップ中なら向きを目的地に合わせて前進入力で上書きする。取引画面を開いたままでも効く。
-     */
-    public void applyMovementInput(ClientPlayerEntity player, Input input) {
-        if (!running || player != MinecraftClient.getInstance().player) {
+     ^/
+    public void applyMovementInput(LocalPlayer player, Input input) {
+        if (!running || player != Minecraft.getInstance().player) {
             return;
         }
         if (nudgeDirection != null) {
             int forward = nudgeDirection.getForwardAxis();
             int sideways = nudgeDirection.getSidewaysAxis();
-            input.pressingForward = forward > 0;
-            input.pressingBack = forward < 0;
-            input.pressingLeft = sideways > 0;
-            input.pressingRight = sideways < 0;
-            input.movementForward = forward;
-            input.movementSideways = sideways;
-            input.sneaking = false;
+            input.up = forward > 0;
+            input.down = forward < 0;
+            input.left = sideways > 0;
+            input.right = sideways < 0;
+            input.forwardImpulse = forward;
+            input.leftImpulse = sideways;
+            input.shiftKeyDown = false;
             return;
         }
         if (moveTarget == null) {
@@ -476,7 +477,7 @@ public class VoidTradeFeature implements Feature {
         double dz = moveTarget.z - player.getZ();
         if (moveKeepFacing) {
             // 向きはそのまま、目的地の方向を前後・左右の入力に分解する（Entity#movementInputToVelocity の逆変換）
-            double yaw = Math.toRadians(player.getYaw());
+            double yaw = Math.toRadians(player.getYRot());
             double sin = Math.sin(yaw);
             double cos = Math.cos(yaw);
             double forward = -dx * sin + dz * cos;
@@ -486,45 +487,45 @@ public class VoidTradeFeature implements Feature {
                 forward /= length;
                 sideways /= length;
             }
-            input.pressingForward = forward > 0.3;
-            input.pressingBack = forward < -0.3;
-            input.pressingLeft = sideways > 0.3;
-            input.pressingRight = sideways < -0.3;
-            input.movementForward = (float) forward;
-            input.movementSideways = (float) sideways;
-            input.sneaking = false;
-            input.jumping = player.horizontalCollision && player.isOnGround();
+            input.up = forward > 0.3;
+            input.down = forward < -0.3;
+            input.left = sideways > 0.3;
+            input.right = sideways < -0.3;
+            input.forwardImpulse = (float) forward;
+            input.leftImpulse = (float) sideways;
+            input.shiftKeyDown = false;
+            input.jumping = player.horizontalCollision && player.onGround();
             player.setSprinting(false);
             return;
         }
         float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
-        player.setYaw(player.getYaw() + MathHelper.wrapDegrees(targetYaw - player.getYaw()));
+        player.setYRot(player.getYRot() + Mth.wrapDegrees(targetYaw - player.getYRot()));
 
-        input.pressingForward = true;
-        input.pressingBack = false;
-        input.pressingLeft = false;
-        input.pressingRight = false;
-        input.movementForward = 1.0f;
-        input.movementSideways = 0.0f;
-        input.sneaking = false;
+        input.up = true;
+        input.down = false;
+        input.left = false;
+        input.right = false;
+        input.forwardImpulse = 1.0f;
+        input.leftImpulse = 0.0f;
+        input.shiftKeyDown = false;
         // 1 ブロックの段差は跳んで越える
-        input.jumping = player.horizontalCollision && player.isOnGround();
+        input.jumping = player.horizontalCollision && player.onGround();
         player.setSprinting(moveSprint);
     }
 
-    /**
+    /^*
      * 前 tick から大きく位置が飛んだ（ワールドが変わった）か。移動系ステップ中に毎 tick 呼び、基準位置を更新する。
-     */
-    private boolean teleportedSinceLastTick(MinecraftClient client) {
-        Vec3d pos = client.player.getPos();
-        boolean teleported = client.world != lastTickWorld
-                || (lastTickPos != null && lastTickPos.squaredDistanceTo(pos) > TELEPORT_DISTANCE_SQUARED);
+     ^/
+    private boolean teleportedSinceLastTick(Minecraft client) {
+        Vec3 pos = client.player.position();
+        boolean teleported = client.level != lastTickWorld
+                || (lastTickPos != null && lastTickPos.distanceToSqr(pos) > TELEPORT_DISTANCE_SQUARED);
         lastTickPos = pos;
-        lastTickWorld = client.world;
+        lastTickWorld = client.level;
         return teleported;
     }
 
-    private static double squaredHorizontalDistance(ClientPlayerEntity player, Vec3d target) {
+    private static double squaredHorizontalDistance(LocalPlayer player, Vec3 target) {
         double dx = target.x - player.getX();
         double dz = target.z - player.getZ();
         return dx * dx + dz * dz;
@@ -534,23 +535,23 @@ public class VoidTradeFeature implements Feature {
     // 村人・ブロックへの右クリック
     // ------------------------------------------------------------
 
-    private StepResult tickInteractEntity(MinecraftClient client, VoidTradeStep step) {
-        ClientPlayerEntity player = client.player;
-        if (player.currentScreenHandler instanceof MerchantScreenHandler) {
+    private StepResult tickInteractEntity(Minecraft client, VoidTradeStep step) {
+        LocalPlayer player = client.player;
+        if (player.containerMenu instanceof MerchantMenu) {
             return StepResult.DONE;
         }
 
-        MerchantEntity merchant = findMerchant(client.world, step);
+        AbstractVillager merchant = findMerchant(client.level, step);
         if (merchant == null) {
             waitReason = "merchantNotFound";
             return StepResult.CONTINUE;
         }
-        if (merchant.getBoundingBox().squaredMagnitude(player.getEyePos()) >= MAX_REACH_SQUARED) {
+        if (merchant.getBoundingBox().distanceToSqr(player.getEyePosition()) >= MAX_REACH_SQUARED) {
             waitReason = "merchantTooFar";
             return stepTicks > OUT_OF_REACH_GRACE_TICKS ? fail("merchantTooFar") : StepResult.CONTINUE;
         }
 
-        Vec3d aim = merchant.getBoundingBox().getCenter();
+        Vec3 aim = merchant.getBoundingBox().getCenter();
         lookAt(player, aim);
         waitReason = "screenNotOpened";
 
@@ -560,31 +561,31 @@ public class VoidTradeFeature implements Feature {
         }
         lastInteractTick = stepTicks;
         merchantEntityId = merchant.getId();
-        merchantWorld = client.world;
+        merchantWorld = client.level;
         // ItemScroller は手で右クリックした村人しか記録しないので、お気に入りと一覧の並びをこの村人に合わせる
-        ItemScrollerCompat.setLastInteractedVillager(merchant.getUuid());
+        ItemScrollerCompat.setLastInteractedVillager(merchant.getUUID());
 
         // バニラの右クリック（MinecraftClient#doItemUse）と同じ順で送る
-        ActionResult result = client.interactionManager.interactEntityAtLocation(
-                player, merchant, new EntityHitResult(merchant, aim), Hand.MAIN_HAND);
-        if (!result.isAccepted()) {
-            result = client.interactionManager.interactEntity(player, merchant, Hand.MAIN_HAND);
+        InteractionResult result = client.gameMode.interactAt(
+                player, merchant, new EntityHitResult(merchant, aim), InteractionHand.MAIN_HAND);
+        if (!result.consumesAction()) {
+            result = client.gameMode.interact(player, merchant, InteractionHand.MAIN_HAND);
         }
-        if (result.isAccepted() && result.shouldSwingHand()) {
-            player.swingHand(Hand.MAIN_HAND);
+        if (result.consumesAction() && result.shouldSwing()) {
+            player.swing(InteractionHand.MAIN_HAND);
         }
         return StepResult.CONTINUE;
     }
 
-    private static MerchantEntity findMerchant(ClientWorld world, VoidTradeStep step) {
-        Vec3d center = new Vec3d(step.x + 0.5, step.y, step.z + 0.5);
-        Box area = new Box(center, center).expand(Math.max(0.5, step.radius));
+    private static AbstractVillager findMerchant(ClientLevel world, VoidTradeStep step) {
+        Vec3 center = new Vec3(step.x + 0.5, step.y, step.z + 0.5);
+        AABB area = new AABB(center, center).inflate(Math.max(0.5, step.radius));
 
-        MerchantEntity nearest = null;
+        AbstractVillager nearest = null;
         double nearestDistance = Double.MAX_VALUE;
-        for (MerchantEntity merchant : world.getEntitiesByClass(MerchantEntity.class, area,
+        for (AbstractVillager merchant : world.getEntitiesOfClass(AbstractVillager.class, area,
                 entity -> entity.isAlive() && !entity.isBaby())) {
-            double distance = merchant.squaredDistanceTo(center);
+            double distance = merchant.distanceToSqr(center);
             if (distance < nearestDistance) {
                 nearest = merchant;
                 nearestDistance = distance;
@@ -593,49 +594,49 @@ public class VoidTradeFeature implements Feature {
         return nearest;
     }
 
-    private StepResult tickInteractBlock(MinecraftClient client, VoidTradeStep step) {
-        ClientPlayerEntity player = client.player;
+    private StepResult tickInteractBlock(Minecraft client, VoidTradeStep step) {
+        LocalPlayer player = client.player;
         BlockPos pos = new BlockPos(step.x, step.y, step.z);
-        Vec3d center = Vec3d.ofCenter(pos);
-        Vec3d eye = player.getEyePos();
-        if (eye.squaredDistanceTo(center) > MAX_REACH_SQUARED) {
+        Vec3 center = Vec3.atCenterOf(pos);
+        Vec3 eye = player.getEyePosition();
+        if (eye.distanceToSqr(center) > MAX_REACH_SQUARED) {
             return fail("blockTooFar");
         }
 
         // プレイヤー側を向いた面の中央を狙う
-        Direction side = Direction.getFacing(eye.x - center.x, eye.y - center.y, eye.z - center.z);
-        Vec3d hitPos = center.add(side.getOffsetX() * 0.5, side.getOffsetY() * 0.5, side.getOffsetZ() * 0.5);
+        Direction side = Direction.getNearest(eye.x - center.x, eye.y - center.y, eye.z - center.z);
+        Vec3 hitPos = center.add(side.getStepX() * 0.5, side.getStepY() * 0.5, side.getStepZ() * 0.5);
         lookAt(player, hitPos);
         if (stepTicks < 2) {
             return StepResult.CONTINUE;
         }
 
-        ActionResult result = client.interactionManager.interactBlock(
-                player, Hand.MAIN_HAND, new BlockHitResult(hitPos, side, pos, false));
-        if (result.isAccepted() && result.shouldSwingHand()) {
-            player.swingHand(Hand.MAIN_HAND);
+        InteractionResult result = client.gameMode.useItemOn(
+                player, InteractionHand.MAIN_HAND, new BlockHitResult(hitPos, side, pos, false));
+        if (result.consumesAction() && result.shouldSwing()) {
+            player.swing(InteractionHand.MAIN_HAND);
         }
         return StepResult.DONE;
     }
 
-    private static void lookAt(ClientPlayerEntity player, Vec3d target) {
-        Vec3d eye = player.getEyePos();
+    private static void lookAt(LocalPlayer player, Vec3 target) {
+        Vec3 eye = player.getEyePosition();
         double dx = target.x - eye.x;
         double dy = target.y - eye.y;
         double dz = target.z - eye.z;
         double horizontal = Math.sqrt(dx * dx + dz * dz);
         float yaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, horizontal));
-        player.setYaw(player.getYaw() + MathHelper.wrapDegrees(yaw - player.getYaw()));
-        player.setPitch(MathHelper.clamp(pitch, -90.0f, 90.0f));
+        player.setYRot(player.getYRot() + Mth.wrapDegrees(yaw - player.getYRot()));
+        player.setXRot(Mth.clamp(pitch, -90.0f, 90.0f));
     }
 
     // ------------------------------------------------------------
     // アンロード待ち・取引・画面操作
     // ------------------------------------------------------------
 
-    private StepResult tickWaitUnload(MinecraftClient client) {
-        if (!(client.player.currentScreenHandler instanceof MerchantScreenHandler)) {
+    private StepResult tickWaitUnload(Minecraft client) {
+        if (!(client.player.containerMenu instanceof MerchantMenu)) {
             return fail("screenClosed");
         }
         if (merchantEntityId < 0 || merchantWorld == null) {
@@ -643,20 +644,20 @@ public class VoidTradeFeature implements Feature {
         }
 
         waitReason = "notUnloaded";
-        if (client.world != merchantWorld) {
+        if (client.level != merchantWorld) {
             return StepResult.DONE;
         }
         // サーバーが村人の追跡をやめる（= 遠ざかった／アンロードされた）とクライアントからも消える
-        Entity merchant = client.world.getEntityById(merchantEntityId);
+        Entity merchant = client.level.getEntity(merchantEntityId);
         return merchant == null || merchant.isRemoved() ? StepResult.DONE : StepResult.CONTINUE;
     }
 
-    private StepResult tickTrade(MinecraftClient client, VoidTradeStep step) {
-        ClientPlayerEntity player = client.player;
-        if (!(player.currentScreenHandler instanceof MerchantScreenHandler handler)) {
+    private StepResult tickTrade(Minecraft client, VoidTradeStep step) {
+        LocalPlayer player = client.player;
+        if (!(player.containerMenu instanceof MerchantMenu handler)) {
             return fail("screenClosed");
         }
-        if (handler.getRecipes().isEmpty()) {
+        if (handler.getOffers().isEmpty()) {
             waitReason = "offersNotReceived";
             return StepResult.CONTINUE;
         }
@@ -668,7 +669,7 @@ public class VoidTradeFeature implements Feature {
             }
             // 前の周の取引が村人に残っている = アンロードされないまま取引していた。
             // 気づかずに回し続けると村人がロック・値上がりするので止める
-            for (TradeOffer offer : tradeQueue) {
+            for (MerchantOffer offer : tradeQueue) {
                 String key = stepIndex + ":" + originalOffers(handler).indexOf(offer);
                 Integer baseline = baselineUses.putIfAbsent(key, offer.getUses());
                 if (baseline != null && offer.getUses() > baseline) {
@@ -689,18 +690,18 @@ public class VoidTradeFeature implements Feature {
             return result;
         }
 
-        TradeOffer offer = tradeQueue.get(tradeQueuePos);
-        if (offer.isDisabled()) {
+        MerchantOffer offer = tradeQueue.get(tradeQueuePos);
+        if (offer.isOutOfStock()) {
             return nextOffer("offerLocked");
         }
 
         // 最初は必ず選び直す（前の取引の材料が残っていると別の取引が出力されるため）。
         // 以降は出力が空になったら選び直して、サーバー側でインベントリから材料を補充させる
-        if (!offerSelected || handler.getSlot(OUTPUT_SLOT).getStack().isEmpty()) {
+        if (!offerSelected || handler.getSlot(OUTPUT_SLOT).getItem().isEmpty()) {
             selectOffer(client, handler, offer);
             offerSelected = true;
         }
-        if (handler.getSlot(OUTPUT_SLOT).getStack().isEmpty()) {
+        if (handler.getSlot(OUTPUT_SLOT).getItem().isEmpty()) {
             // 選んでも出力が出ない = 材料切れ
             return ++tradeIdleTicks >= TRADE_IDLE_LIMIT ? nextOffer("noMaterials") : StepResult.CONTINUE;
         }
@@ -708,13 +709,13 @@ public class VoidTradeFeature implements Feature {
         int usesBefore = offer.getUses();
         if (step.dropOutput) {
             for (int i = 0; i < MAX_THROWS_PER_TICK
-                    && !offer.isDisabled()
-                    && !handler.getSlot(OUTPUT_SLOT).getStack().isEmpty(); i++) {
-                client.interactionManager.clickSlot(handler.syncId, OUTPUT_SLOT, 1, SlotActionType.THROW, player);
+                    && !offer.isOutOfStock()
+                    && !handler.getSlot(OUTPUT_SLOT).getItem().isEmpty(); i++) {
+                client.gameMode.handleContainerInput(handler.containerId, OUTPUT_SLOT, 1, ContainerInput.THROW, player);
             }
         } else {
             // シフトクリックは入っている材料の分だけ連続で取引される
-            client.interactionManager.clickSlot(handler.syncId, OUTPUT_SLOT, 0, SlotActionType.QUICK_MOVE, player);
+            client.gameMode.handleContainerInput(handler.containerId, OUTPUT_SLOT, 0, ContainerInput.QUICK_MOVE, player);
         }
 
         int traded = offer.getUses() - usesBefore;
@@ -729,16 +730,16 @@ public class VoidTradeFeature implements Feature {
         return ++tradeIdleTicks >= TRADE_IDLE_LIMIT ? nextOffer("inventoryFull") : StepResult.CONTINUE;
     }
 
-    /**
+    /^*
      * 今の取引を終えて次の取引へ進む。
-     */
+     ^/
     private StepResult nextOffer(String finishReason) {
         if (firstFinishReason == null) {
             firstFinishReason = finishReason;
         }
         if (currentOfferTraded == 0 && tradeQueue.size() > 1) {
             skippedOffers.add(describeOffer(tradeQueue.get(tradeQueuePos))
-                    .append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skipped." + finishReason)));
+                    .append(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skipped." + finishReason)));
         }
         currentOfferTraded = 0;
         tradeQueuePos++;
@@ -747,32 +748,32 @@ public class VoidTradeFeature implements Feature {
         return StepResult.CONTINUE;
     }
 
-    /**
+    /^*
      * お気に入りのうち 1 回も取引できなかったものを知らせる。毎周出るとうるさいので、ステップごとに 1 回だけ。
-     */
-    private void warnSkippedOffers(ClientPlayerEntity player) {
+     ^/
+    private void warnSkippedOffers(LocalPlayer player) {
         if (skippedOffers.isEmpty() || !warnedSkipSteps.add(stepIndex)) {
             return;
         }
-        MutableText list = Text.empty();
+        MutableComponent list = Component.empty();
         for (int i = 0; i < skippedOffers.size(); i++) {
             if (i > 0) {
                 list.append(", ");
             }
             list.append(skippedOffers.get(i));
         }
-        player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skippedFavorites",
-                skippedOffers.size(), tradeQueue.size(), list).formatted(Formatting.YELLOW), false);
+        player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.skippedFavorites",
+                skippedOffers.size(), tradeQueue.size(), list).withStyle(ChatFormatting.YELLOW), false);
     }
 
-    /**
+    /^*
      * 取引する取引を決める。取引番号は画面に表示されている並び（ItemScroller が並べ替えていればその並び）で数える。
      * 決められなければ理由を出して止め、null を返す。
-     */
-    private List<TradeOffer> resolveTradeTargets(ClientPlayerEntity player, MerchantScreenHandler handler, VoidTradeStep step) {
-        List<TradeOffer> targets = new ArrayList<>();
+     ^/
+    private List<MerchantOffer> resolveTradeTargets(LocalPlayer player, MerchantMenu handler, VoidTradeStep step) {
+        List<MerchantOffer> targets = new ArrayList<>();
         if (step.useFavorites) {
-            TradeOfferList original = originalOffers(handler);
+            MerchantOffers original = originalOffers(handler);
             for (int index : ItemScrollerCompat.getFavoriteTradeIndices(handler)) {
                 if (index >= 0 && index < original.size()) {
                     targets.add(original.get(index));
@@ -786,7 +787,7 @@ public class VoidTradeFeature implements Feature {
             return targets;
         }
 
-        TradeOfferList offers = handler.getRecipes();
+        MerchantOffers offers = handler.getOffers();
         int index = step.offerIndex - 1;
         if (index < 0 || index >= offers.size()) {
             fail("offerOutOfRange");
@@ -797,79 +798,80 @@ public class VoidTradeFeature implements Feature {
         return targets;
     }
 
-    /**
+    /^*
      * サーバーと同じ並びの取引一覧。ItemScroller 等が getRecipes() を並べ替えた一覧に差し替えていても変わらない。
-     */
-    private static TradeOfferList originalOffers(MerchantScreenHandler handler) {
+     ^/
+    private static MerchantOffers originalOffers(MerchantMenu handler) {
         return ((MerchantScreenHandlerAccessor) handler).getMerchant().getOffers();
     }
 
-    /**
+    /^*
      * MerchantScreen で取引を選んだときと同じ処理（MerchantScreen#syncRecipeIndex）。
      * 表示上の並びとサーバー側の並びが違う場合（ItemScroller のお気に入りの並べ替え）に備えて番号を変換する。
      * 材料の自動補充は表示側の一覧、サーバーへ送る番号と MerchantInventory の番号は元の一覧で数える。
-     */
-    private static void selectOffer(MinecraftClient client, MerchantScreenHandler handler, TradeOffer offer) {
-        int visibleIndex = handler.getRecipes().indexOf(offer);
+     ^/
+    private static void selectOffer(Minecraft client, MerchantMenu handler, MerchantOffer offer) {
+        int visibleIndex = handler.getOffers().indexOf(offer);
         int realIndex = originalOffers(handler).indexOf(offer);
         if (visibleIndex < 0 || realIndex < 0) {
             return;
         }
-        handler.setRecipeIndex(realIndex);
-        handler.switchTo(visibleIndex);
-        client.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(realIndex));
-        if (client.currentScreen instanceof MerchantScreen screen) {
+        handler.setSelectionHint(realIndex);
+        handler.tryMoveItems(visibleIndex);
+        client.getConnection().send(new ServerboundSelectTradePacket(realIndex));
+        if (McClient.screen() instanceof MerchantScreen screen) {
             ((MerchantScreenAccessor) screen).setSelectedIndex(visibleIndex);
         }
     }
 
-    /**
+    /^*
      * 取引番号を決めやすいよう、表示順の取引一覧（必要な材料 → 結果）をチャットに出す。
-     */
-    private static void sendOfferList(ClientPlayerEntity player, MerchantScreenHandler handler) {
-        TradeOfferList offers = handler.getRecipes();
-        player.sendMessage(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList").formatted(Formatting.GRAY), false);
+     ^/
+    private static void sendOfferList(LocalPlayer player, MerchantMenu handler) {
+        MerchantOffers offers = handler.getOffers();
+        player.displayClientMessage(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList").withStyle(ChatFormatting.GRAY), false);
         for (int i = 0; i < offers.size(); i++) {
-            TradeOffer offer = offers.get(i);
-            MutableText line = Text.literal(" " + (i + 1) + ": ").append(describeOffer(offer));
-            if (offer.isDisabled()) {
-                line.append(Text.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList.locked"));
+            MerchantOffer offer = offers.get(i);
+            MutableComponent line = Component.literal(" " + (i + 1) + ": ").append(describeOffer(offer));
+            if (offer.isOutOfStock()) {
+                line.append(Component.translatable("message." + ASTTweaks.MOD_ID + ".voidtrade.offerList.locked"));
             }
-            player.sendMessage(line.formatted(Formatting.GRAY), false);
+            player.displayClientMessage(line.withStyle(ChatFormatting.GRAY), false);
         }
     }
 
-    /**
+    /^*
      * 「材料 → 結果」の 1 行表記。
-     */
-    private static MutableText describeOffer(TradeOffer offer) {
-        MutableText text = describeStack(offer.getAdjustedFirstBuyItem());
-        if (!offer.getSecondBuyItem().isEmpty()) {
-            text.append(" + ").append(describeStack(offer.getSecondBuyItem()));
+     ^/
+    private static MutableComponent describeOffer(MerchantOffer offer) {
+        MutableComponent text = describeStack(offer.getCostA());
+        if (!offer.getCostB().isEmpty()) {
+            text.append(" + ").append(describeStack(offer.getCostB()));
         }
-        return text.append(" → ").append(describeStack(offer.getSellItem()));
+        return text.append(" → ").append(describeStack(offer.getResult()));
     }
 
-    private static MutableText describeStack(ItemStack stack) {
-        return Text.empty().append(stack.getName()).append(" x" + stack.getCount());
+    private static MutableComponent describeStack(ItemStack stack) {
+        return Component.empty().append(stack.getHoverName()).append(" x" + stack.getCount());
     }
 
-    private StepResult tickCloseScreen(MinecraftClient client) {
-        ClientPlayerEntity player = client.player;
-        if (player.currentScreenHandler != player.playerScreenHandler) {
-            player.closeHandledScreen();
+    private StepResult tickCloseScreen(Minecraft client) {
+        LocalPlayer player = client.player;
+        if (player.containerMenu != player.inventoryMenu) {
+            player.closeContainer();
         }
         return StepResult.DONE;
     }
 
-    private StepResult tickCommand(MinecraftClient client, VoidTradeStep step) {
+    private StepResult tickCommand(Minecraft client, VoidTradeStep step) {
         String command = step.command != null ? step.command.trim() : "";
         if (command.startsWith("/")) {
             command = command.substring(1);
         }
         if (!command.isEmpty()) {
-            client.player.networkHandler.sendChatCommand(command);
+            client.player.connection.sendCommand(command);
         }
         return StepResult.DONE;
     }
 }
+*///?}

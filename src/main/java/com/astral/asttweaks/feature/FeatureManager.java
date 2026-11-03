@@ -13,7 +13,6 @@ import com.astral.asttweaks.feature.inventorysort.InventorySortFeature;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightFeature;
 import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.notepad.NotepadFeature;
-import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
 import com.astral.asttweaks.feature.pickprotect.PickProtectFeature;
 import com.astral.asttweaks.feature.portalprotect.PortalProtectFeature;
 import com.astral.asttweaks.feature.scoreboard.ScoreboardFeature;
@@ -21,8 +20,13 @@ import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.syncertune.SyncerTuneFeature;
 import com.astral.asttweaks.feature.updatechecker.UpdateCheckerFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
-import com.astral.asttweaks.feature.voidtrade.VoidTradeFeature;
 import com.astral.asttweaks.feature.worldborderfix.WorldBorderFixFeature;
+//? if <26.1 {
+/*import com.astral.asttweaks.feature.voidtrade.VoidTradeFeature;
+*///?}
+//? if <1.20 {
+/*import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
+*///?}
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import java.util.HashMap;
@@ -71,8 +75,12 @@ public class FeatureManager {
         registerFeature(new PortalProtectFeature());
         registerFeature(new SyncerTuneFeature());
         registerFeature(new WorldBorderFixFeature());
-        registerFeature(new NvidiumChunkFixFeature());
-        registerFeature(new VoidTradeFeature());
+        //? if <26.1 {
+        /*registerFeature(new VoidTradeFeature());
+        *///?}
+        //? if <1.20 {
+        /*registerFeature(new NvidiumChunkFixFeature());
+        *///?}
 
         // Initialize all features
         for (Feature feature : features.values()) {
@@ -257,17 +265,21 @@ public class FeatureManager {
         return (WorldBorderFixFeature) getFeature("worldborderfix");
     }
 
-    /**
-     * Get the Nvidium chunk fix feature.
-     */
-    public NvidiumChunkFixFeature getNvidiumChunkFixFeature() {
-        return (NvidiumChunkFixFeature) getFeature("nvidiumchunkfix");
-    }
-
-    /**
-     * Get the void trade feature.
-     */
+    //? if <26.1 {
+    /*/^*
+     * Get the void trade feature (1.20.1 以前のみ).
+     ^/
     public VoidTradeFeature getVoidTradeFeature() {
         return (VoidTradeFeature) getFeature("voidtrade");
     }
+    *///?}
+
+    //? if <1.20 {
+    /*/^*
+     * Get the Nvidium chunk fix feature (1.19.4 のみ).
+     ^/
+    public NvidiumChunkFixFeature getNvidiumChunkFixFeature() {
+        return (NvidiumChunkFixFeature) getFeature("nvidiumchunkfix");
+    }
+    *///?}
 }

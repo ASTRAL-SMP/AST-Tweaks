@@ -4,10 +4,12 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autodrop.AutoDropConfig;
 import com.astral.asttweaks.feature.autodrop.AutoDropFeature;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.Gfx;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /**
  * Screen for configuring Auto Drop protected slots.
@@ -20,7 +22,7 @@ import net.minecraft.text.Text;
  *   [Hotbar 0][1][2][3][4][5][6][7][8]
  * Armor is always protected (non-clickable); all other slots toggle.
  */
-public class AutoDropProtectedSlotScreen extends Screen {
+public class AutoDropProtectedSlotScreen extends CompatScreen {
     private static final int SLOT_SIZE = 20;
     private static final int SLOT_SPACING = 2;
     private static final int GRID_WIDTH = 9;
@@ -36,7 +38,7 @@ public class AutoDropProtectedSlotScreen extends Screen {
     private int gridY;
 
     public AutoDropProtectedSlotScreen(Screen parent) {
-        super(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.title"));
+        super(Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.title"));
         this.parent = parent;
         AutoDropFeature feature = (AutoDropFeature) FeatureManager.getInstance().getFeature("autodrop");
         this.config = feature != null ? feature.getConfig() : null;
@@ -51,31 +53,29 @@ public class AutoDropProtectedSlotScreen extends Screen {
         gridX = (this.width - totalWidth) / 2;
         gridY = (this.height - totalHeight) / 2 - 10;
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        b -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 30, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        b -> McClient.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 30, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
+        int titleWidth = this.font.width(this.title);
+        gfx.text(this.font, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFFFF);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFF);
-
-        Text help = Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.help");
-        int helpWidth = this.textRenderer.getWidth(help);
-        this.textRenderer.drawWithShadow(matrices, help, this.width / 2 - helpWidth / 2, 30, 0xAAAAAA);
+        Component help = Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.help");
+        int helpWidth = this.font.width(help);
+        gfx.text(this.font, help, this.width / 2 - helpWidth / 2, 30, 0xFFAAAAAA);
 
         int armorY = gridY;
         for (int i = 0; i < 4; i++) {
             int x = gridX + i * (SLOT_SIZE + SLOT_SPACING);
-            drawArmorSlot(matrices, x, armorY, ARMOR_SLOTS[i]);
+            drawArmorSlot(gfx, x, armorY, ARMOR_SLOTS[i]);
         }
         int offhandX = gridX + (GRID_WIDTH - 1) * (SLOT_SIZE + SLOT_SPACING);
-        drawSlot(matrices, offhandX, armorY, OFFHAND_SLOT, mouseX, mouseY, "Off");
+        drawSlot(gfx, offhandX, armorY, OFFHAND_SLOT, mouseX, mouseY, "Off");
 
         int mainStartY = armorY + SLOT_SIZE + SLOT_SPACING + 5;
         for (int row = 0; row < MAIN_ROWS; row++) {
@@ -83,43 +83,43 @@ public class AutoDropProtectedSlotScreen extends Screen {
                 int slot = 9 + row * GRID_WIDTH + col;
                 int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
                 int y = mainStartY + row * (SLOT_SIZE + SLOT_SPACING);
-                drawSlot(matrices, x, y, slot, mouseX, mouseY, null);
+                drawSlot(gfx, x, y, slot, mouseX, mouseY, null);
             }
         }
 
         int hotbarY = mainStartY + MAIN_ROWS * (SLOT_SIZE + SLOT_SPACING) + 10;
         for (int col = 0; col < GRID_WIDTH; col++) {
             int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
-            drawSlot(matrices, x, hotbarY, col, mouseX, mouseY, null);
+            drawSlot(gfx, x, hotbarY, col, mouseX, mouseY, null);
         }
 
-        drawLabel(matrices, "Armor", armorY);
-        drawLabel(matrices, "Main", mainStartY + (MAIN_ROWS * (SLOT_SIZE + SLOT_SPACING)) / 2 - SLOT_SIZE / 2);
-        drawLabel(matrices, "Hotbar", hotbarY);
+        drawLabel(gfx, "Armor", armorY);
+        drawLabel(gfx, "Main", mainStartY + (MAIN_ROWS * (SLOT_SIZE + SLOT_SPACING)) / 2 - SLOT_SIZE / 2);
+        drawLabel(gfx, "Hotbar", hotbarY);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
-    private void drawLabel(MatrixStack matrices, String text, int y) {
-        Text label = Text.literal(text);
-        this.textRenderer.drawWithShadow(matrices, label,
-                gridX - 5 - this.textRenderer.getWidth(label),
-                y + SLOT_SIZE / 2 - 4, 0x888888);
+    private void drawLabel(Gfx gfx, String text, int y) {
+        Component label = Component.literal(text);
+        gfx.text(this.font, label,
+                gridX - 5 - this.font.width(label),
+                y + SLOT_SIZE / 2 - 4, 0xFF888888);
     }
 
-    private void drawArmorSlot(MatrixStack matrices, int x, int y, int slot) {
+    private void drawArmorSlot(Gfx gfx, int x, int y, int slot) {
         int bgColor = 0xFF5A2020;
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
-        drawBorder(matrices, x, y, 0xFF888888);
+        gfx.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
+        drawBorder(gfx, x, y, 0xFF888888);
 
         String text = "A";
-        int textWidth = this.textRenderer.getWidth(text);
-        this.textRenderer.drawWithShadow(matrices, text,
+        int textWidth = this.font.width(text);
+        gfx.text(this.font, text,
                 x + (SLOT_SIZE - textWidth) / 2,
-                y + (SLOT_SIZE - 8) / 2, 0xFFFFFF);
+                y + (SLOT_SIZE - 8) / 2, 0xFFFFFFFF);
     }
 
-    private void drawSlot(MatrixStack matrices, int x, int y, int slot, int mouseX, int mouseY, String overrideLabel) {
+    private void drawSlot(Gfx gfx, int x, int y, int slot, int mouseX, int mouseY, String overrideLabel) {
         boolean protectedSlot = config != null && config.isSlotProtected(slot);
         boolean hovered = mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE;
 
@@ -129,26 +129,26 @@ public class AutoDropProtectedSlotScreen extends Screen {
         } else {
             bgColor = hovered ? 0xFF666666 : 0xFF444444;
         }
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
-        drawBorder(matrices, x, y, hovered ? 0xFFFFFFFF : 0xFF888888);
+        gfx.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
+        drawBorder(gfx, x, y, hovered ? 0xFFFFFFFF : 0xFF888888);
 
         String text = overrideLabel != null ? overrideLabel : String.valueOf(slot);
-        int textWidth = this.textRenderer.getWidth(text);
-        int textColor = protectedSlot ? 0xFFFFFF : 0xCCCCCC;
-        this.textRenderer.drawWithShadow(matrices, text,
+        int textWidth = this.font.width(text);
+        int textColor = protectedSlot ? 0xFFFFFFFF : 0xFFCCCCCC;
+        gfx.text(this.font, text,
                 x + (SLOT_SIZE - textWidth) / 2,
                 y + (SLOT_SIZE - 8) / 2, textColor);
     }
 
-    private void drawBorder(MatrixStack matrices, int x, int y, int color) {
-        fill(matrices, x, y, x + SLOT_SIZE, y + 1, color);
-        fill(matrices, x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, color);
-        fill(matrices, x, y, x + 1, y + SLOT_SIZE, color);
-        fill(matrices, x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, color);
+    private void drawBorder(Gfx gfx, int x, int y, int color) {
+        gfx.fill(x, y, x + SLOT_SIZE, y + 1, color);
+        gfx.fill(x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, color);
+        gfx.fill(x, y, x + 1, y + SLOT_SIZE, color);
+        gfx.fill(x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, color);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && config != null) {
             int armorY = gridY;
             int mainStartY = armorY + SLOT_SIZE + SLOT_SPACING + 5;
@@ -180,7 +180,7 @@ public class AutoDropProtectedSlotScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return superMouseClicked(mouseX, mouseY, button);
     }
 
     private boolean isIn(double mx, double my, int x, int y) {
@@ -188,7 +188,7 @@ public class AutoDropProtectedSlotScreen extends Screen {
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(parent);
+    public void onClose() {
+        McClient.setScreen(parent);
     }
 }

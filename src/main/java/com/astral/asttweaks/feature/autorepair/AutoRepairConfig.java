@@ -1,11 +1,10 @@
 package com.astral.asttweaks.feature.autorepair;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 
 /**
  * Configuration wrapper for the auto repair feature.
@@ -66,7 +65,7 @@ public class AutoRepairConfig {
      * Check if an item is in the list (whitelist or blacklist).
      */
     public boolean isInList(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         return getItemList().contains(id.toString());
     }
 
@@ -88,7 +87,7 @@ public class AutoRepairConfig {
      * Toggle an item in the list.
      */
     public void toggleItem(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         String idString = id.toString();
         Set<String> list = getItemList();
         if (list.contains(idString)) {

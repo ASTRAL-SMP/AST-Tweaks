@@ -1,8 +1,9 @@
-package com.astral.asttweaks.feature.voidtrade;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade;
 
-/**
+/^*
  * Void Trade ワークフローのステップ種別。
- */
+ ^/
 public enum VoidTradeStepType {
     MOVE_TO("move_to", true, true),
     NUDGE("nudge", false, false),
@@ -28,17 +29,18 @@ public enum VoidTradeStepType {
         return id;
     }
 
-    /**
+    /^*
      * 座標 (x, y, z) を使うステップか。
-     */
+     ^/
     public boolean usesPosition() {
         return usesPosition;
     }
 
-    /**
+    /^*
      * 完了条件を待つステップか（設定のタイムアウトで打ち切る対象）。
-     */
+     ^/
     public boolean hasTimeout() {
         return hasTimeout;
     }
 }
+*///?}

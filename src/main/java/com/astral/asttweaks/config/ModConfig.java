@@ -8,12 +8,14 @@ import com.astral.asttweaks.feature.automove.MoveDirection;
 import com.astral.asttweaks.feature.inventorysort.SortMode;
 import com.astral.asttweaks.feature.inventorysort.SortTarget;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
-import com.astral.asttweaks.feature.voidtrade.VoidTradePreset;
-import com.astral.asttweaks.feature.voidtrade.VoidTradeStep;
 import com.astral.asttweaks.util.KeyCombo;
+//? if <26.1 {
+/*import com.astral.asttweaks.feature.voidtrade.VoidTradePreset;
+import com.astral.asttweaks.feature.voidtrade.VoidTradeStep;
+*///?}
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -177,21 +179,10 @@ public class ModConfig {
     public int worldBorderFixCoordThreshold = 100000;       // |X| または |Z| のしきい値
     public boolean worldBorderFixAutoReenable = false;      // ゾーン離脱時に即時再ロードで Nvidium を復帰（一部環境でクラッシュ報告あり）
 
-    // Nvidium Chunk Fix (Nvidium が VRAM 上限で破棄したリージョンが描画されないまま残る問題の修正)
-    public boolean nvidiumChunkFixEnabled = false;
-
-    // Void Trade (座標指定のワークフローをループ実行してボイドトレードを自動化)
-    public boolean voidTradeEnabled = false;
-    public int voidTradeLoopCount = 0;                      // 0 = 停止するまで無限ループ
-    public int voidTradeStepTimeoutSeconds = 120;           // 移動・取引画面待ち等のタイムアウト
-    public int voidTradeExtraWaitTicks = 0;                 // 待機ステップに一律で足す tick 数（ラグ対策）
-    public List<VoidTradeStep> voidTradeSteps = new ArrayList<>();
-    public List<VoidTradePreset> voidTradePresets = new ArrayList<>();
-
     // キーコンボ設定（全キーバインド）
-    public KeyCombo scoreboardToggleKey = new KeyCombo(GLFW.GLFW_KEY_O, -1);
-    public KeyCombo scoreboardPageUpKey = new KeyCombo(GLFW.GLFW_KEY_UP, -1);
-    public KeyCombo scoreboardPageDownKey = new KeyCombo(GLFW.GLFW_KEY_DOWN, -1);
+    public KeyCombo scoreboardToggleKey = new KeyCombo(InputConstants.KEY_O, -1);
+    public KeyCombo scoreboardPageUpKey = new KeyCombo(InputConstants.KEY_UP, -1);
+    public KeyCombo scoreboardPageDownKey = new KeyCombo(InputConstants.KEY_DOWN, -1);
     public KeyCombo autoEatToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoMoveToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoMoveForwardKey = new KeyCombo(-1, -1);
@@ -209,16 +200,28 @@ public class ModConfig {
     public KeyCombo mouseSensitivityToggleKey = new KeyCombo(-1, -1);
     public KeyCombo notepadOpenKey = new KeyCombo(-1, -1);
     public KeyCombo massGrindstoneExecuteKey = new KeyCombo(-1, -1);
-    public KeyCombo inventorySortExecuteKey = new KeyCombo(GLFW.GLFW_KEY_R, -1);
+    public KeyCombo inventorySortExecuteKey = new KeyCombo(InputConstants.KEY_R, -1);
     public KeyCombo inventorySortContainerExecuteKey = new KeyCombo(-1, -1);
-    public KeyCombo openGeneralScreenKey = new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K);
+    public KeyCombo openGeneralScreenKey = new KeyCombo(InputConstants.KEY_L, InputConstants.KEY_K);
+    //? if <26.1 {
+    /*// Nvidium Chunk Fix (Nvidium が VRAM 上限で破棄したリージョンが描画されないまま残る問題の修正、1.19.4 のみ)
+    public boolean nvidiumChunkFixEnabled = false;
+
+    // Void Trade (座標指定のワークフローをループ実行してボイドトレードを自動化)
+    public boolean voidTradeEnabled = false;
+    public int voidTradeLoopCount = 0;                      // 0 = 停止するまで無限ループ
+    public int voidTradeStepTimeoutSeconds = 120;           // 移動・取引画面待ち等のタイムアウト
+    public int voidTradeExtraWaitTicks = 0;                 // 待機ステップに一律で足す tick 数（ラグ対策）
+    public List<VoidTradeStep> voidTradeSteps = new ArrayList<>();
+    public List<VoidTradePreset> voidTradePresets = new ArrayList<>();
+    public KeyCombo voidTradeToggleKey = new KeyCombo(-1, -1);
+    *///?}
     public KeyCombo autoDropToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoDropExecuteKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockInventoryToggleKey = new KeyCombo(-1, -1);
     public KeyCombo autoRestockShulkerToggleKey = new KeyCombo(-1, -1);
     public KeyCombo villagerLinkToggleKey = new KeyCombo(-1, -1);
-    public KeyCombo voidTradeToggleKey = new KeyCombo(-1, -1);
 
     // Inventory sort settings
     public boolean inventorySortEnabled = true;
@@ -432,25 +435,6 @@ public class ModConfig {
                         this.worldBorderFixCoordThreshold = loaded.worldBorderFixCoordThreshold;
                     }
                     this.worldBorderFixAutoReenable = loaded.worldBorderFixAutoReenable;
-                    this.nvidiumChunkFixEnabled = loaded.nvidiumChunkFixEnabled;
-                    this.voidTradeEnabled = loaded.voidTradeEnabled;
-                    this.voidTradeLoopCount = Math.max(0, loaded.voidTradeLoopCount);
-                    this.voidTradeExtraWaitTicks = Math.max(0, loaded.voidTradeExtraWaitTicks);
-                    if (loaded.voidTradeStepTimeoutSeconds > 0) {
-                        this.voidTradeStepTimeoutSeconds = loaded.voidTradeStepTimeoutSeconds;
-                    }
-                    if (loaded.voidTradeSteps != null) {
-                        this.voidTradeSteps = sanitizeSteps(loaded.voidTradeSteps);
-                    }
-                    if (loaded.voidTradePresets != null) {
-                        this.voidTradePresets = new ArrayList<>();
-                        for (VoidTradePreset preset : loaded.voidTradePresets) {
-                            if (preset != null && preset.name != null && preset.steps != null) {
-                                preset.steps = sanitizeSteps(preset.steps);
-                                this.voidTradePresets.add(preset);
-                            }
-                        }
-                    }
                     // キーコンボ設定の読み込み
                     if (loaded.scoreboardToggleKey != null) {
                         this.scoreboardToggleKey.copyFrom(loaded.scoreboardToggleKey);
@@ -521,6 +505,30 @@ public class ModConfig {
                     if (loaded.openGeneralScreenKey != null) {
                         this.openGeneralScreenKey.copyFrom(loaded.openGeneralScreenKey);
                     }
+                    //? if <26.1 {
+                    /*this.nvidiumChunkFixEnabled = loaded.nvidiumChunkFixEnabled;
+                    this.voidTradeEnabled = loaded.voidTradeEnabled;
+                    this.voidTradeLoopCount = Math.max(0, loaded.voidTradeLoopCount);
+                    this.voidTradeExtraWaitTicks = Math.max(0, loaded.voidTradeExtraWaitTicks);
+                    if (loaded.voidTradeStepTimeoutSeconds > 0) {
+                        this.voidTradeStepTimeoutSeconds = loaded.voidTradeStepTimeoutSeconds;
+                    }
+                    if (loaded.voidTradeSteps != null) {
+                        this.voidTradeSteps = sanitizeSteps(loaded.voidTradeSteps);
+                    }
+                    if (loaded.voidTradePresets != null) {
+                        this.voidTradePresets = new ArrayList<>();
+                        for (VoidTradePreset preset : loaded.voidTradePresets) {
+                            if (preset != null && preset.name != null && preset.steps != null) {
+                                preset.steps = sanitizeSteps(preset.steps);
+                                this.voidTradePresets.add(preset);
+                            }
+                        }
+                    }
+                    if (loaded.voidTradeToggleKey != null) {
+                        this.voidTradeToggleKey.copyFrom(loaded.voidTradeToggleKey);
+                    }
+                    *///?}
                     if (loaded.autoDropToggleKey != null) {
                         this.autoDropToggleKey.copyFrom(loaded.autoDropToggleKey);
                     }
@@ -539,9 +547,6 @@ public class ModConfig {
                     if (loaded.villagerLinkToggleKey != null) {
                         this.villagerLinkToggleKey.copyFrom(loaded.villagerLinkToggleKey);
                     }
-                    if (loaded.voidTradeToggleKey != null) {
-                        this.voidTradeToggleKey.copyFrom(loaded.voidTradeToggleKey);
-                    }
                 }
                 ASTTweaks.LOGGER.info("Configuration loaded from {}", CONFIG_PATH);
             } catch (IOException e) {
@@ -552,9 +557,10 @@ public class ModConfig {
         }
     }
 
-    /**
+    //? if <26.1 {
+    /*/^*
      * 未知の種別（新しい版で保存された設定など）は Gson が null にするので捨て、欠けた値を補う。
-     */
+     ^/
     private static List<VoidTradeStep> sanitizeSteps(List<VoidTradeStep> steps) {
         List<VoidTradeStep> result = new ArrayList<>();
         for (VoidTradeStep step : steps) {
@@ -564,6 +570,7 @@ public class ModConfig {
         }
         return result;
     }
+    *///?}
 
     /**
      * Save configuration to file.

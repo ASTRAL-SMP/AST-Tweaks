@@ -2,21 +2,18 @@ package com.astral.asttweaks.feature.massgrindstone;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.util.Enchants;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.GrindstoneScreen;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.GrindstoneScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.Text;
-
-import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.GrindstoneScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.GrindstoneMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 /**
  * Mass Grindstone feature - ItemScroller/MassCraft style fast enchantment removal.
@@ -95,12 +92,10 @@ public class MassGrindstoneFeature implements Feature {
     public void stopProcessing() {
         if (isProcessing) {
             isProcessing = false;
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
             if (client.player != null && processedCount > 0) {
-                client.player.sendMessage(
-                    Text.translatable("message." + ASTTweaks.MOD_ID + ".massgrindstone.completed", processedCount),
-                    true
-                );
+                McClient.overlay(client.player, 
+                    Component.translatable("message." + ASTTweaks.MOD_ID + ".massgrindstone.completed", processedCount));
             }
             ASTTweaks.LOGGER.info("MassGrindstone: Stopped processing, processed {} items", processedCount);
             processedCount = 0;
@@ -110,16 +105,16 @@ public class MassGrindstoneFeature implements Feature {
     /**
      * Check if the grindstone screen is currently open.
      */
-    public static boolean isGrindstoneScreenOpen(MinecraftClient client) {
-        return client.currentScreen instanceof GrindstoneScreen;
+    public static boolean isGrindstoneScreenOpen(Minecraft client) {
+        return McClient.screen() instanceof GrindstoneScreen;
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) {
             return;
         }
 
-        if (client.player == null || client.world == null || client.isPaused()) {
+        if (client.player == null || client.level == null || client.isPaused()) {
             stopProcessing();
             return;
         }
@@ -141,10 +136,8 @@ public class MassGrindstoneFeature implements Feature {
             if (!isProcessing) {
                 startProcessing();
                 if (client.player != null) {
-                    client.player.sendMessage(
-                        Text.translatable("message." + ASTTweaks.MOD_ID + ".massgrindstone.processing"),
-                        true
-                    );
+                    McClient.overlay(client.player, 
+                        Component.translatable("message." + ASTTweaks.MOD_ID + ".massgrindstone.processing"));
                 }
             }
         }
@@ -169,32 +162,31 @@ public class MassGrindstoneFeature implements Feature {
      * Check if the execute key is currently pressed.
      * Uses InputUtil to directly check key state, which works even in GUI screens.
      */
-    private boolean isExecuteKeyPressed(MinecraftClient client) {
+    private boolean isExecuteKeyPressed(Minecraft client) {
         if (client.getWindow() == null) {
             return false;
         }
 
-        long windowHandle = client.getWindow().getHandle();
-        return com.astral.asttweaks.config.ModConfig.getInstance().massGrindstoneExecuteKey.isPressed(windowHandle);
+        return com.astral.asttweaks.config.ModConfig.getInstance().massGrindstoneExecuteKey.isPressed();
     }
 
     /**
      * Process the next enchanted item.
      * @return true if an item was processed, false if no more items to process
      */
-    private boolean processNextItem(MinecraftClient client) {
-        PlayerEntity player = client.player;
-        if (player == null || client.interactionManager == null) {
+    private boolean processNextItem(Minecraft client) {
+        Player player = client.player;
+        if (player == null || client.gameMode == null) {
             return false;
         }
 
         // Check if handler is correct type
-        if (!(player.currentScreenHandler instanceof GrindstoneScreenHandler handler)) {
+        if (!(player.containerMenu instanceof GrindstoneMenu handler)) {
             return false;
         }
 
         // First, check if there's already a result waiting
-        ItemStack outputStack = handler.getSlot(GRINDSTONE_OUTPUT_SLOT).getStack();
+        ItemStack outputStack = handler.getSlot(GRINDSTONE_OUTPUT_SLOT).getItem();
         if (!outputStack.isEmpty()) {
             // Drop the result (Ctrl+Q = drop stack)
             dropResultFromGrindstone(client, player, handler);
@@ -203,7 +195,7 @@ public class MassGrindstoneFeature implements Feature {
         }
 
         // Check if input slot already has an item
-        ItemStack inputStack = handler.getSlot(GRINDSTONE_INPUT_SLOT_1).getStack();
+        ItemStack inputStack = handler.getSlot(GRINDSTONE_INPUT_SLOT_1).getItem();
         if (!inputStack.isEmpty()) {
             // Wait for result to appear (next tick)
             return true;
@@ -225,10 +217,10 @@ public class MassGrindstoneFeature implements Feature {
      * Find the next enchanted item in the player's inventory that should be processed.
      * @return The screen slot index, or -1 if no suitable item found
      */
-    private int findNextEnchantedItem(PlayerEntity player, GrindstoneScreenHandler handler) {
+    private int findNextEnchantedItem(Player player, GrindstoneMenu handler) {
         // Search main inventory (slots 3-29 in grindstone screen)
         for (int i = GRINDSTONE_INVENTORY_START; i < GRINDSTONE_HOTBAR_START; i++) {
-            ItemStack stack = handler.getSlot(i).getStack();
+            ItemStack stack = handler.getSlot(i).getItem();
             if (shouldProcessStack(stack)) {
                 return i;
             }
@@ -236,7 +228,7 @@ public class MassGrindstoneFeature implements Feature {
 
         // Search hotbar (slots 30-38 in grindstone screen)
         for (int i = GRINDSTONE_HOTBAR_START; i < GRINDSTONE_HOTBAR_START + 9; i++) {
-            ItemStack stack = handler.getSlot(i).getStack();
+            ItemStack stack = handler.getSlot(i).getItem();
             if (shouldProcessStack(stack)) {
                 return i;
             }
@@ -267,34 +259,21 @@ public class MassGrindstoneFeature implements Feature {
      * Items with only curses cannot be processed as grindstones don't remove curses.
      */
     private boolean hasRemovableEnchantments(ItemStack stack) {
-        Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(stack);
-
-        if (enchantments.isEmpty()) {
-            return false;
-        }
-
-        // Check if there's at least one non-curse enchantment
-        for (Enchantment enchantment : enchantments.keySet()) {
-            if (!enchantment.isCursed()) {
-                return true;
-            }
-        }
-
-        return false;
+        return Enchants.hasRemovable(stack);
     }
 
     /**
      * Quick move (shift+click) an item to the grindstone input slot.
      */
-    private void quickMoveToGrindstone(MinecraftClient client, PlayerEntity player,
-                                        GrindstoneScreenHandler handler, int screenSlot) {
-        if (client.interactionManager == null) return;
+    private void quickMoveToGrindstone(Minecraft client, Player player,
+                                        GrindstoneMenu handler, int screenSlot) {
+        if (client.gameMode == null) return;
 
-        client.interactionManager.clickSlot(
-            handler.syncId,
+        client.gameMode.handleContainerInput(
+            handler.containerId,
             screenSlot,
             0,
-            SlotActionType.QUICK_MOVE,
+            ContainerInput.QUICK_MOVE,
             player
         );
     }
@@ -303,26 +282,26 @@ public class MassGrindstoneFeature implements Feature {
      * Drop the result from the grindstone output slot.
      * Uses Ctrl+Q (throw stack) for efficiency.
      */
-    private void dropResultFromGrindstone(MinecraftClient client, PlayerEntity player,
-                                          GrindstoneScreenHandler handler) {
-        if (client.interactionManager == null) return;
+    private void dropResultFromGrindstone(Minecraft client, Player player,
+                                          GrindstoneMenu handler) {
+        if (client.gameMode == null) return;
 
         if (config.shouldDropResults()) {
             // Ctrl+Q to drop the entire stack
-            client.interactionManager.clickSlot(
-                handler.syncId,
+            client.gameMode.handleContainerInput(
+                handler.containerId,
                 GRINDSTONE_OUTPUT_SLOT,
                 1,  // Button 1 with THROW = Ctrl+Q (drop stack)
-                SlotActionType.THROW,
+                ContainerInput.THROW,
                 player
             );
         } else {
             // Quick move to inventory
-            client.interactionManager.clickSlot(
-                handler.syncId,
+            client.gameMode.handleContainerInput(
+                handler.containerId,
                 GRINDSTONE_OUTPUT_SLOT,
                 0,
-                SlotActionType.QUICK_MOVE,
+                ContainerInput.QUICK_MOVE,
                 player
             );
         }

@@ -1,4 +1,5 @@
-package com.astral.asttweaks.feature.voidtrade;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -10,9 +11,9 @@ import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/^*
  * ワークフローをクリップボード経由で共有するためのテキスト形式（1 行の JSON）。
- */
+ ^/
 public final class VoidTradeShare {
     private static final Gson GSON = new Gson();
     private static final String FORMAT = "asttweaks-voidtrade";
@@ -40,10 +41,10 @@ public final class VoidTradeShare {
         return GSON.toJson(root);
     }
 
-    /**
+    /^*
      * 共有テキストを読み取る。ステップの配列だけ（設定ファイルの voidTradeSteps をそのまま写したもの）も受け付ける。
      * 読み取れなければ null。
-     */
+     ^/
     public static List<VoidTradeStep> parse(String text) {
         if (text == null || text.isBlank()) {
             return null;
@@ -68,3 +69,4 @@ public final class VoidTradeShare {
         }
     }
 }
+*///?}

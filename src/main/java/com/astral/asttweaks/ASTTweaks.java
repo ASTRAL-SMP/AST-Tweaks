@@ -7,6 +7,7 @@ import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.updatechecker.ResidualCleanup;
 import com.astral.asttweaks.util.KeyBindings;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,15 @@ public class ASTTweaks implements ClientModInitializer {
         FeatureManager.getInstance().init();
 
         LOGGER.info("AST-Tweaks initialized successfully!");
+
+        // 開発用: -Dasttweaks.mixinAudit=true（./gradlew runClient -PmixinAudit）で全 Mixin を強制適用して検証する
+        if (Boolean.getBoolean("asttweaks.mixinAudit")) {
+            ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+                LOGGER.info("Running Mixin audit...");
+                org.spongepowered.asm.mixin.MixinEnvironment.getCurrentEnvironment().audit();
+                LOGGER.info("Mixin audit finished");
+            });
+        }
     }
 
     public static ASTTweaks getInstance() {

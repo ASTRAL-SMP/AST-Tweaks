@@ -1,8 +1,5 @@
 package com.astral.asttweaks.util;
 
-import net.minecraft.client.util.InputUtil;
-import org.lwjgl.glfw.GLFW;
-
 import java.util.Objects;
 
 /**
@@ -37,18 +34,18 @@ public class KeyCombo {
     /**
      * 両キー同時押し判定。
      */
-    public boolean isPressed(long windowHandle) {
+    public boolean isPressed() {
         if (mainKey == -1) return false;
-        if (!isInputDown(windowHandle, mainKey, mainKeyType)) return false;
+        if (!isInputDown(mainKey, mainKeyType)) return false;
         if (modifierKey == -1) return true;
-        return isInputDown(windowHandle, modifierKey, modifierKeyType);
+        return isInputDown(modifierKey, modifierKeyType);
     }
 
-    private static boolean isInputDown(long windowHandle, int code, String type) {
+    private static boolean isInputDown(int code, String type) {
         if (TYPE_MOUSE.equals(type)) {
-            return GLFW.glfwGetMouseButton(windowHandle, code) == GLFW.GLFW_PRESS;
+            return KeyInput.isMouseDown(code);
         }
-        return GLFW.glfwGetKey(windowHandle, code) == GLFW.GLFW_PRESS;
+        return KeyInput.isKeyDown(code);
     }
 
     /**
@@ -69,9 +66,9 @@ public class KeyCombo {
     public static String getInputName(int code, String type) {
         if (code == -1) return "---";
         if (TYPE_MOUSE.equals(type)) {
-            return InputUtil.Type.MOUSE.createFromCode(code).getLocalizedText().getString();
+            return KeyInput.mouseName(code);
         }
-        return InputUtil.fromKeyCode(code, 0).getLocalizedText().getString();
+        return KeyInput.keyName(code);
     }
 
     /**

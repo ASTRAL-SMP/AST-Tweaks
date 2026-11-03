@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.sodium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.sodium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.lavahighlight.LavaHighlightConfig;
@@ -7,11 +8,11 @@ import me.jellysquid.mods.sodium.client.model.light.LightPipeline;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.quad.blender.ColorSampler;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockRenderView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,9 +20,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
+/^*
  * Mixin for Sodium's FluidRenderer to apply lava highlight colors.
- */
+ ^/
 @Mixin(value = FluidRenderer.class, remap = false)
 public abstract class SodiumFluidRendererMixin {
 
@@ -33,12 +34,12 @@ public abstract class SodiumFluidRendererMixin {
         method = "updateQuad",
         at = @At("TAIL")
     )
-    private void onUpdateQuad(ModelQuadView quad, BlockRenderView world, BlockPos pos,
+    private void onUpdateQuad(ModelQuadView quad, BlockAndTintGetter world, BlockPos pos,
                               LightPipeline lighter, Direction dir, float brightness,
                               ColorSampler<FluidState> colorSampler, FluidState fluidState,
                               CallbackInfo ci) {
         // Check if this is lava
-        if (!fluidState.isOf(Fluids.LAVA) && !fluidState.isOf(Fluids.FLOWING_LAVA)) {
+        if (!fluidState.is(Fluids.LAVA) && !fluidState.is(Fluids.FLOWING_LAVA)) {
             return;
         }
 
@@ -48,7 +49,7 @@ public abstract class SodiumFluidRendererMixin {
         }
 
         LavaHighlightConfig config = feature.getConfig();
-        boolean isSource = fluidState.isStill();
+        boolean isSource = fluidState.isSource();
 
         int color = -1;
         if (isSource && config.isHighlightSource()) {
@@ -79,3 +80,4 @@ public abstract class SodiumFluidRendererMixin {
         }
     }
 }
+*///?}

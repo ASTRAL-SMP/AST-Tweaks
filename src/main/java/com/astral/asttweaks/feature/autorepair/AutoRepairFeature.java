@@ -3,17 +3,18 @@ package com.astral.asttweaks.feature.autorepair;
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.TweakerooCompat;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.util.Enchants;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -106,32 +107,32 @@ public class AutoRepairFeature implements Feature {
         return config.getTargetSlot();
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (!config.isEnabled()) {
             return;
         }
 
-        if (client.player == null || client.world == null || client.isPaused()) {
+        if (client.player == null || client.level == null || client.isPaused()) {
             resetState();
             return;
         }
 
         // Don't process if in a GUI screen (except chat)
-        if (client.currentScreen != null) {
+        if (McClient.screen() != null) {
             return;
         }
 
         processStateMachine(client);
     }
 
-    private void processStateMachine(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    private void processStateMachine(Minecraft client) {
+        Player player = client.player;
 
         switch (currentState) {
             case IDLE:
                 // Check if we have experience bottles and items needing repair
                 if (hasExperienceBottle(player) && findNextRepairItem(player) != -1) {
-                    previousMainhandSlot = player.getInventory().selectedSlot;
+                    previousMainhandSlot = McClient.selectedSlot(player.getInventory());
                     // Disable Tweakeroo's AlmostBrokenTools to prevent interference
                     TweakerooCompat.disableAlmostBrokenTools();
                     currentState = State.SETUP_OFFHAND;
@@ -187,7 +188,7 @@ public class AutoRepairFeature implements Feature {
 
                 currentRepairSlot = repairSlot;
                 // Select target slot
-                player.getInventory().selectedSlot = targetSlot;
+                McClient.setSelectedSlot(player.getInventory(), targetSlot);
                 // 新規アイテムにつき in-flight 推定をリセット
                 bottlesInFlight = 0;
                 lastSeenDamage = -1;
@@ -237,13 +238,13 @@ public class AutoRepairFeature implements Feature {
      * 投擲済み（in-flight）ボトル本数の推定で残りダメージをカバーしきれていれば投擲を見送る。
      * これにより Clumps 環境で起こる「最後の大型オーブが repaired 済みアイテムに当たって XP バーへ漏れる」損失を抑制する。
      */
-    private void fastUseOffhand(MinecraftClient client, PlayerEntity player) {
-        if (client.interactionManager == null) return;
+    private void fastUseOffhand(Minecraft client, Player player) {
+        if (client.gameMode == null) return;
 
         ItemStack targetStack = currentRepairSlot != -1 && isArmorSlot(currentRepairSlot)
-                ? player.getInventory().getStack(currentRepairSlot)
-                : player.getMainHandStack();
-        int currentDamage = targetStack.getDamage();
+                ? player.getInventory().getItem(currentRepairSlot)
+                : player.getMainHandItem();
+        int currentDamage = targetStack.getDamageValue();
 
         // damage 更新を検知したら in-flight カウンタを巻き戻す
         if (lastSeenDamage == -1 || currentDamage < lastSeenDamage) {
@@ -278,7 +279,7 @@ public class AutoRepairFeature implements Feature {
             if (!hasExperienceBottleInOffhand(player)) {
                 break;
             }
-            client.interactionManager.interactItem(player, Hand.OFF_HAND);
+            client.gameMode.useItem(player, InteractionHand.OFF_HAND);
             actuallyThrown++;
         }
         bottlesInFlight += actuallyThrown;
@@ -288,7 +289,7 @@ public class AutoRepairFeature implements Feature {
      * damage=0 を観測した直後に同一 tick で swap-back と swap-in を実行する。
      * Mending 対象が mainhand に居ない時間を最小化することで、in-flight オーブの取りこぼしを減らす。
      */
-    private void swapToNextItemImmediate(MinecraftClient client, PlayerEntity player) {
+    private void swapToNextItemImmediate(Minecraft client, Player player) {
         int targetSlot = getTargetSlot();
 
         // 現アイテムを repaired として記録
@@ -327,7 +328,7 @@ public class AutoRepairFeature implements Feature {
         } else if (nextSlot != targetSlot) {
             swapSlots(client, player, nextSlot, targetSlot);
         }
-        player.getInventory().selectedSlot = targetSlot;
+        McClient.setSelectedSlot(player.getInventory(), targetSlot);
         currentRepairSlot = nextSlot;
 
         // in-flight 推定をリセット（新アイテム用）
@@ -355,7 +356,7 @@ public class AutoRepairFeature implements Feature {
      * 防具は装備したまま修繕する（Mending は装備中の armor にも適用されるため）。
      * スロット移動は行わないので常に成功。
      */
-    private boolean setupArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
+    private boolean setupArmorRepair(Minecraft client, Player player, int armorSlot) {
         armorDisplacedFromTargetSlot = -1;
         ASTTweaks.LOGGER.info("Set up armor repair (in-place): armorSlot={}", armorSlot);
         return true;
@@ -364,7 +365,7 @@ public class AutoRepairFeature implements Feature {
     /**
      * 装備のまま修繕したので戻す必要なし。
      */
-    private void teardownArmorRepair(MinecraftClient client, PlayerEntity player, int armorSlot) {
+    private void teardownArmorRepair(Minecraft client, Player player, int armorSlot) {
         // no-op: armor は装備したままなのでスロット移動は不要
     }
 
@@ -372,10 +373,10 @@ public class AutoRepairFeature implements Feature {
      * main inventory (9-35) から空きスロットを探す。なければ -1。
      * hotbar や offhand は除外（既に何か入っている前提）。
      */
-    private int findEmptyMainInvSlot(PlayerEntity player) {
-        PlayerInventory inv = player.getInventory();
+    private int findEmptyMainInvSlot(Player player) {
+        Inventory inv = player.getInventory();
         for (int i = 9; i < 36; i++) {
-            if (inv.getStack(i).isEmpty()) {
+            if (inv.getItem(i).isEmpty()) {
                 return i;
             }
         }
@@ -385,17 +386,17 @@ public class AutoRepairFeature implements Feature {
     /**
      * Check if player has experience bottle anywhere in inventory.
      */
-    private boolean hasExperienceBottle(PlayerEntity player) {
-        PlayerInventory inv = player.getInventory();
+    private boolean hasExperienceBottle(Player player) {
+        Inventory inv = player.getInventory();
 
         // Check offhand first
-        if (inv.offHand.get(0).getItem() == Items.EXPERIENCE_BOTTLE) {
+        if (inv.getItem(Inventory.SLOT_OFFHAND).getItem() == Items.EXPERIENCE_BOTTLE) {
             return true;
         }
 
         // Check main inventory
         for (int i = 0; i < 36; i++) {
-            if (inv.getStack(i).getItem() == Items.EXPERIENCE_BOTTLE) {
+            if (inv.getItem(i).getItem() == Items.EXPERIENCE_BOTTLE) {
                 return true;
             }
         }
@@ -406,22 +407,22 @@ public class AutoRepairFeature implements Feature {
     /**
      * Check if offhand contains experience bottle.
      */
-    private boolean hasExperienceBottleInOffhand(PlayerEntity player) {
-        return player.getOffHandStack().getItem() == Items.EXPERIENCE_BOTTLE;
+    private boolean hasExperienceBottleInOffhand(Player player) {
+        return player.getOffhandItem().getItem() == Items.EXPERIENCE_BOTTLE;
     }
 
     /**
      * Move experience bottle to offhand.
      */
-    private boolean moveExperienceBottleToOffhand(MinecraftClient client, PlayerEntity player) {
-        if (client.interactionManager == null) return false;
+    private boolean moveExperienceBottleToOffhand(Minecraft client, Player player) {
+        if (client.gameMode == null) return false;
 
-        PlayerInventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
 
         // Find experience bottle in inventory
         int bottleSlot = -1;
         for (int i = 0; i < 36; i++) {
-            if (inv.getStack(i).getItem() == Items.EXPERIENCE_BOTTLE) {
+            if (inv.getItem(i).getItem() == Items.EXPERIENCE_BOTTLE) {
                 bottleSlot = i;
                 break;
             }
@@ -433,7 +434,7 @@ public class AutoRepairFeature implements Feature {
 
         // 最初の呼び出し時、オフハンドにアイテムがあれば退避先を記録
         if (!hadOffhandItem) {
-            ItemStack offhandStack = inv.offHand.get(0);
+            ItemStack offhandStack = inv.getItem(Inventory.SLOT_OFFHAND);
             if (!offhandStack.isEmpty() && offhandStack.getItem() != Items.EXPERIENCE_BOTTLE) {
                 hadOffhandItem = true;
                 originalOffhandDisplacedSlot = bottleSlot;
@@ -451,29 +452,29 @@ public class AutoRepairFeature implements Feature {
 
         // Swap bottle with offhand using SWAP action
         // First pick up the bottle
-        client.interactionManager.clickSlot(
-                player.currentScreenHandler.syncId,
+        client.gameMode.handleContainerInput(
+                player.containerMenu.containerId,
                 screenSlot,
                 0,
-                SlotActionType.PICKUP,
+                ContainerInput.PICKUP,
                 player
         );
 
         // Then put it in offhand
-        client.interactionManager.clickSlot(
-                player.currentScreenHandler.syncId,
+        client.gameMode.handleContainerInput(
+                player.containerMenu.containerId,
                 offhandScreenSlot,
                 0,
-                SlotActionType.PICKUP,
+                ContainerInput.PICKUP,
                 player
         );
 
         // If there was something in offhand, put it back
-        client.interactionManager.clickSlot(
-                player.currentScreenHandler.syncId,
+        client.gameMode.handleContainerInput(
+                player.containerMenu.containerId,
                 screenSlot,
                 0,
-                SlotActionType.PICKUP,
+                ContainerInput.PICKUP,
                 player
         );
 
@@ -486,19 +487,19 @@ public class AutoRepairFeature implements Feature {
      * Returns the inventory slot, or -1 if none found.
      * Excludes slots that have already been repaired this session.
      */
-    private int findNextRepairItem(PlayerEntity player) {
-        PlayerInventory inv = player.getInventory();
+    private int findNextRepairItem(Player player) {
+        Inventory inv = player.getInventory();
 
         // Check hotbar first (slots 0-8)
         for (int i = 0; i < 9; i++) {
-            if (!repairedSlots.contains(i) && needsRepair(inv.getStack(i))) {
+            if (!repairedSlots.contains(i) && needsRepair(inv.getItem(i))) {
                 return i;
             }
         }
 
         // Then check main inventory (slots 9-35)
         for (int i = 9; i < 36; i++) {
-            if (!repairedSlots.contains(i) && needsRepair(inv.getStack(i))) {
+            if (!repairedSlots.contains(i) && needsRepair(inv.getItem(i))) {
                 return i;
             }
         }
@@ -507,7 +508,7 @@ public class AutoRepairFeature implements Feature {
         // 設定でオフの場合はスキップ
         if (config.shouldRepairArmor()) {
             for (int i = ARMOR_SLOT_FIRST; i <= ARMOR_SLOT_LAST; i++) {
-                if (!repairedSlots.contains(i) && needsRepair(inv.getStack(i))) {
+                if (!repairedSlots.contains(i) && needsRepair(inv.getItem(i))) {
                     return i;
                 }
             }
@@ -525,7 +526,7 @@ public class AutoRepairFeature implements Feature {
         }
 
         // Check if item is damageable
-        if (!stack.isDamageable()) {
+        if (!stack.isDamageableItem()) {
             return false;
         }
 
@@ -540,34 +541,34 @@ public class AutoRepairFeature implements Feature {
         }
 
         // Check if item has any damage
-        return stack.getDamage() > 0;
+        return stack.getDamageValue() > 0;
     }
 
     /**
      * Check if an item has the Mending enchantment.
      */
     private boolean hasMending(ItemStack stack) {
-        return EnchantmentHelper.getLevel(Enchantments.MENDING, stack) > 0;
+        return Enchants.has(stack, Enchantments.MENDING);
     }
 
     /**
      * 現在の修繕対象が damage=0 まで戻ったかチェック。
      * armor (装備のまま修繕) の場合は対象 armor スロットを、それ以外は mainhand を見る。
      */
-    private boolean isCurrentItemFullyRepaired(PlayerEntity player) {
+    private boolean isCurrentItemFullyRepaired(Player player) {
         ItemStack target = currentRepairSlot != -1 && isArmorSlot(currentRepairSlot)
-                ? player.getInventory().getStack(currentRepairSlot)
-                : player.getMainHandStack();
-        if (target.isEmpty() || !target.isDamageable()) {
+                ? player.getInventory().getItem(currentRepairSlot)
+                : player.getMainHandItem();
+        if (target.isEmpty() || !target.isDamageableItem()) {
             return true;
         }
-        return target.getDamage() == 0;
+        return target.getDamageValue() == 0;
     }
 
     /**
      * Move item from given slot to target slot.
      */
-    private void moveItemToMainhand(MinecraftClient client, PlayerEntity player, int fromSlot) {
+    private void moveItemToMainhand(Minecraft client, Player player, int fromSlot) {
         int targetSlot = getTargetSlot();
         swapSlots(client, player, fromSlot, targetSlot);
         ASTTweaks.LOGGER.info("Moving item from slot {} to target slot {}", fromSlot, targetSlot);
@@ -576,8 +577,8 @@ public class AutoRepairFeature implements Feature {
     /**
      * Swap two inventory slots.
      */
-    private void swapSlots(MinecraftClient client, PlayerEntity player, int slot1, int slot2) {
-        if (client.interactionManager == null) return;
+    private void swapSlots(Minecraft client, Player player, int slot1, int slot2) {
+        if (client.gameMode == null) return;
 
         // Use number key swap for hotbar slots
         if (slot2 < 9) {
@@ -585,22 +586,22 @@ public class AutoRepairFeature implements Feature {
             int screenSlot1 = slot1 < 9 ? slot1 + 36 : slot1;
 
             // SWAP action with hotbar key
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     screenSlot1,
                     slot2,
-                    SlotActionType.SWAP,
+                    ContainerInput.SWAP,
                     player
             );
         } else if (slot1 < 9) {
             // Swap other way
             int screenSlot2 = slot2 < 9 ? slot2 + 36 : slot2;
 
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     screenSlot2,
                     slot1,
-                    SlotActionType.SWAP,
+                    ContainerInput.SWAP,
                     player
             );
         }
@@ -609,41 +610,41 @@ public class AutoRepairFeature implements Feature {
     /**
      * Finish repair and restore player's original state.
      */
-    private void finishRepair(MinecraftClient client, PlayerEntity player) {
+    private void finishRepair(Minecraft client, Player player) {
         // Restore original selected slot
-        if (previousMainhandSlot != -1 && previousMainhandSlot != player.getInventory().selectedSlot) {
-            player.getInventory().selectedSlot = previousMainhandSlot;
+        if (previousMainhandSlot != -1 && previousMainhandSlot != McClient.selectedSlot(player.getInventory())) {
+            McClient.setSelectedSlot(player.getInventory(), previousMainhandSlot);
         }
 
         // オフハンドに退避されたアイテムを復元
-        if (hadOffhandItem && originalOffhandDisplacedSlot != -1 && client.interactionManager != null) {
+        if (hadOffhandItem && originalOffhandDisplacedSlot != -1 && client.gameMode != null) {
             int screenSlot = originalOffhandDisplacedSlot < 9
                     ? originalOffhandDisplacedSlot + 36
                     : originalOffhandDisplacedSlot;
             int offhandScreenSlot = 45;
 
             // 退避先スロットのアイテムを拾う
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     screenSlot,
                     0,
-                    SlotActionType.PICKUP,
+                    ContainerInput.PICKUP,
                     player
             );
             // オフハンドに置く
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     offhandScreenSlot,
                     0,
-                    SlotActionType.PICKUP,
+                    ContainerInput.PICKUP,
                     player
             );
             // オフハンドにあったもの（経験値ボトル等）を元のスロットに戻す
-            client.interactionManager.clickSlot(
-                    player.currentScreenHandler.syncId,
+            client.gameMode.handleContainerInput(
+                    player.containerMenu.containerId,
                     screenSlot,
                     0,
-                    SlotActionType.PICKUP,
+                    ContainerInput.PICKUP,
                     player
             );
 

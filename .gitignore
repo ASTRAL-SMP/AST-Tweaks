@@ -17,3 +17,9 @@ build/
 
 # Fabric Loom
 run/
+bin/
+*.launch
+
+# Java
+hs_err_*.log
+*.hprof

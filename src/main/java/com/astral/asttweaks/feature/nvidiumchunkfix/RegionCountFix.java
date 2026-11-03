@@ -1,9 +1,10 @@
-package com.astral.asttweaks.feature.nvidiumchunkfix;
+//? if <1.20 {
+/*package com.astral.asttweaks.feature.nvidiumchunkfix;
 
 import com.astral.asttweaks.ASTTweaks;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
-/**
+/^*
  * Nvidium 0.1.x が 256 セクションすべてが埋まったリージョンを描画しない不具合の修正。
  *
  * RegionManager はリージョンのメタデータにセクション数（使用中の最大スロット + 1、最大 256）を
@@ -18,7 +19,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
  * 保持し、Java 側の詰め方をそれに合わせる（途中で機能を切り替えても両者は食い違わない）。
  *
  * Nvidium / Sodium のクラスを参照しないこと。
- */
+ ^/
 public final class RegionCountFix {
     public static final String SECTION_RASTER_TASK = "occlusion/section_raster/task.glsl";
 
@@ -39,10 +40,10 @@ public final class RegionCountFix {
     private RegionCountFix() {
     }
 
-    /**
+    /^*
      * section_raster/task.glsl のセクション数の読み方を「個数 - 1 + 1」に書き換える。
      * パイプライン生成時（シェーダーのコンパイル時）に呼ばれ、以降の Java 側の詰め方もこれで決まる。
-     */
+     ^/
     public static String patchSectionRasterTask(String source, boolean enabled) {
         active = false;
         if (!enabled) {
@@ -63,9 +64,9 @@ public final class RegionCountFix {
         return active;
     }
 
-    /**
+    /^*
      * リージョンのメタデータに詰めるセクション数を返す。count は使用中の最大スロット + 1（1〜256）。
-     */
+     ^/
     public static int encodeCount(int regionId, int count, int regionX, int regionY, int regionZ, boolean enabled) {
         if (count >= SECTIONS_PER_REGION) {
             if (FULL_REGIONS.add(regionId) && enabled && !fullRegionLogged) {
@@ -89,11 +90,12 @@ public final class RegionCountFix {
         return FULL_REGIONS.size();
     }
 
-    /**
+    /^*
      * 新しいパイプラインの生成時に呼ぶ（リージョン ID はパイプラインごとに振り直される）。
-     */
+     ^/
     public static void resetRegions() {
         FULL_REGIONS.clear();
         fullRegionLogged = false;
     }
 }
+*///?}

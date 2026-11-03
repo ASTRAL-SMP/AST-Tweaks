@@ -2,9 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.astral.asttweaks.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "${java}",
   "mixins": [
-    "DebugInfoSenderMixin"
+    ${server_mixins}
   ],
   "client": [
     "ClientPlayNetworkHandlerMixin",
@@ -17,12 +17,8 @@
     "AutoEatStopUsingItemMixin",
     "AutoMoveInputMixin",
     "PickBlockMixin",
-    "VillageDebugRendererAccessor",
-    "VillageDebugRendererBrainAccessor",
     "ScreenShouldCloseOnEscMixin",
-    "VoidTradeInputMixin",
-    "MerchantScreenAccessor",
-    "MerchantScreenHandlerAccessor"
+    ${client_mixins}
   ],
   "injectors": {
     "defaultRequire": 1

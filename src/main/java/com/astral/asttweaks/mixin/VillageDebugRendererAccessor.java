@@ -1,15 +1,17 @@
-package com.astral.asttweaks.mixin;
+//? if <26.1 {
+/*package com.astral.asttweaks.mixin;
 
-import net.minecraft.client.render.debug.VillageDebugRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.client.renderer.debug.BrainDebugRenderer;
 
-@Mixin(VillageDebugRenderer.class)
+@Mixin(BrainDebugRenderer.class)
 public interface VillageDebugRendererAccessor {
 
-    @Accessor("brains")
-    Map<UUID, VillageDebugRenderer.Brain> getBrains();
+    @Accessor("brainDumpsPerEntity")
+    Map<UUID, BrainDebugRenderer.BrainDump> getBrains();
 }
+*///?}

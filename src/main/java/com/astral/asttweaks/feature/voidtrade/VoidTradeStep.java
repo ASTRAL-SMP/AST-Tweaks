@@ -1,14 +1,15 @@
-package com.astral.asttweaks.feature.voidtrade;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.automove.MoveDirection;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
-/**
+/^*
  * Void Trade ワークフローの 1 ステップ。Gson でそのまま保存される。
  * 種別ごとに使うフィールドだけが意味を持つ（他は無視）。
- */
+ ^/
 public class VoidTradeStep {
     public VoidTradeStepType type = VoidTradeStepType.MOVE_TO;
     public int x;
@@ -44,9 +45,9 @@ public class VoidTradeStep {
         return nudgeDirection != null ? nudgeDirection : MoveDirection.LEFT;
     }
 
-    /**
+    /^*
      * 設定ファイルや共有テキストから読んだデータの欠けを補う。種別が不明（新しい版の種別など）なら false。
-     */
+     ^/
     public boolean sanitize() {
         if (type == null) {
             return false;
@@ -76,32 +77,33 @@ public class VoidTradeStep {
         return copy;
     }
 
-    /**
+    /^*
      * 一覧・ステータス表示用の 1 行説明。
-     */
-    public MutableText describe() {
+     ^/
+    public MutableComponent describe() {
         VoidTradeStepType stepType = getType();
         String prefix = "message." + ASTTweaks.MOD_ID + ".voidtrade.step.";
         String key = prefix + stepType.getId();
-        MutableText text = switch (stepType) {
+        MutableComponent text = switch (stepType) {
             case MOVE_TO -> {
-                MutableText move = Text.translatable(key, x, y, z);
+                MutableComponent move = Component.translatable(key, x, y, z);
                 if (keepFacing) {
-                    yield move.append(Text.translatable(prefix + "keepFacingSuffix"));
+                    yield move.append(Component.translatable(prefix + "keepFacingSuffix"));
                 }
-                yield sprint ? move.append(Text.translatable(prefix + "sprintSuffix")) : move;
+                yield sprint ? move.append(Component.translatable(prefix + "sprintSuffix")) : move;
             }
-            case NUDGE -> Text.translatable(key,
-                    Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + getNudgeDirection().getId()), nudgeTicks);
-            case INTERACT_ENTITY, INTERACT_BLOCK -> Text.translatable(key, x, y, z);
-            case WAIT -> Text.translatable(key, ticks);
+            case NUDGE -> Component.translatable(key,
+                    Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + getNudgeDirection().getId()), nudgeTicks);
+            case INTERACT_ENTITY, INTERACT_BLOCK -> Component.translatable(key, x, y, z);
+            case WAIT -> Component.translatable(key, ticks);
             case TRADE -> {
-                MutableText trade = useFavorites ? Text.translatable(prefix + "tradeFavorites") : Text.translatable(key, offerIndex);
-                yield dropOutput ? trade.append(Text.translatable(prefix + "dropSuffix")) : trade;
+                MutableComponent trade = useFavorites ? Component.translatable(prefix + "tradeFavorites") : Component.translatable(key, offerIndex);
+                yield dropOutput ? trade.append(Component.translatable(prefix + "dropSuffix")) : trade;
             }
-            case COMMAND -> Text.translatable(key, command != null ? command : "");
-            default -> Text.translatable(key);
+            case COMMAND -> Component.translatable(key, command != null ? command : "");
+            default -> Component.translatable(key);
         };
-        return firstLoopOnly ? Text.translatable(prefix + "firstLoopPrefix").append(text) : text;
+        return firstLoopOnly ? Component.translatable(prefix + "firstLoopPrefix").append(text) : text;
     }
 }
+*///?}

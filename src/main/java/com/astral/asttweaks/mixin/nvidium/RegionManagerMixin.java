@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
@@ -12,13 +13,13 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import java.util.function.IntConsumer;
 
-/**
+/^*
  * Nvidium のリージョン ID 解放を RenderPipeline に通知する（可視性統計のリセット用）。
  *
  * RegionManager はリージョンが空になると ID を IdProvider に返し、次に作られるリージョンがその ID を
  * 再利用する。可視性統計（RegionVisibilityTracker）は VRAM 上限での破棄時にしかリセットされないため、
  * 読み込まれたばかりのリージョンが前の持ち主の「長く見えていない」統計を引き継ぎ、最優先で破棄されてしまう。
- */
+ ^/
 @Mixin(value = RegionManager.class, remap = false)
 public abstract class RegionManagerMixin implements NvidiumRegionManagerExt {
     @Unique
@@ -44,3 +45,4 @@ public abstract class RegionManagerMixin implements NvidiumRegionManagerExt {
         return regionId;
     }
 }
+*///?}

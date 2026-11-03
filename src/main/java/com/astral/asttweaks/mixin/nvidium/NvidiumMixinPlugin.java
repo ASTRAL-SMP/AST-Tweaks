@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.compat.NvidiumCompat;
 import org.objectweb.asm.tree.ClassNode;
@@ -8,9 +9,9 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-/**
+/^*
  * Mixin plugin to apply the Nvidium Chunk Fix mixins only when a supported Nvidium (and Sodium) is loaded.
- */
+ ^/
 public class NvidiumMixinPlugin implements IMixinConfigPlugin {
 
     @Override
@@ -44,3 +45,4 @@ public class NvidiumMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 }
+*///?}

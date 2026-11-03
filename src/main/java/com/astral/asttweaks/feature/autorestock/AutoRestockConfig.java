@@ -1,28 +1,66 @@
 package com.astral.asttweaks.feature.autorestock;
 
+import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.config.ModConfig;
+import com.astral.asttweaks.util.VanillaItemData;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
-import net.minecraft.resource.featuretoggle.FeatureSet;
-import net.minecraft.util.Identifier;
-
+//? if >=26.1 {
+import com.mojang.serialization.Dynamic;
+//?}
+//? if >=26.1 {
+import java.lang.ref.WeakReference;
+//?}
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+//? if >=26.1 {
+import net.minecraft.SharedConstants;
+//?}
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.RegistryAccess;
+//? if >=26.1 {
+import net.minecraft.core.component.DataComponentPatch;
+//?}
+//? if >=26.1 {
+import net.minecraft.core.component.DataComponents;
+//?}
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+//? if >=26.1 {
+import net.minecraft.nbt.NbtOps;
+//?}
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
+//? if >=26.1 {
+import net.minecraft.resources.RegistryOps;
+//?}
+import net.minecraft.resources.Identifier;
+//? if >=26.1 {
+import net.minecraft.util.datafix.DataFixers;
+//?}
+//? if >=26.1 {
+import net.minecraft.util.datafix.fixes.References;
+//?}
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
  * Configuration wrapper for the Auto Restock feature.
  */
 public class AutoRestockConfig {
     public static final int OFFHAND_SLOT = 40;
+    //? if >=26.1 {
+    // Data version of Minecraft 1.19.4, which the previous builds of this mod targeted
+    private static final int LEGACY_DATA_VERSION = 3337;
+
+    private static boolean legacyEntriesMigrated = false;
+    private static WeakReference<RegistryAccess> canonicalizedFor = new WeakReference<>(null);
+    //?}
 
     public boolean isEnabled() {
         return ModConfig.getInstance().autoRestockEnabled;
@@ -99,8 +137,104 @@ public class AutoRestockConfig {
         if (ModConfig.getInstance().autoRestockEntries == null) {
             ModConfig.getInstance().autoRestockEntries = new ArrayList<>();
         }
-        return ModConfig.getInstance().autoRestockEntries;
+        List<AutoRestockEntry> entries = ModConfig.getInstance().autoRestockEntries;
+        //? if >=26.1 {
+        if (!legacyEntriesMigrated) {
+            legacyEntriesMigrated = true;
+            if (migrateLegacyEntries(entries)) {
+                ModConfig.getInstance().save();
+            }
+        }
+        Minecraft client = Minecraft.getInstance();
+        if (client.level != null && canonicalizedFor.get() != client.level.registryAccess()) {
+            canonicalizedFor = new WeakReference<>(client.level.registryAccess());
+            if (canonicalizeEntries(entries)) {
+                ModConfig.getInstance().save();
+            }
+        }
+        //?}
+        return entries;
     }
+
+    //? if >=26.1 {
+    /**
+     * Entries saved by the 1.19.4 builds hold the item's raw NBT ("tag"). Runs them through
+     * the vanilla DataFixer to get the data-component form this version stores.
+     */
+    private static boolean migrateLegacyEntries(List<AutoRestockEntry> entries) {
+        boolean changed = false;
+        for (AutoRestockEntry entry : entries) {
+            if (entry == null || entry.itemId == null || entry.nbt == null || entry.nbt.isBlank()) {
+                continue;
+            }
+            CompoundTag legacyTag;
+            try {
+                legacyTag = TagParser.parseCompoundFully(entry.nbt);
+            } catch (CommandSyntaxException e) {
+                continue;
+            }
+            if (!isLegacyItemTag(legacyTag)) {
+                continue;
+            }
+
+            CompoundTag legacyStack = new CompoundTag();
+            legacyStack.putString("id", entry.itemId);
+            legacyStack.putByte("Count", (byte) 1);
+            legacyStack.put("tag", legacyTag);
+            try {
+                Dynamic<Tag> fixed = DataFixers.getDataFixer().update(References.ITEM_STACK,
+                        new Dynamic<>(NbtOps.INSTANCE, legacyStack),
+                        LEGACY_DATA_VERSION, SharedConstants.getCurrentVersion().dataVersion().version());
+                if (!(fixed.getValue() instanceof CompoundTag stack)) {
+                    continue;
+                }
+                CompoundTag components = stack.getCompoundOrEmpty("components").copy();
+                components.remove("minecraft:damage");
+                entry.itemId = stack.getStringOr("id", entry.itemId);
+                entry.nbt = components.isEmpty() ? "" : components.toString();
+                changed = true;
+                ASTTweaks.LOGGER.info("Auto Restock: migrated 1.19.4 entry {} to {}", legacyStack, entry.nbt);
+            } catch (RuntimeException e) {
+                ASTTweaks.LOGGER.warn("Auto Restock: failed to migrate 1.19.4 entry {}", legacyStack, e);
+            }
+        }
+        return changed;
+    }
+
+    // Component patch keys are namespaced ("minecraft:enchantments", "!minecraft:food");
+    // 1.19.4 item NBT keys are not ("Enchantments", "display").
+    private static boolean isLegacyItemTag(CompoundTag tag) {
+        for (String key : tag.keySet()) {
+            if (key.indexOf(':') < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Re-encodes stored patches the same way {@link #getStackKey} does, so entries coming from
+     * the DataFixer (or older codec versions) keep matching. Needs the world's registries.
+     */
+    private boolean canonicalizeEntries(List<AutoRestockEntry> entries) {
+        boolean changed = false;
+        for (AutoRestockEntry entry : entries) {
+            if (entry == null || entry.nbt == null || entry.nbt.isBlank()) {
+                continue;
+            }
+            ItemStack stack = parseConfiguredStack(entry);
+            if (stack == null) {
+                continue;
+            }
+            String canonical = normalizeNbt(stack);
+            if (!canonical.equals(entry.nbt)) {
+                entry.nbt = canonical;
+                changed = true;
+            }
+        }
+        return changed;
+    }
+    //?}
 
     public AutoRestockEntry getEntry(ItemStack stack) {
         String key = getStackKey(stack);
@@ -137,7 +271,7 @@ public class AutoRestockConfig {
     public int getDesiredCount(ItemStack stack) {
         AutoRestockEntry entry = getEntry(stack);
         if (entry == null) {
-            return clampDesiredCount(stack, stack.getMaxCount());
+            return clampDesiredCount(stack, stack.getMaxStackSize());
         }
         return clampDesiredCount(stack, entry.desiredCount);
     }
@@ -148,10 +282,10 @@ public class AutoRestockConfig {
         }
 
         getEntries().add(new AutoRestockEntry(
-                Registries.ITEM.getId(stack.getItem()).toString(),
+                BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
                 normalizeNbt(stack),
                 List.of(findNextDefaultSlot()),
-                clampDesiredCount(stack, stack.getMaxCount())));
+                clampDesiredCount(stack, stack.getMaxStackSize())));
         ModConfig.getInstance().save();
     }
 
@@ -193,48 +327,93 @@ public class AutoRestockConfig {
     }
 
     public ItemStack getConfiguredStack(AutoRestockEntry entry) {
+        Item item = resolveItem(entry);
+        if (item == null) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = parseConfiguredStack(entry);
+        return stack != null ? stack : new ItemStack(item);
+    }
+
+    private static Item resolveItem(AutoRestockEntry entry) {
         Identifier identifier = Identifier.tryParse(entry.itemId);
         if (identifier == null) {
-            return ItemStack.EMPTY;
+            return null;
         }
-
-        Item item = Registries.ITEM.get(identifier);
+        Item item = BuiltInRegistries.ITEM.getValue(identifier);
         if (item == Items.AIR && !"minecraft:air".equals(entry.itemId)) {
-            return ItemStack.EMPTY;
+            return null;
         }
+        return item;
+    }
 
-        ItemStack stack = new ItemStack(item);
-        if (entry.nbt != null && !entry.nbt.isBlank()) {
-            try {
-                stack.setNbt(StringNbtReader.parse(entry.nbt));
-            } catch (CommandSyntaxException ignored) {
-                return new ItemStack(item);
-            }
+    /**
+     * The entry's stack with its stored components applied, or null if the item or the
+     * components can't be resolved.
+     */
+    private static ItemStack parseConfiguredStack(AutoRestockEntry entry) {
+        Item item = resolveItem(entry);
+        if (item == null) {
+            return null;
         }
-        return stack;
+        ItemStack stack = new ItemStack(item);
+        if (entry.nbt == null || entry.nbt.isBlank()) {
+            return stack;
+        }
+        //? if >=26.1 {
+        try {
+            Tag tag = TagParser.parseCompoundFully(entry.nbt);
+            Optional<DataComponentPatch> patch = DataComponentPatch.CODEC.parse(registryOps(), tag).result();
+            if (patch.isEmpty()) {
+                return null;
+            }
+            stack.applyComponents(patch.get());
+            return stack;
+        } catch (CommandSyntaxException e) {
+            return null;
+        }
+        //?} else {
+        /*try {
+            stack.setTag(TagParser.parseTag(entry.nbt));
+            return stack;
+        } catch (CommandSyntaxException e) {
+            return null;
+        }
+        *///?}
     }
 
     public static String getStackKey(ItemStack stack) {
         if (stack.isEmpty()) {
             return "";
         }
-        return Registries.ITEM.getId(stack.getItem()) + "|" + normalizeNbt(stack);
+        return BuiltInRegistries.ITEM.getKey(stack.getItem()) + "|" + normalizeNbt(stack);
     }
 
     public static boolean matches(ItemStack expected, ItemStack actual) {
         return !expected.isEmpty()
                 && !actual.isEmpty()
-                && expected.isOf(actual.getItem())
+                && expected.is(actual.getItem())
                 && normalizeNbt(expected).equals(normalizeNbt(actual));
     }
 
-    public static FeatureSet getDefaultEnabledFeatures() {
-        return FeatureFlags.VANILLA_FEATURES;
+    public static FeatureFlagSet getDefaultEnabledFeatures() {
+        return FeatureFlags.VANILLA_SET;
     }
 
-    public static DynamicRegistryManager getDefaultRegistryLookup() {
-        return DynamicRegistryManager.EMPTY;
+    public static RegistryAccess getDefaultRegistryLookup() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level != null) {
+            return client.level.registryAccess();
+        }
+        RegistryAccess vanilla = VanillaItemData.registries();
+        return vanilla != null ? vanilla : RegistryAccess.EMPTY;
     }
+
+    //? if >=26.1 {
+    private static RegistryOps<Tag> registryOps() {
+        return getDefaultRegistryLookup().createSerializationContext(NbtOps.INSTANCE);
+    }
+    //?}
 
     private String getEntryKey(AutoRestockEntry entry) {
         return entry.itemId + "|" + (entry.nbt != null ? entry.nbt : "");
@@ -300,13 +479,22 @@ public class AutoRestockConfig {
     }
 
     private static String normalizeNbt(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
+        //? if >=26.1 {
+        DataComponentPatch patch = stack.getComponentsPatch().forget(type -> type == DataComponents.DAMAGE);
+        if (patch.isEmpty()) {
+            return "";
+        }
+        return DataComponentPatch.CODEC.encodeStart(registryOps(), patch).result()
+                .map(Tag::toString)
+                .orElse("");
+        //?} else {
+        /*CompoundTag nbt = stack.getTag();
         if (nbt == null) {
             return "";
         }
-
-        NbtCompound normalized = nbt.copy();
-        normalized.remove(ItemStack.DAMAGE_KEY);
+        CompoundTag normalized = nbt.copy();
+        normalized.remove(ItemStack.TAG_DAMAGE);
         return normalized.isEmpty() ? "" : normalized.toString();
+        *///?}
     }
 }

@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
@@ -9,10 +10,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-/**
+/^*
  * リージョンのメタデータに詰めるセクション数を、シェーダーの読み方に合わせて「個数 - 1」にする
  * （{@link RegionCountFix}）。あわせて全スロットが埋まったリージョンを数える（F3 表示・ログ用）。
- */
+ ^/
 @Mixin(targets = "me.cortex.nvidium.managers.RegionManager$Region", remap = false)
 public abstract class RegionMixin {
     @Shadow
@@ -42,3 +43,4 @@ public abstract class RegionMixin {
         return RegionCountFix.encodeCount(this.id, count, this.rx, this.ry, this.rz, enabled);
     }
 }
+*///?}

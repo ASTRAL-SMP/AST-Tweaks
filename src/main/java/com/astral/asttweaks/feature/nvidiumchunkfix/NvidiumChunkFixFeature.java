@@ -1,10 +1,11 @@
-package com.astral.asttweaks.feature.nvidiumchunkfix;
+//? if <1.20 {
+/*package com.astral.asttweaks.feature.nvidiumchunkfix;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.compat.NvidiumCompat;
 import com.astral.asttweaks.feature.Feature;
 
-/**
+/^*
  * Nvidium（特に Bobby 併用時）で地形がリージョン単位（8x4x8 セクション = 128x64x128 ブロック）で
  * 抜け落ち、ブロック更新か F3+A まで戻らない問題の修正。
  *
@@ -28,7 +29,7 @@ import com.astral.asttweaks.feature.Feature;
  *
  * シェーダーはパイプライン生成時にコンパイルされるため、有効/無効の切り替えは次のレンダラー
  * 再ロード（F3+A 等）から反映される。対象外バージョンの Nvidium・未導入時は mixin 自体が適用されず no-op。
- */
+ ^/
 public class NvidiumChunkFixFeature implements Feature {
     private final NvidiumChunkFixConfig config = new NvidiumChunkFixConfig();
 
@@ -73,3 +74,4 @@ public class NvidiumChunkFixFeature implements Feature {
         return config;
     }
 }
+*///?}
