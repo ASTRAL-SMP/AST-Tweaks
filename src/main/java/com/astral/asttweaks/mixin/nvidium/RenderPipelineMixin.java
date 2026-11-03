@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.EvictedSections;
@@ -9,7 +10,7 @@ import me.cortex.nvidium.RenderPipeline;
 import me.cortex.nvidium.managers.RegionManager;
 import me.cortex.nvidium.managers.RegionVisibilityTracker;
 import me.cortex.nvidium.managers.SectionManager;
-import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.core.SectionPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,11 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-/**
+/^*
  * Nvidium がリージョンを GPU から破棄したとき（VRAM 上限・region_keep_distance 超過）に、
  * そのリージョンにあったセクションを記録して Sodium 側で再ビルドさせる。
  * 実際の再ビルド予約は {@link SodiumRenderSectionManagerMixin} で行う。
- */
+ ^/
 @Mixin(value = RenderPipeline.class, remap = false)
 public abstract class RenderPipelineMixin {
     @Shadow
@@ -63,14 +64,14 @@ public abstract class RenderPipelineMixin {
 
         // リージョンは 8x4x8 セクション（SectionManager.removeRegionById と同じ展開）
         long regionKey = regions.regionIdToKey(id);
-        int baseX = ChunkSectionPos.unpackX(regionKey) << 3;
-        int baseY = ChunkSectionPos.unpackY(regionKey) << 2;
-        int baseZ = ChunkSectionPos.unpackZ(regionKey) << 3;
+        int baseX = SectionPos.x(regionKey) << 3;
+        int baseY = SectionPos.y(regionKey) << 2;
+        int baseZ = SectionPos.z(regionKey) << 3;
         for (int x = baseX; x < baseX + 8; x++) {
             for (int y = baseY; y < baseY + 4; y++) {
                 for (int z = baseZ; z < baseZ + 8; z++) {
                     if (this.sectionManager.getSectionRegionIndex(x, y, z) != -1) {
-                        EvictedSections.add(ChunkSectionPos.asLong(x, y, z));
+                        EvictedSections.add(SectionPos.asLong(x, y, z));
                     }
                 }
             }
@@ -96,3 +97,4 @@ public abstract class RenderPipelineMixin {
         return feature != null && feature.isEnabled();
     }
 }
+*///?}

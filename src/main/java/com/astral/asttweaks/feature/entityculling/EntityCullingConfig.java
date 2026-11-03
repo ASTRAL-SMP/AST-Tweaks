@@ -1,13 +1,12 @@
 package com.astral.asttweaks.feature.entityculling;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import java.util.Collection;
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 
 /**
  * Configuration wrapper for entity culling feature.
@@ -80,7 +79,7 @@ public class EntityCullingConfig {
 
     // Entity blacklist methods
     public boolean isEntityBlacklisted(EntityType<?> entityType) {
-        Identifier id = Registries.ENTITY_TYPE.getId(entityType);
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
         return ModConfig.getInstance().entityBlacklist.contains(id.toString());
     }
 
@@ -89,13 +88,13 @@ public class EntityCullingConfig {
     }
 
     public void addToEntityBlacklist(EntityType<?> entityType) {
-        Identifier id = Registries.ENTITY_TYPE.getId(entityType);
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
         ModConfig.getInstance().entityBlacklist.add(id.toString());
         ModConfig.getInstance().save();
     }
 
     public void removeFromEntityBlacklist(EntityType<?> entityType) {
-        Identifier id = Registries.ENTITY_TYPE.getId(entityType);
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
         ModConfig.getInstance().entityBlacklist.remove(id.toString());
         ModConfig.getInstance().save();
     }
@@ -114,7 +113,7 @@ public class EntityCullingConfig {
 
     // Item entity blacklist methods
     public boolean isItemBlacklisted(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         return ModConfig.getInstance().itemEntityBlacklist.contains(id.toString());
     }
 
@@ -123,13 +122,13 @@ public class EntityCullingConfig {
     }
 
     public void addToItemBlacklist(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         ModConfig.getInstance().itemEntityBlacklist.add(id.toString());
         ModConfig.getInstance().save();
     }
 
     public void removeFromItemBlacklist(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         ModConfig.getInstance().itemEntityBlacklist.remove(id.toString());
         ModConfig.getInstance().save();
     }
@@ -149,7 +148,7 @@ public class EntityCullingConfig {
     // Bulk entity operations
     public void hideAllEntities(Collection<EntityType<?>> entityTypes) {
         for (EntityType<?> type : entityTypes) {
-            Identifier id = Registries.ENTITY_TYPE.getId(type);
+            Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
             ModConfig.getInstance().entityBlacklist.add(id.toString());
         }
         ModConfig.getInstance().save();
@@ -163,7 +162,7 @@ public class EntityCullingConfig {
     // Bulk item operations
     public void hideAllItems(Collection<Item> items) {
         for (Item item : items) {
-            Identifier id = Registries.ITEM.getId(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             ModConfig.getInstance().itemEntityBlacklist.add(id.toString());
         }
         ModConfig.getInstance().save();

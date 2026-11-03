@@ -1,24 +1,29 @@
 package com.astral.asttweaks.feature.updatechecker;
 
 import com.astral.asttweaks.ASTTweaks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Util;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.Gfx;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+//? if >=26.1 {
+import net.minecraft.util.Util;
+//?} else {
+/*import net.minecraft.Util;
+*///?}
 
 /**
  * Xaero-style popup screen shown over the title screen when a new mod
  * version is available. Offers to download the new jar in-place, open the
  * GitHub release page in a browser, dismiss for the session, or skip the version.
  */
-public class UpdateAvailableScreen extends Screen {
+public class UpdateAvailableScreen extends CompatScreen {
 
     private static final int BUTTON_WIDTH = 160;
     private static final int BUTTON_HEIGHT = 20;
@@ -32,10 +37,10 @@ public class UpdateAvailableScreen extends Screen {
     private final String latestVersionNumber;
     private final String currentVersion;
 
-    private ButtonWidget updateButton;
-    private ButtonWidget openPageButton;
-    private ButtonWidget laterButton;
-    private ButtonWidget skipButton;
+    private Button updateButton;
+    private Button openPageButton;
+    private Button laterButton;
+    private Button skipButton;
 
     private enum State { PROMPT, DOWNLOADING, SUCCESS, FAILED }
 
@@ -47,7 +52,7 @@ public class UpdateAvailableScreen extends Screen {
                                  UpdateCheckerFeature feature,
                                  GitHubRelease latestRelease,
                                  String currentVersion) {
-        super(Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.title"));
+        super(Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.title"));
         this.parent = parent;
         this.feature = feature;
         this.latestRelease = latestRelease;
@@ -63,25 +68,25 @@ public class UpdateAvailableScreen extends Screen {
         int firstButtonY = this.height / 2 + 10;
         int buttonX = (this.width - BUTTON_WIDTH) / 2;
 
-        this.updateButton = this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.update"),
+        this.updateButton = this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.update"),
                 b -> startDownload()
-        ).dimensions(buttonX, firstButtonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        ).bounds(buttonX, firstButtonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
-        this.openPageButton = this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.openPage"),
+        this.openPageButton = this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.openPage"),
                 b -> openProjectPage()
-        ).dimensions(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING), BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        ).bounds(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING), BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
-        this.laterButton = this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.later"),
-                b -> close()
-        ).dimensions(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        this.laterButton = this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.later"),
+                b -> onClose()
+        ).bounds(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
-        this.skipButton = this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.skip"),
+        this.skipButton = this.addRenderableWidget(Button.builder(
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.skip"),
                 b -> skipThisVersion()
-        ).dimensions(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        ).bounds(buttonX, firstButtonY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
         applyStateToButtons();
     }
@@ -106,7 +111,7 @@ public class UpdateAvailableScreen extends Screen {
         if (laterButton != null) {
             laterButton.active = !downloading;
             if (finished) {
-                laterButton.setMessage(Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.close"));
+                laterButton.setMessage(Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.button.close"));
             }
         }
     }
@@ -118,7 +123,7 @@ public class UpdateAvailableScreen extends Screen {
 
         UpdateDownloader.downloadAsync(latestRelease, p -> progressPercent = (int) Math.round(p * 100))
                 .thenAccept(result -> {
-                    MinecraftClient.getInstance().execute(() -> {
+                    Minecraft.getInstance().execute(() -> {
                         if (result.success) {
                             state = State.SUCCESS;
                             feature.markUpdateInstalled(latestVersionNumber);
@@ -130,7 +135,7 @@ public class UpdateAvailableScreen extends Screen {
                     });
                 })
                 .exceptionally(t -> {
-                    MinecraftClient.getInstance().execute(() -> {
+                    Minecraft.getInstance().execute(() -> {
                         state = State.FAILED;
                         errorMessage = t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage();
                         applyStateToButtons();
@@ -146,107 +151,114 @@ public class UpdateAvailableScreen extends Screen {
             if (repo == null || repo.isBlank()) return;
             url = "https://github.com/" + repo + "/releases";
         }
-        if (this.client == null) {
+        if (this.minecraft == null) {
             return;
         }
         final String finalUrl = url;
-        this.client.setScreen(new ConfirmLinkScreen(confirmed -> {
+        //? if >=26.3 {
+        /*// 26.3 で URL を開く処理が Blaze3D に移り、ConfirmLinkScreen も URI を受け取るようになった
+        java.net.URI uri = java.net.URI.create(finalUrl);
+        McClient.setScreen(new ConfirmLinkScreen(confirmed -> {
             if (confirmed) {
-                Util.getOperatingSystem().open(finalUrl);
+                com.mojang.blaze3d.Blaze3D.openUri(uri);
             }
-            this.client.setScreen(this);
+            McClient.setScreen(this);
+        }, uri, true));
+        *///?} else {
+        McClient.setScreen(new ConfirmLinkScreen(confirmed -> {
+            if (confirmed) {
+                Util.getPlatform().openUri(finalUrl);
+            }
+            McClient.setScreen(this);
         }, finalUrl, true));
+        //?}
     }
 
     private void skipThisVersion() {
         feature.skipVersion(latestVersionNumber);
-        close();
+        onClose();
     }
 
     @Override
-    public void close() {
-        if (this.client != null) {
-            this.client.setScreen(parent);
+    public void onClose() {
+        if (this.minecraft != null) {
+            McClient.setScreen(parent);
         }
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
-
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
         int panelWidth = Math.min(PANEL_WIDTH, this.width - 20);
         int panelX = (this.width - panelWidth) / 2;
         int panelTop = this.height / 2 - 110;
         int panelBottom = this.height / 2 + 130;
 
-        fill(matrices, panelX, panelTop, panelX + panelWidth, panelBottom, 0xC0101010);
-        drawHorizontalLine(matrices, panelX, panelX + panelWidth - 1, panelTop, 0xFF404040);
-        drawHorizontalLine(matrices, panelX, panelX + panelWidth - 1, panelBottom - 1, 0xFF404040);
-        drawVerticalLine(matrices, panelX, panelTop, panelBottom - 1, 0xFF404040);
-        drawVerticalLine(matrices, panelX + panelWidth - 1, panelTop, panelBottom - 1, 0xFF404040);
+        gfx.fill(panelX, panelTop, panelX + panelWidth, panelBottom, 0xC0101010);
+        gfx.hLine(panelX, panelX + panelWidth - 1, panelTop, 0xFF404040);
+        gfx.hLine(panelX, panelX + panelWidth - 1, panelBottom - 1, 0xFF404040);
+        gfx.vLine(panelX, panelTop, panelBottom - 1, 0xFF404040);
+        gfx.vLine(panelX + panelWidth - 1, panelTop, panelBottom - 1, 0xFF404040);
 
-        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, panelTop + PANEL_PADDING, 0xFFFFFF);
-        drawCenteredTextWithShadow(
-                matrices,
-                this.textRenderer,
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.heading").formatted(Formatting.YELLOW),
+        gfx.centeredText(this.font, this.title, this.width / 2, panelTop + PANEL_PADDING, 0xFFFFFFFF);
+        gfx.centeredText(
+                this.font,
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.heading").withStyle(ChatFormatting.YELLOW),
                 this.width / 2,
                 panelTop + PANEL_PADDING + 14,
-                0xFFFFFF
+                0xFFFFFFFF
         );
-        drawCenteredTextWithShadow(
-                matrices,
-                this.textRenderer,
-                Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.versions", currentVersion, latestVersionNumber),
+        gfx.centeredText(
+                this.font,
+                Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.versions", currentVersion, latestVersionNumber),
                 this.width / 2,
                 panelTop + PANEL_PADDING + 30,
-                0xFFFFFF
+                0xFFFFFFFF
         );
 
-        renderWrappedDescription(matrices, panelX, panelTop, panelWidth);
-        renderStatusLine(matrices, panelX, panelWidth);
+        renderWrappedDescription(gfx, panelX, panelTop, panelWidth);
+        renderStatusLine(gfx, panelX, panelWidth);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
-    private void renderWrappedDescription(MatrixStack matrices, int panelX, int panelTop, int panelWidth) {
-        Text description = Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.description");
-        List<OrderedText> lines = this.textRenderer.wrapLines(description, panelWidth - PANEL_PADDING * 2);
+    private void renderWrappedDescription(Gfx gfx, int panelX, int panelTop, int panelWidth) {
+        Component description = Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.description");
+        List<FormattedCharSequence> lines = this.font.split(description, panelWidth - PANEL_PADDING * 2);
         int y = panelTop + PANEL_PADDING + 50;
-        for (OrderedText line : lines) {
-            int x = (this.width - this.textRenderer.getWidth(line)) / 2;
-            this.textRenderer.drawWithShadow(matrices, line, x, y, 0xCCCCCC);
+        for (FormattedCharSequence line : lines) {
+            int x = (this.width - this.font.width(line)) / 2;
+            gfx.text(this.font, line, x, y, 0xFFCCCCCC);
             y += 11;
         }
     }
 
-    private void renderStatusLine(MatrixStack matrices, int panelX, int panelWidth) {
-        Text status = null;
-        int color = 0xFFFFFF;
+    private void renderStatusLine(Gfx gfx, int panelX, int panelWidth) {
+        Component status = null;
+        int color = 0xFFFFFFFF;
         switch (state) {
             case DOWNLOADING -> {
-                status = Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.downloading", progressPercent);
-                color = 0xFFFF55;
+                status = Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.downloading", progressPercent);
+                color = 0xFFFFFF55;
             }
             case SUCCESS -> {
-                status = Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.success");
-                color = 0x55FF55;
+                status = Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.success");
+                color = 0xFF55FF55;
             }
             case FAILED -> {
-                status = Text.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.failed", errorMessage);
-                color = 0xFF5555;
+                status = Component.translatable("screen." + ASTTweaks.MOD_ID + ".updatechecker.status.failed", errorMessage);
+                color = 0xFFFF5555;
             }
             case PROMPT -> {
             }
         }
         if (status != null) {
             int y = this.height / 2 + 4;
-            drawCenteredTextWithShadow(matrices, this.textRenderer, status, this.width / 2, y, color);
+            gfx.centeredText(this.font, status, this.width / 2, y, color);
         }
     }
 }

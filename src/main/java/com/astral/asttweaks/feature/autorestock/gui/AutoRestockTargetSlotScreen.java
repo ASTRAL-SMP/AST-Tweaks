@@ -4,16 +4,18 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autorestock.AutoRestockConfig;
 import com.astral.asttweaks.feature.autorestock.AutoRestockFeature;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.Gfx;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Slot picker for a single auto restock entry.
  */
-public class AutoRestockTargetSlotScreen extends Screen {
+public class AutoRestockTargetSlotScreen extends CompatScreen {
     private static final int SLOT_SIZE = 20;
     private static final int SLOT_SPACING = 2;
     private static final int GRID_WIDTH = 9;
@@ -28,7 +30,7 @@ public class AutoRestockTargetSlotScreen extends Screen {
     private int gridY;
 
     public AutoRestockTargetSlotScreen(Screen parent, ItemStack stack) {
-        super(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.slotselect.title"));
+        super(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.slotselect.title"));
         this.parent = parent;
         this.stack = stack.copyWithCount(1);
         AutoRestockFeature feature = FeatureManager.getInstance().getAutoRestockFeature();
@@ -44,34 +46,32 @@ public class AutoRestockTargetSlotScreen extends Screen {
         this.gridX = (this.width - totalWidth) / 2;
         this.gridY = (this.height - totalHeight) / 2 - 10;
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        b -> this.client.setScreen(this.parent))
-                .dimensions(this.width / 2 - 100, this.height - 30, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        b -> McClient.setScreen(this.parent))
+                .bounds(this.width / 2 - 100, this.height - 30, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
+        int titleWidth = this.font.width(this.title);
+        gfx.text(this.font, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFFFF);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 15, 0xFFFFFF);
+        Component help = Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.slotselect.help");
+        int helpWidth = this.font.width(help);
+        gfx.text(this.font, help, this.width / 2 - helpWidth / 2, 30, 0xFFAAAAAA);
 
-        Text help = Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.slotselect.help");
-        int helpWidth = this.textRenderer.getWidth(help);
-        this.textRenderer.drawWithShadow(matrices, help, this.width / 2 - helpWidth / 2, 30, 0xAAAAAA);
-
-        this.client.getItemRenderer().renderInGuiWithOverrides(matrices, this.stack, this.width / 2 - 48, 42);
-        this.textRenderer.drawWithShadow(matrices, this.stack.getName(), this.width / 2 - 28, 47, 0xFFFFFF);
+        gfx.item(this.stack, this.width / 2 - 48, 42);
+        gfx.text(this.font, this.stack.getHoverName(), this.width / 2 - 28, 47, 0xFFFFFFFF);
 
         int armorY = gridY;
         for (int i = 0; i < ARMOR_SLOTS.length; i++) {
             int x = gridX + i * (SLOT_SIZE + SLOT_SPACING);
-            drawDisabledSlot(matrices, x, armorY, "A");
+            drawDisabledSlot(gfx, x, armorY, "A");
         }
         int offhandX = gridX + (GRID_WIDTH - 1) * (SLOT_SIZE + SLOT_SPACING);
-        drawSelectableSlot(matrices, offhandX, armorY, AutoRestockConfig.OFFHAND_SLOT, mouseX, mouseY, "Off");
+        drawSelectableSlot(gfx, offhandX, armorY, AutoRestockConfig.OFFHAND_SLOT, mouseX, mouseY, "Off");
 
         int mainStartY = armorY + SLOT_SIZE + SLOT_SPACING + 5;
         for (int row = 0; row < MAIN_ROWS; row++) {
@@ -79,38 +79,38 @@ public class AutoRestockTargetSlotScreen extends Screen {
                 int slot = 9 + row * GRID_WIDTH + col;
                 int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
                 int y = mainStartY + row * (SLOT_SIZE + SLOT_SPACING);
-                drawSelectableSlot(matrices, x, y, slot, mouseX, mouseY, null);
+                drawSelectableSlot(gfx, x, y, slot, mouseX, mouseY, null);
             }
         }
 
         int hotbarY = mainStartY + MAIN_ROWS * (SLOT_SIZE + SLOT_SPACING) + 10;
         for (int col = 0; col < GRID_WIDTH; col++) {
             int x = gridX + col * (SLOT_SIZE + SLOT_SPACING);
-            drawSelectableSlot(matrices, x, hotbarY, col, mouseX, mouseY, null);
+            drawSelectableSlot(gfx, x, hotbarY, col, mouseX, mouseY, null);
         }
 
-        drawLabel(matrices, Text.translatable("gui.asttweaks.inventory.armor"), armorY);
-        drawLabel(matrices, Text.translatable("gui.asttweaks.inventory.main"),
+        drawLabel(gfx, Component.translatable("gui.asttweaks.inventory.armor"), armorY);
+        drawLabel(gfx, Component.translatable("gui.asttweaks.inventory.main"),
                 mainStartY + (MAIN_ROWS * (SLOT_SIZE + SLOT_SPACING)) / 2 - SLOT_SIZE / 2);
-        drawLabel(matrices, Text.translatable("gui.asttweaks.inventory.hotbar"), hotbarY);
+        drawLabel(gfx, Component.translatable("gui.asttweaks.inventory.hotbar"), hotbarY);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
-    private void drawLabel(MatrixStack matrices, Text text, int y) {
-        this.textRenderer.drawWithShadow(matrices, text,
-                this.gridX - 5 - this.textRenderer.getWidth(text),
-                y + SLOT_SIZE / 2 - 4, 0x888888);
+    private void drawLabel(Gfx gfx, Component text, int y) {
+        gfx.text(this.font, text,
+                this.gridX - 5 - this.font.width(text),
+                y + SLOT_SIZE / 2 - 4, 0xFF888888);
     }
 
-    private void drawDisabledSlot(MatrixStack matrices, int x, int y, String label) {
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF303030);
-        drawBorder(matrices, x, y, 0xFF666666);
-        int textWidth = this.textRenderer.getWidth(label);
-        this.textRenderer.drawWithShadow(matrices, label, x + (SLOT_SIZE - textWidth) / 2, y + 6, 0xAAAAAA);
+    private void drawDisabledSlot(Gfx gfx, int x, int y, String label) {
+        gfx.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF303030);
+        drawBorder(gfx, x, y, 0xFF666666);
+        int textWidth = this.font.width(label);
+        gfx.text(this.font, label, x + (SLOT_SIZE - textWidth) / 2, y + 6, 0xFFAAAAAA);
     }
 
-    private void drawSelectableSlot(MatrixStack matrices, int x, int y, int slot, int mouseX, int mouseY, String overrideLabel) {
+    private void drawSelectableSlot(Gfx gfx, int x, int y, int slot, int mouseX, int mouseY, String overrideLabel) {
         boolean selected = this.config != null && this.config.isTargetSlotSelected(this.stack, slot);
         boolean hovered = mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE;
 
@@ -121,23 +121,23 @@ public class AutoRestockTargetSlotScreen extends Screen {
             bgColor = hovered ? 0xFF666666 : 0xFF444444;
         }
 
-        fill(matrices, x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
-        drawBorder(matrices, x, y, hovered ? 0xFFFFFFFF : 0xFF888888);
+        gfx.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, bgColor);
+        drawBorder(gfx, x, y, hovered ? 0xFFFFFFFF : 0xFF888888);
 
         String label = overrideLabel != null ? overrideLabel : String.valueOf(slot);
-        int textWidth = this.textRenderer.getWidth(label);
-        this.textRenderer.drawWithShadow(matrices, label, x + (SLOT_SIZE - textWidth) / 2, y + 6, 0xFFFFFF);
+        int textWidth = this.font.width(label);
+        gfx.text(this.font, label, x + (SLOT_SIZE - textWidth) / 2, y + 6, 0xFFFFFFFF);
     }
 
-    private void drawBorder(MatrixStack matrices, int x, int y, int color) {
-        fill(matrices, x, y, x + SLOT_SIZE, y + 1, color);
-        fill(matrices, x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, color);
-        fill(matrices, x, y, x + 1, y + SLOT_SIZE, color);
-        fill(matrices, x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, color);
+    private void drawBorder(Gfx gfx, int x, int y, int color) {
+        gfx.fill(x, y, x + SLOT_SIZE, y + 1, color);
+        gfx.fill(x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, color);
+        gfx.fill(x, y, x + 1, y + SLOT_SIZE, color);
+        gfx.fill(x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, color);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && this.config != null) {
             int armorY = gridY;
             int mainStartY = armorY + SLOT_SIZE + SLOT_SPACING + 5;
@@ -170,7 +170,7 @@ public class AutoRestockTargetSlotScreen extends Screen {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return superMouseClicked(mouseX, mouseY, button);
     }
 
     private boolean isIn(double mouseX, double mouseY, int x, int y) {
@@ -178,7 +178,7 @@ public class AutoRestockTargetSlotScreen extends Screen {
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(this.parent);
+    public void onClose() {
+        McClient.setScreen(this.parent);
     }
 }

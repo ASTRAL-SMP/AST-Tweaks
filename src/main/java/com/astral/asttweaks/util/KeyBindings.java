@@ -18,8 +18,8 @@ import com.astral.asttweaks.feature.mousesensitivity.MouseSensitivityFeature;
 import com.astral.asttweaks.feature.silktouchswitch.SilkTouchSwitchFeature;
 import com.astral.asttweaks.feature.villagerlink.VillagerLinkFeature;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 /**
  * キーバインド管理。
@@ -59,15 +59,14 @@ public class KeyBindings {
         // ティックハンドラ登録（全キーバインドをKeyCombo+エッジ検出で処理）
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) return;
-            long window = client.getWindow().getHandle();
             ModConfig config = ModConfig.getInstance();
 
             // GUI画面が開いているときはカスタムキーコンボを処理しない
             // （massGrindstone, inventorySort は各Featureクラス内で直接処理）
-            if (client.currentScreen != null) return;
+            if (McClient.screen() != null) return;
 
             // スコアボードトグル
-            boolean scoreboardToggleDown = config.scoreboardToggleKey.isPressed(window);
+            boolean scoreboardToggleDown = config.scoreboardToggleKey.isPressed();
             if (scoreboardToggleDown && !wasScoreboardToggleDown) {
                 ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
                 if (scoreboard != null) {
@@ -77,7 +76,7 @@ public class KeyBindings {
             wasScoreboardToggleDown = scoreboardToggleDown;
 
             // スコアボード上スクロール
-            boolean pageUpDown = config.scoreboardPageUpKey.isPressed(window);
+            boolean pageUpDown = config.scoreboardPageUpKey.isPressed();
             if (pageUpDown && !wasScoreboardPageUpDown) {
                 ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
                 if (scoreboard != null) {
@@ -87,7 +86,7 @@ public class KeyBindings {
             wasScoreboardPageUpDown = pageUpDown;
 
             // スコアボード下スクロール
-            boolean pageDownDown = config.scoreboardPageDownKey.isPressed(window);
+            boolean pageDownDown = config.scoreboardPageDownKey.isPressed();
             if (pageDownDown && !wasScoreboardPageDownDown) {
                 ScoreboardFeature scoreboard = FeatureManager.getInstance().getScoreboardFeature();
                 if (scoreboard != null) {
@@ -97,123 +96,117 @@ public class KeyBindings {
             wasScoreboardPageDownDown = pageDownDown;
 
             // 自動食事トグル
-            boolean autoEatDown = config.autoEatToggleKey.isPressed(window);
+            boolean autoEatDown = config.autoEatToggleKey.isPressed();
             if (autoEatDown && !wasAutoEatToggleDown) {
                 AutoEatFeature autoEat = FeatureManager.getInstance().getAutoEatFeature();
                 if (autoEat != null) {
                     boolean newState = !autoEat.isEnabled();
                     autoEat.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autoeat." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoEatToggleDown = autoEatDown;
 
             // 自動移動トグル
-            boolean autoMoveDown = config.autoMoveToggleKey.isPressed(window);
+            boolean autoMoveDown = config.autoMoveToggleKey.isPressed();
             if (autoMoveDown && !wasAutoMoveToggleDown) {
                 AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
                 if (autoMove != null) {
                     autoMove.toggle();
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove." + (autoMove.isMoving() ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove." + (autoMove.isMoving() ? "enabled" : "disabled")));
                 }
             }
             wasAutoMoveToggleDown = autoMoveDown;
 
             // 自動移動 方向別トグル
-            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD,
+            handleAutoMoveDirection(client, config, MoveDirection.FORWARD,
                     config.autoMoveForwardKey, wasAutoMoveForwardDown);
-            wasAutoMoveForwardDown = config.autoMoveForwardKey.isPressed(window);
+            wasAutoMoveForwardDown = config.autoMoveForwardKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD,
+            handleAutoMoveDirection(client, config, MoveDirection.BACKWARD,
                     config.autoMoveBackwardKey, wasAutoMoveBackwardDown);
-            wasAutoMoveBackwardDown = config.autoMoveBackwardKey.isPressed(window);
+            wasAutoMoveBackwardDown = config.autoMoveBackwardKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.LEFT,
+            handleAutoMoveDirection(client, config, MoveDirection.LEFT,
                     config.autoMoveLeftKey, wasAutoMoveLeftDown);
-            wasAutoMoveLeftDown = config.autoMoveLeftKey.isPressed(window);
+            wasAutoMoveLeftDown = config.autoMoveLeftKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.RIGHT,
+            handleAutoMoveDirection(client, config, MoveDirection.RIGHT,
                     config.autoMoveRightKey, wasAutoMoveRightDown);
-            wasAutoMoveRightDown = config.autoMoveRightKey.isPressed(window);
+            wasAutoMoveRightDown = config.autoMoveRightKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD_LEFT,
+            handleAutoMoveDirection(client, config, MoveDirection.FORWARD_LEFT,
                     config.autoMoveForwardLeftKey, wasAutoMoveForwardLeftDown);
-            wasAutoMoveForwardLeftDown = config.autoMoveForwardLeftKey.isPressed(window);
+            wasAutoMoveForwardLeftDown = config.autoMoveForwardLeftKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.FORWARD_RIGHT,
+            handleAutoMoveDirection(client, config, MoveDirection.FORWARD_RIGHT,
                     config.autoMoveForwardRightKey, wasAutoMoveForwardRightDown);
-            wasAutoMoveForwardRightDown = config.autoMoveForwardRightKey.isPressed(window);
+            wasAutoMoveForwardRightDown = config.autoMoveForwardRightKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD_LEFT,
+            handleAutoMoveDirection(client, config, MoveDirection.BACKWARD_LEFT,
                     config.autoMoveBackwardLeftKey, wasAutoMoveBackwardLeftDown);
-            wasAutoMoveBackwardLeftDown = config.autoMoveBackwardLeftKey.isPressed(window);
+            wasAutoMoveBackwardLeftDown = config.autoMoveBackwardLeftKey.isPressed();
 
-            handleAutoMoveDirection(client, config, window, MoveDirection.BACKWARD_RIGHT,
+            handleAutoMoveDirection(client, config, MoveDirection.BACKWARD_RIGHT,
                     config.autoMoveBackwardRightKey, wasAutoMoveBackwardRightDown);
-            wasAutoMoveBackwardRightDown = config.autoMoveBackwardRightKey.isPressed(window);
+            wasAutoMoveBackwardRightDown = config.autoMoveBackwardRightKey.isPressed();
 
             // 自動トーテムトグル
-            boolean autoTotemDown = config.autoTotemToggleKey.isPressed(window);
+            boolean autoTotemDown = config.autoTotemToggleKey.isPressed();
             if (autoTotemDown && !wasAutoTotemToggleDown) {
                 AutoTotemFeature autoTotem = FeatureManager.getInstance().getAutoTotemFeature();
                 if (autoTotem != null) {
                     boolean newState = !autoTotem.isEnabled();
                     autoTotem.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autototem." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoTotemToggleDown = autoTotemDown;
 
             // 自動修繕トグル
-            boolean autoRepairDown = config.autoRepairToggleKey.isPressed(window);
+            boolean autoRepairDown = config.autoRepairToggleKey.isPressed();
             if (autoRepairDown && !wasAutoRepairToggleDown) {
                 AutoRepairFeature autoRepair = FeatureManager.getInstance().getAutoRepairFeature();
                 if (autoRepair != null) {
                     boolean newState = !autoRepair.isEnabled();
                     autoRepair.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorepair." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRepairToggleDown = autoRepairDown;
 
             // 骨粉フィルタートグル
-            boolean boneMealDown = config.boneMealFilterToggleKey.isPressed(window);
+            boolean boneMealDown = config.boneMealFilterToggleKey.isPressed();
             if (boneMealDown && !wasBoneMealFilterToggleDown) {
                 BoneMealFilterFeature boneMealFilter = FeatureManager.getInstance().getBoneMealFilterFeature();
                 if (boneMealFilter != null) {
                     boolean newState = !boneMealFilter.isEnabled();
                     boneMealFilter.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".bonemealfilter." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasBoneMealFilterToggleDown = boneMealDown;
 
             // シルクタッチスイッチトグル
-            boolean silkTouchDown = config.silkTouchSwitchToggleKey.isPressed(window);
+            boolean silkTouchDown = config.silkTouchSwitchToggleKey.isPressed();
             if (silkTouchDown && !wasSilkTouchSwitchToggleDown) {
                 SilkTouchSwitchFeature silkTouchSwitch = FeatureManager.getInstance().getSilkTouchSwitchFeature();
                 if (silkTouchSwitch != null) {
                     boolean newState = !silkTouchSwitch.isEnabled();
                     silkTouchSwitch.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".silktouchswitch." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasSilkTouchSwitchToggleDown = silkTouchDown;
 
             // メモ帳を開く
-            boolean notepadDown = config.notepadOpenKey.isPressed(window);
+            boolean notepadDown = config.notepadOpenKey.isPressed();
             if (notepadDown && !wasNotepadOpenDown) {
                 NotepadFeature notepad = FeatureManager.getInstance().getNotepadFeature();
                 if (notepad != null) {
@@ -223,98 +216,91 @@ public class KeyBindings {
             wasNotepadOpenDown = notepadDown;
 
             // マウス感度トグル
-            boolean mouseSensDown = config.mouseSensitivityToggleKey.isPressed(window);
+            boolean mouseSensDown = config.mouseSensitivityToggleKey.isPressed();
             if (mouseSensDown && !wasMouseSensitivityToggleDown) {
                 MouseSensitivityFeature mouseSens = FeatureManager.getInstance().getMouseSensitivityFeature();
                 if (mouseSens != null && mouseSens.isEnabled()) {
                     int sensitivity = mouseSens.toggle();
                     if (mouseSens.isToggled()) {
-                        client.player.sendMessage(
-                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.activated", sensitivity),
-                                true);
+                        McClient.overlay(client.player, 
+                                Component.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.activated", sensitivity));
                     } else {
-                        client.player.sendMessage(
-                                Text.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.deactivated", sensitivity),
-                                true);
+                        McClient.overlay(client.player, 
+                                Component.translatable("message." + ASTTweaks.MOD_ID + ".mousesensitivity.deactivated", sensitivity));
                     }
                 }
             }
             wasMouseSensitivityToggleDown = mouseSensDown;
 
             // 自動ドロップトグル
-            boolean autoDropDown = config.autoDropToggleKey.isPressed(window);
+            boolean autoDropDown = config.autoDropToggleKey.isPressed();
             if (autoDropDown && !wasAutoDropToggleDown) {
                 AutoDropFeature autoDrop = FeatureManager.getInstance().getAutoDropFeature();
                 if (autoDrop != null) {
                     boolean newState = !autoDrop.isEnabled();
                     autoDrop.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autodrop." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autodrop." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoDropToggleDown = autoDropDown;
 
             // 自動補充トグル
-            boolean autoRestockDown = config.autoRestockToggleKey.isPressed(window);
+            boolean autoRestockDown = config.autoRestockToggleKey.isPressed();
             if (autoRestockDown && !wasAutoRestockToggleDown) {
                 AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.isEnabled();
                     autoRestock.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockToggleDown = autoRestockDown;
 
             // インベントリからの自動補充トグル
-            boolean autoRestockInventoryDown = config.autoRestockInventoryToggleKey.isPressed(window);
+            boolean autoRestockInventoryDown = config.autoRestockInventoryToggleKey.isPressed();
             if (autoRestockInventoryDown && !wasAutoRestockInventoryToggleDown) {
                 AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.getConfig().isInventoryRestockEnabled();
                     autoRestock.getConfig().setInventoryRestockEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.inventory." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.inventory." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockInventoryToggleDown = autoRestockInventoryDown;
 
             // 開いているシュルカーからの自動補充トグル
-            boolean autoRestockShulkerDown = config.autoRestockShulkerToggleKey.isPressed(window);
+            boolean autoRestockShulkerDown = config.autoRestockShulkerToggleKey.isPressed();
             if (autoRestockShulkerDown && !wasAutoRestockShulkerToggleDown) {
                 AutoRestockFeature autoRestock = FeatureManager.getInstance().getAutoRestockFeature();
                 if (autoRestock != null) {
                     boolean newState = !autoRestock.getConfig().isShulkerRestockEnabled();
                     autoRestock.getConfig().setShulkerRestockEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.shulker." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".autorestock.shulker." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasAutoRestockShulkerToggleDown = autoRestockShulkerDown;
 
             // 村人リンクトグル
-            boolean villagerLinkDown = config.villagerLinkToggleKey.isPressed(window);
+            boolean villagerLinkDown = config.villagerLinkToggleKey.isPressed();
             if (villagerLinkDown && !wasVillagerLinkToggleDown) {
                 VillagerLinkFeature villagerLink = FeatureManager.getInstance().getVillagerLinkFeature();
                 if (villagerLink != null) {
                     boolean newState = !villagerLink.isEnabled();
                     villagerLink.setEnabled(newState);
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".villagerlink." + (newState ? "enabled" : "disabled")),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".villagerlink." + (newState ? "enabled" : "disabled")));
                 }
             }
             wasVillagerLinkToggleDown = villagerLinkDown;
 
             // 一般設定画面を開く（K+L デフォルト）
-            boolean openGeneralDown = config.openGeneralScreenKey.isPressed(window);
+            boolean openGeneralDown = config.openGeneralScreenKey.isPressed();
             if (openGeneralDown && !wasOpenGeneralScreenDown) {
-                client.setScreen(ConfigScreen.createClothConfigScreen(null));
+                McClient.setScreen(ConfigScreen.createClothConfigScreen(null));
             }
             wasOpenGeneralScreenDown = openGeneralDown;
 
@@ -326,23 +312,21 @@ public class KeyBindings {
         });
     }
 
-    private static void handleAutoMoveDirection(MinecraftClient client, ModConfig config,
-            long window, MoveDirection direction, KeyCombo keyCombo, boolean wasDown) {
-        boolean isDown = keyCombo.isPressed(window);
+    private static void handleAutoMoveDirection(Minecraft client, ModConfig config,
+            MoveDirection direction, KeyCombo keyCombo, boolean wasDown) {
+        boolean isDown = keyCombo.isPressed();
         if (isDown && !wasDown) {
             AutoMoveFeature autoMove = FeatureManager.getInstance().getAutoMoveFeature();
             if (autoMove != null) {
                 autoMove.toggleWithDirection(direction);
                 String dirKey = "config." + ASTTweaks.MOD_ID + ".automove.direction." + direction.getId();
                 if (autoMove.isMoving()) {
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.enabled.direction",
-                                    Text.translatable(dirKey)),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove.enabled.direction",
+                                    Component.translatable(dirKey)));
                 } else {
-                    client.player.sendMessage(
-                            Text.translatable("message." + ASTTweaks.MOD_ID + ".automove.disabled"),
-                            true);
+                    McClient.overlay(client.player, 
+                            Component.translatable("message." + ASTTweaks.MOD_ID + ".automove.disabled"));
                 }
             }
         }

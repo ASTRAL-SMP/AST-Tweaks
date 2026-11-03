@@ -3,17 +3,17 @@ package com.astral.asttweaks.mixin;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.entityculling.EntityCullingConfig;
 import com.astral.asttweaks.feature.entityculling.EntityCullingFeature;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.Registries;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,15 +23,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityRenderDispatcherMixin {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
+    //? if >=26.3 {
+    /*private void onShouldRender(Entity entity, Frustum frustum, double camX, double camY, double camZ, float partialTick,
+                                 CallbackInfoReturnable<Boolean> cir) {
+    *///?} else {
     private void onShouldRender(Entity entity, Frustum frustum, double camX, double camY, double camZ,
                                  CallbackInfoReturnable<Boolean> cir) {
+    //?}
         EntityCullingFeature feature = FeatureManager.getInstance().getEntityCullingFeature();
         if (feature == null || !feature.isEnabled()) {
             return;
         }
 
         EntityCullingConfig config = feature.getConfig();
-        boolean isPlayer = entity instanceof PlayerEntity;
+        boolean isPlayer = entity instanceof Player;
 
         // Disable all entity rendering (except players)
         if (config.isDisableAllEntities() && !isPlayer) {
@@ -42,7 +47,7 @@ public abstract class EntityRenderDispatcherMixin {
         // Check entity blacklist (except players)
         if (!isPlayer) {
             EntityType<?> entityType = entity.getType();
-            String entityId = Registries.ENTITY_TYPE.getId(entityType).toString();
+            String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString();
             if (config.isEntityBlacklisted(entityId)) {
                 cir.setReturnValue(false);
                 return;
@@ -50,7 +55,7 @@ public abstract class EntityRenderDispatcherMixin {
         }
 
         // Disable armor stand rendering
-        if (entity instanceof ArmorStandEntity && config.isDisableArmorStands()) {
+        if (entity instanceof ArmorStand && config.isDisableArmorStands()) {
             cir.setReturnValue(false);
             return;
         }
@@ -72,7 +77,7 @@ public abstract class EntityRenderDispatcherMixin {
         // Item entity rendering control
         if (entity instanceof ItemEntity itemEntity) {
             // Check item type blacklist first
-            if (config.isItemBlacklisted(itemEntity.getStack().getItem())) {
+            if (config.isItemBlacklisted(itemEntity.getItem().getItem())) {
                 cir.setReturnValue(false);
                 return;
             }
@@ -84,7 +89,7 @@ public abstract class EntityRenderDispatcherMixin {
         }
 
         // Limit XP orb rendering
-        if (entity instanceof ExperienceOrbEntity) {
+        if (entity instanceof ExperienceOrb) {
             if (feature.shouldSkipXpOrbRender()) {
                 cir.setReturnValue(false);
                 return;

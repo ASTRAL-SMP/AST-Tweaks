@@ -1,29 +1,32 @@
-package com.astral.asttweaks.feature.voidtrade.gui;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade.gui;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.voidtrade.VoidTradeConfig;
 import com.astral.asttweaks.feature.voidtrade.VoidTradePreset;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatListEntry;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.CompatSelectionList;
+import com.astral.asttweaks.util.gui.Gfx;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.FormattedCharSequence;
 
-/**
+/^*
  * Void Trade のプリセット画面。組み込みの手順（簡易ボイトレ・テンプレート）と、
  * 名前を付けて保存したワークフローを一覧し、読み込み・保存・削除する。
- */
-public class VoidTradePresetScreen extends Screen {
+ ^/
+public class VoidTradePresetScreen extends CompatScreen {
     private static final String KEY = "config." + ASTTweaks.MOD_ID + ".voidtrade.presets.";
     private static final String WORKFLOW_KEY = "config." + ASTTweaks.MOD_ID + ".voidtrade.workflow.";
     private static final int TOP = 34;
@@ -34,17 +37,17 @@ public class VoidTradePresetScreen extends Screen {
     private final VoidTradeWorkflowScreen editor;
     private final VoidTradeConfig config;
     private PresetListWidget presetList;
-    private TextFieldWidget nameField;
-    private ButtonWidget loadButton;
-    private ButtonWidget deleteButton;
-    private ButtonWidget saveButton;
+    private EditBox nameField;
+    private Button loadButton;
+    private Button deleteButton;
+    private Button saveButton;
     private int listLeft;
     private int listWidth;
-    private Text notice;
+    private Component notice;
     private int noticeTicks;
 
     public VoidTradePresetScreen(VoidTradeWorkflowScreen editor) {
-        super(Text.translatable(KEY + "title"));
+        super(Component.translatable(KEY + "title"));
         this.editor = editor;
         this.config = FeatureManager.getInstance().getVoidTradeFeature().getConfig();
     }
@@ -55,34 +58,34 @@ public class VoidTradePresetScreen extends Screen {
 
         this.listWidth = Math.min(320, this.width - 40);
         this.listLeft = (this.width - this.listWidth) / 2;
-        this.presetList = new PresetListWidget(this.client, this.listWidth, this.height, TOP, this.height - 84, 14);
+        this.presetList = new PresetListWidget(this.minecraft, this.listWidth, this.height, TOP, this.height - 84, 14);
         this.presetList.setLeftPos(this.listLeft);
         this.presetList.setRenderBackground(false);
-        this.presetList.setRenderHorizontalShadows(false);
-        this.addSelectableChild(this.presetList);
+        this.presetList.setRenderTopAndBottom(false);
+        this.addWidget(this.presetList);
 
         int saveWidth = 110;
-        this.nameField = this.addDrawableChild(new TextFieldWidget(this.textRenderer, this.listLeft, this.height - 75,
-                this.listWidth - saveWidth - 6, 18, Text.translatable(KEY + "name")));
+        this.nameField = this.addRenderableWidget(new EditBox(this.font, this.listLeft, this.height - 75,
+                this.listWidth - saveWidth - 6, 18, Component.translatable(KEY + "name")));
         this.nameField.setMaxLength(NAME_MAX_LENGTH);
-        this.nameField.setPlaceholder(Text.translatable(KEY + "name"));
-        this.saveButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable(KEY + "save"), b -> saveCurrent())
-                .dimensions(this.listLeft + this.listWidth - saveWidth, this.height - 76, saveWidth, 20)
-                .tooltip(Tooltip.of(Text.translatable(KEY + "save.tooltip")))
+        this.nameField.setHint(Component.translatable(KEY + "name"));
+        this.saveButton = this.addRenderableWidget(Button.builder(Component.translatable(KEY + "save"), b -> saveCurrent())
+                .bounds(this.listLeft + this.listWidth - saveWidth, this.height - 76, saveWidth, 20)
+                .tooltip(Tooltip.create(Component.translatable(KEY + "save.tooltip")))
                 .build());
 
         int gap = 6;
         int buttonWidth = Math.min(100, (this.width - 20 - gap * 2) / 3);
         int left = this.width / 2 - (buttonWidth * 3 + gap * 2) / 2;
         int bottomY = this.height - 28;
-        this.loadButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable(KEY + "load"), b -> loadSelected())
-                .dimensions(left, bottomY, buttonWidth, 20)
+        this.loadButton = this.addRenderableWidget(Button.builder(Component.translatable(KEY + "load"), b -> loadSelected())
+                .bounds(left, bottomY, buttonWidth, 20)
                 .build());
-        this.deleteButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable(KEY + "delete"), b -> deleteSelected())
-                .dimensions(left + buttonWidth + gap, bottomY, buttonWidth, 20)
+        this.deleteButton = this.addRenderableWidget(Button.builder(Component.translatable(KEY + "delete"), b -> deleteSelected())
+                .bounds(left + buttonWidth + gap, bottomY, buttonWidth, 20)
                 .build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), b -> close())
-                .dimensions(left + (buttonWidth + gap) * 2, bottomY, buttonWidth, 20)
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.back"), b -> onClose())
+                .bounds(left + (buttonWidth + gap) * 2, bottomY, buttonWidth, 20)
                 .build());
 
         this.presetList.rebuild();
@@ -90,7 +93,7 @@ public class VoidTradePresetScreen extends Screen {
     }
 
     private PresetEntry getSelected() {
-        return this.presetList.getSelectedOrNull();
+        return this.presetList.getSelected();
     }
 
     private void updateButtons() {
@@ -100,7 +103,7 @@ public class VoidTradePresetScreen extends Screen {
         this.saveButton.active = !this.editor.getSteps().isEmpty();
     }
 
-    private void showNotice(Text text) {
+    private void showNotice(Component text) {
         this.notice = text;
         this.noticeTicks = 200;
     }
@@ -111,7 +114,7 @@ public class VoidTradePresetScreen extends Screen {
             return;
         }
         // 読み込み（と既存ステップの置き換え確認）は編集画面側で行う
-        this.client.setScreen(this.editor);
+        McClient.setScreen(this.editor);
         if (selected.builtin == Builtin.SIMPLE) {
             this.editor.applySimplePreset();
         } else if (selected.builtin == Builtin.TEMPLATE) {
@@ -122,9 +125,9 @@ public class VoidTradePresetScreen extends Screen {
     }
 
     private void saveCurrent() {
-        String name = this.nameField.getText().trim();
+        String name = this.nameField.getValue().trim();
         if (name.isEmpty()) {
-            showNotice(Text.translatable(KEY + "save.noName"));
+            showNotice(Component.translatable(KEY + "save.noName"));
             return;
         }
         List<VoidTradePreset> presets = this.config.getPresets();
@@ -132,18 +135,18 @@ public class VoidTradePresetScreen extends Screen {
         if (existing == null) {
             presets.add(new VoidTradePreset(name, this.editor.getSteps()));
             this.config.save();
-            showNotice(Text.translatable(KEY + "save.done", name));
+            showNotice(Component.translatable(KEY + "save.done", name));
             this.presetList.rebuild();
             return;
         }
-        this.client.setScreen(new ConfirmScreen(confirmed -> {
+        McClient.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 existing.steps = VoidTradePreset.copySteps(this.editor.getSteps());
                 this.config.save();
-                showNotice(Text.translatable(KEY + "save.overwritten", name));
+                showNotice(Component.translatable(KEY + "save.overwritten", name));
             }
-            this.client.setScreen(this);
-        }, Text.translatable(KEY + "overwrite.title"), Text.translatable(KEY + "overwrite.message", name)));
+            McClient.setScreen(this);
+        }, Component.translatable(KEY + "overwrite.title"), Component.translatable(KEY + "overwrite.message", name)));
     }
 
     private void deleteSelected() {
@@ -152,14 +155,14 @@ public class VoidTradePresetScreen extends Screen {
             return;
         }
         VoidTradePreset preset = selected.preset;
-        this.client.setScreen(new ConfirmScreen(confirmed -> {
+        McClient.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 this.config.getPresets().remove(preset);
                 this.config.save();
-                showNotice(Text.translatable(KEY + "delete.done", preset.name));
+                showNotice(Component.translatable(KEY + "delete.done", preset.name));
             }
-            this.client.setScreen(this);
-        }, Text.translatable(KEY + "delete.title"), Text.translatable(KEY + "delete.message", preset.name)));
+            McClient.setScreen(this);
+        }, Component.translatable(KEY + "delete.title"), Component.translatable(KEY + "delete.message", preset.name)));
     }
 
     @Override
@@ -173,47 +176,46 @@ public class VoidTradePresetScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        fill(matrices, this.listLeft, TOP, this.listLeft + this.listWidth, this.height - 84, 0x80000000);
-        this.presetList.render(matrices, mouseX, mouseY, delta);
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
+        gfx.fill(this.listLeft, TOP, this.listLeft + this.listWidth, this.height - 84, 0x80000000);
+        gfx.widget(this.presetList, mouseX, mouseY, delta);
 
-        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        gfx.centeredText(this.font, this.title, this.width / 2, 8, 0xFFFFFF);
         if (this.noticeTicks > 0 && this.notice != null) {
-            drawCenteredTextWithShadow(matrices, this.textRenderer, this.notice, this.width / 2, 20, 0xFFFF55);
+            gfx.centeredText(this.font, this.notice, this.width / 2, 20, 0xFFFF55);
         } else {
-            drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable(KEY + "help"), this.width / 2, 20, 0xA0A0A0);
+            gfx.centeredText(this.font, Component.translatable(KEY + "help"), this.width / 2, 20, 0xA0A0A0);
         }
 
         // 選択中のプリセットの説明（組み込みは中身の説明、保存したものはステップ数）
         PresetEntry selected = getSelected();
         if (selected != null) {
-            Text description = selected.builtin == Builtin.SIMPLE ? Text.translatable(WORKFLOW_KEY + "simple.tooltip")
-                    : selected.builtin == Builtin.TEMPLATE ? Text.translatable(WORKFLOW_KEY + "template.tooltip")
-                    : Text.translatable(KEY + "stepCount", selected.preset.steps.size());
-            List<OrderedText> lines = this.textRenderer.wrapLines(description, this.listWidth);
+            Component description = selected.builtin == Builtin.SIMPLE ? Component.translatable(WORKFLOW_KEY + "simple.tooltip")
+                    : selected.builtin == Builtin.TEMPLATE ? Component.translatable(WORKFLOW_KEY + "template.tooltip")
+                    : Component.translatable(KEY + "stepCount", selected.preset.steps.size());
+            List<FormattedCharSequence> lines = this.font.split(description, this.listWidth);
             int y = this.height - 52;
             for (int i = 0; i < Math.min(2, lines.size()); i++) {
-                drawTextWithShadow(matrices, this.textRenderer, lines.get(i), this.listLeft, y, 0xA0A0A0);
+                gfx.text(this.font, lines.get(i), this.listLeft, y, 0xA0A0A0);
                 y += 10;
             }
         }
 
-        super.render(matrices, mouseX, mouseY, delta);
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(this.editor);
+    public void onClose() {
+        McClient.setScreen(this.editor);
     }
 
-    class PresetListWidget extends AlwaysSelectedEntryListWidget<PresetEntry> {
-        PresetListWidget(MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    class PresetListWidget extends CompatSelectionList<PresetEntry> {
+        PresetListWidget(Minecraft client, int width, int height, int top, int bottom, int itemHeight) {
             super(client, width, height, top, bottom, itemHeight);
         }
 
         void rebuild() {
-            PresetEntry previous = this.getSelectedOrNull();
+            PresetEntry previous = this.getSelected();
             this.clearEntries();
             this.addEntry(new PresetEntry(Builtin.SIMPLE, null));
             this.addEntry(new PresetEntry(Builtin.TEMPLATE, null));
@@ -235,7 +237,7 @@ public class VoidTradePresetScreen extends Screen {
         public void setSelected(PresetEntry entry) {
             super.setSelected(entry);
             if (entry != null && entry.preset != null) {
-                VoidTradePresetScreen.this.nameField.setText(entry.preset.name);
+                VoidTradePresetScreen.this.nameField.setValue(entry.preset.name);
             }
         }
 
@@ -245,12 +247,12 @@ public class VoidTradePresetScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPositionX() {
-            return this.left + this.width - 6;
+        protected int getScrollbarPosition() {
+            return this.x0 + this.width - 6;
         }
     }
 
-    class PresetEntry extends AlwaysSelectedEntryListWidget.Entry<PresetEntry> {
+    class PresetEntry extends CompatListEntry<PresetEntry> {
         private final Builtin builtin;
         private final VoidTradePreset preset;
 
@@ -259,33 +261,34 @@ public class VoidTradePresetScreen extends Screen {
             this.preset = preset;
         }
 
-        private MutableText label() {
+        private MutableComponent label() {
             if (this.builtin != null) {
-                return Text.translatable(WORKFLOW_KEY + (this.builtin == Builtin.SIMPLE ? "simple" : "template"))
-                        .append(Text.translatable(KEY + "builtin").formatted(Formatting.GRAY));
+                return Component.translatable(WORKFLOW_KEY + (this.builtin == Builtin.SIMPLE ? "simple" : "template"))
+                        .append(Component.translatable(KEY + "builtin").withStyle(ChatFormatting.GRAY));
             }
-            return Text.literal(this.preset.name)
-                    .append(Text.translatable(KEY + "steps", this.preset.steps.size()).formatted(Formatting.GRAY));
+            return Component.literal(this.preset.name)
+                    .append(Component.translatable(KEY + "steps", this.preset.steps.size()).withStyle(ChatFormatting.GRAY));
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight,
-                           int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            List<OrderedText> lines = VoidTradePresetScreen.this.textRenderer.wrapLines(label(), entryWidth - 4);
+        protected void drawEntry(Gfx gfx, int x, int y, int entryWidth, int entryHeight,
+                                 int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            List<FormattedCharSequence> lines = VoidTradePresetScreen.this.font.split(label(), entryWidth - 4);
             if (!lines.isEmpty()) {
-                drawTextWithShadow(matrices, VoidTradePresetScreen.this.textRenderer, lines.get(0), x + 2, y + 2,
+                gfx.text(VoidTradePresetScreen.this.font, lines.get(0), x + 2, y + 2,
                         this.builtin != null ? 0x55FFFF : 0xFFFFFF);
             }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
             return button == 0;
         }
 
         @Override
-        public Text getNarration() {
+        public Component getNarration() {
             return label();
         }
     }
 }
+*///?}

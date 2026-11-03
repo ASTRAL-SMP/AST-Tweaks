@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, 'mc/**']
+    branches: [main]
   push:
-    branches: [main, 'mc/**']
+    branches: [main]
 
 jobs:
   build:
@@ -12,26 +12,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      # 26.x のコンパイルに JDK 25 が要る。1.19.4 / 1.20.1 は同じ JDK で --release 17 にしている
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Loom がプロジェクト内に作る Access Widener 適用済み Minecraft と remap 済み mod。
+      # Loom がプロジェクト内に作る remap 済み mod のキャッシュ（バージョンごと）。
       # setup-gradle は ~/.gradle しかキャッシュしないため、これが無いと毎回作り直しになる
       - name: Cache Loom
         uses: actions/cache@v4
         with:
-          path: .gradle/loom-cache
-          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle', 'settings.gradle', 'gradle.properties', 'src/main/resources/*.accesswidener') }}
+          path: |
+            .gradle/loom-cache
+            versions/*/.gradle/loom-cache
+          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle.kts', 'settings.gradle.kts', 'stonecutter.gradle.kts', 'stonecutter.properties.toml', 'gradle.properties') }}
           restore-keys: loom-${{ runner.os }}-
 
-      - name: Build
-        run: ./gradlew build
+      - name: Build all versions
+        run: ./gradlew chiseledBuild
 
       - name: Upload build artifacts
         if: success()

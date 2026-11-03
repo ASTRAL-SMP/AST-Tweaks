@@ -15,10 +15,10 @@ public class GitHubRelease {
     /**
      * Releases for different Minecraft versions share one repository, so a release
      * only counts for this build if it ships a jar whose file name contains this
-     * marker (e.g. "mc1.19" for ast-tweaks-1.1.30+mc1.19.4.jar).
+     * marker (e.g. "mc26.1" for ast-tweaks-1.2.0+mc26.1.2.jar).
      */
     public static final String GAME_VERSION_MARKER = computeGameVersionMarker();
-    // "mc1.19" must not match "mc1.190"
+    // "mc26.1" must not match "mc26.10"
     private static final Pattern MARKER_PATTERN = Pattern.compile(Pattern.quote(GAME_VERSION_MARKER) + "(?![0-9])");
 
     private String tag_name;
@@ -76,7 +76,7 @@ public class GitHubRelease {
         String mcVersion = FabricLoader.getInstance()
                 .getModContainer("minecraft")
                 .map(c -> c.getMetadata().getVersion().getFriendlyString())
-                .orElse("1.19.4");
+                .orElse("26.1");
         String[] parts = mcVersion.split("\\.");
         String majorMinor = parts.length >= 2 ? parts[0] + "." + parts[1] : mcVersion;
         return "mc" + majorMinor.toLowerCase(Locale.ROOT);

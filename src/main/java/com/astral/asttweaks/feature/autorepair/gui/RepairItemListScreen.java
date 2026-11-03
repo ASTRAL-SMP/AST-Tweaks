@@ -3,30 +3,34 @@ package com.astral.asttweaks.feature.autorepair.gui;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autorepair.AutoRepairConfig;
 import com.astral.asttweaks.feature.autorepair.AutoRepairFeature;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.ItemDisplay;
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatListEntry;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.CompatSelectionList;
+import com.astral.asttweaks.util.gui.Gfx;
+import com.astral.asttweaks.util.gui.GuiEvents;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Screen for configuring repair item whitelist/blacklist.
  */
-public class RepairItemListScreen extends Screen {
+public class RepairItemListScreen extends CompatScreen {
     private final Screen parent;
     private RepairItemListWidget itemListWidget;
     private final AutoRepairConfig config;
 
     public RepairItemListScreen(Screen parent) {
-        super(Text.translatable("config.asttweaks.autorepair.itemlist.title"));
+        super(Component.translatable("config.asttweaks.autorepair.itemlist.title"));
         this.parent = parent;
         AutoRepairFeature feature = (AutoRepairFeature) FeatureManager.getInstance().getFeature("autorepair");
         this.config = feature != null ? feature.getConfig() : null;
@@ -36,14 +40,14 @@ public class RepairItemListScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.itemListWidget = new RepairItemListWidget(this.client, this.width, this.height, 32, this.height - 32, 36);
-        this.addSelectableChild(this.itemListWidget);
+        this.itemListWidget = new RepairItemListWidget(this.minecraft, this.width, this.height, 32, this.height - 32, 36);
+        this.addWidget(this.itemListWidget);
 
         // Get all damageable items (tools, armor, weapons)
-        List<Item> repairableItems = Registries.ITEM.stream()
+        List<Item> repairableItems = BuiltInRegistries.ITEM.stream()
                 .filter(item -> {
-                    ItemStack stack = new ItemStack(item);
-                    return stack.isDamageable();
+                    ItemStack stack = ItemDisplay.stackOrEmpty(item);
+                    return stack.isDamageableItem();
                 })
                 .sorted((a, b) -> {
                     boolean aInList = config != null && config.isInList(a);
@@ -51,7 +55,7 @@ public class RepairItemListScreen extends Screen {
                     if (aInList != bInList) {
                         return aInList ? -1 : 1;
                     }
-                    return a.getName().getString().compareTo(b.getName().getString());
+                    return ItemDisplay.name(a).getString().compareTo(ItemDisplay.name(b).getString());
                 })
                 .collect(Collectors.toList());
 
@@ -59,42 +63,40 @@ public class RepairItemListScreen extends Screen {
             this.itemListWidget.addEntry(new RepairItemEntry(item));
         }
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        button -> McClient.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 27, 200, 20)
                 .build());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.itemListWidget.render(matrices, mouseX, mouseY, delta);
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
+        gfx.widget(this.itemListWidget, mouseX, mouseY, delta);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 10, 16777215);
+        if (!ItemDisplay.itemDataLoaded()) {
+            gfx.centeredText(this.font, ItemDisplay.NEEDS_WORLD, this.width / 2, this.height / 2, 0xFFFFAA00);
+        }
+
+        int titleWidth = this.font.width(this.title);
+        gfx.text(this.font, this.title, this.width / 2 - titleWidth / 2, 10, 0xFFFFFFFF);
 
         // Show mode indicator
-        Text modeText;
+        Component modeText;
         if (config != null && config.isWhitelistMode()) {
-            modeText = Text.translatable("config.asttweaks.autorepair.itemlist.help.whitelist");
+            modeText = Component.translatable("config.asttweaks.autorepair.itemlist.help.whitelist");
         } else {
-            modeText = Text.translatable("config.asttweaks.autorepair.itemlist.help.blacklist");
+            modeText = Component.translatable("config.asttweaks.autorepair.itemlist.help.blacklist");
         }
-        int helpWidth = this.textRenderer.getWidth(modeText);
-        this.textRenderer.drawWithShadow(matrices, modeText, this.width / 2 - helpWidth / 2, 20, 10526880);
+        int helpWidth = this.font.width(modeText);
+        gfx.text(this.font, modeText, this.width / 2 - helpWidth / 2, 20, 0xFFA0A0A0);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
-    class RepairItemListWidget extends AlwaysSelectedEntryListWidget<RepairItemEntry> {
-        public RepairItemListWidget(MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    class RepairItemListWidget extends CompatSelectionList<RepairItemEntry> {
+        public RepairItemListWidget(Minecraft client, int width, int height, int top, int bottom, int itemHeight) {
             super(client, width, height, top, bottom, itemHeight);
-        }
-
-        @Override
-        protected int getScrollbarPositionX() {
-            return super.getScrollbarPositionX() + 20;
         }
 
         @Override
@@ -102,30 +104,26 @@ public class RepairItemListScreen extends Screen {
             return super.getRowWidth() + 50;
         }
 
-        @Override
-        public int addEntry(RepairItemEntry entry) {
-            return super.addEntry(entry);
-        }
     }
 
-    class RepairItemEntry extends AlwaysSelectedEntryListWidget.Entry<RepairItemEntry> {
+    class RepairItemEntry extends CompatListEntry<RepairItemEntry> {
         private final Item item;
         private final ItemStack stack;
-        private final ButtonWidget toggleButton;
+        private final Button toggleButton;
 
         public RepairItemEntry(Item item) {
             this.item = item;
-            this.stack = new ItemStack(item);
+            this.stack = ItemDisplay.stackOrEmpty(item);
 
-            this.toggleButton = ButtonWidget.builder(
-                            Text.literal(""),
+            this.toggleButton = Button.builder(
+                            Component.literal(""),
                             button -> {
                                 if (config != null) {
                                     config.toggleItem(item);
                                     updateButtonText();
                                 }
                             })
-                    .dimensions(0, 0, 80, 20)
+                    .bounds(0, 0, 80, 20)
                     .build();
 
             updateButtonText();
@@ -138,47 +136,48 @@ public class RepairItemListScreen extends Screen {
             if (whitelistMode) {
                 // Whitelist mode: items in list are repaired
                 this.toggleButton.setMessage(
-                        Text.translatable(inList ? "config.asttweaks.autorepair.willrepair" : "config.asttweaks.autorepair.wontrepair")
-                                .formatted(inList ? Formatting.GREEN : Formatting.GRAY)
+                        Component.translatable(inList ? "config.asttweaks.autorepair.willrepair" : "config.asttweaks.autorepair.wontrepair")
+                                .withStyle(inList ? ChatFormatting.GREEN : ChatFormatting.GRAY)
                 );
             } else {
                 // Blacklist mode: items in list are NOT repaired
                 this.toggleButton.setMessage(
-                        Text.translatable(inList ? "config.asttweaks.autorepair.wontrepair" : "config.asttweaks.autorepair.willrepair")
-                                .formatted(inList ? Formatting.RED : Formatting.GREEN)
+                        Component.translatable(inList ? "config.asttweaks.autorepair.wontrepair" : "config.asttweaks.autorepair.willrepair")
+                                .withStyle(inList ? ChatFormatting.RED : ChatFormatting.GREEN)
                 );
             }
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            MinecraftClient client = RepairItemListScreen.this.client;
+        protected void drawEntry(Gfx gfx, int x, int y, int entryWidth, int entryHeight,
+                                 int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            Minecraft client = RepairItemListScreen.this.minecraft;
 
-            client.getItemRenderer().renderInGuiWithOverrides(matrices, stack, x + 5, y + 8);
-            client.getItemRenderer().renderGuiItemOverlay(matrices, client.textRenderer, stack, x + 5, y + 8);
+            gfx.item(stack, x + 5, y + 8);
+            gfx.itemDecorations(client.font, stack, x + 5, y + 8);
 
-            Text itemName = item.getName();
-            client.textRenderer.draw(matrices, itemName, x + 30, y + 5, 16777215);
+            Component itemName = ItemDisplay.name(item);
+            gfx.text(client.font, itemName, x + 30, y + 5, 0xFFFFFFFF, false);
 
             // Show max durability
-            if (stack.isDamageable()) {
-                Text durabilityInfo = Text.literal(String.format("Max Durability: %d", stack.getMaxDamage()))
-                        .formatted(Formatting.GRAY);
-                client.textRenderer.draw(matrices, durabilityInfo, x + 30, y + 16, 10526880);
+            if (stack.isDamageableItem()) {
+                Component durabilityInfo = Component.literal(String.format("Max Durability: %d", stack.getMaxDamage()))
+                        .withStyle(ChatFormatting.GRAY);
+                gfx.text(client.font, durabilityInfo, x + 30, y + 16, 0xFFA0A0A0, false);
             }
 
             this.toggleButton.setPosition(x + entryWidth - 85, y + 7);
-            this.toggleButton.render(matrices, mouseX, mouseY, tickDelta);
+            gfx.widget(this.toggleButton, mouseX, mouseY, tickDelta);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return this.toggleButton.mouseClicked(mouseX, mouseY, button);
+        protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
+            return GuiEvents.click(this.toggleButton, mouseX, mouseY, button);
         }
 
         @Override
-        public Text getNarration() {
-            return Text.literal(item.getName().getString());
+        public Component getNarration() {
+            return ItemDisplay.name(item);
         }
     }
 }

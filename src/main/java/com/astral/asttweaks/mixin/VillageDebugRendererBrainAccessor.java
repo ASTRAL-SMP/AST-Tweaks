@@ -1,19 +1,21 @@
-package com.astral.asttweaks.mixin;
+//? if <26.1 {
+/*package com.astral.asttweaks.mixin;
 
-import net.minecraft.client.render.debug.VillageDebugRenderer;
-import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.client.renderer.debug.BrainDebugRenderer;
+import net.minecraft.core.BlockPos;
 
-@Mixin(VillageDebugRenderer.Brain.class)
+@Mixin(BrainDebugRenderer.BrainDump.class)
 public interface VillageDebugRendererBrainAccessor {
 
     @Accessor("uuid")
     UUID getUuid();
 
-    @Accessor("pointsOfInterest")
+    @Accessor("pois")
     Set<BlockPos> getPointsOfInterest();
 }
+*///?}

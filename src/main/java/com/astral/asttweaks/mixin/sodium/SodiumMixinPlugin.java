@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.sodium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.sodium;
 
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
@@ -8,9 +9,9 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-/**
+/^*
  * Mixin plugin to conditionally apply Sodium-specific mixins.
- */
+ ^/
 public class SodiumMixinPlugin implements IMixinConfigPlugin {
     private static final boolean SODIUM_LOADED = FabricLoader.getInstance().isModLoaded("sodium");
 
@@ -46,3 +47,4 @@ public class SodiumMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 }
+*///?}

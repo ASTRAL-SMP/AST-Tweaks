@@ -1,10 +1,9 @@
 package com.astral.asttweaks.feature.autodrop;
 
 import com.astral.asttweaks.config.ModConfig;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-
 import java.util.Set;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
 
 /**
  * Configuration wrapper for the Auto Drop feature.
@@ -56,11 +55,11 @@ public class AutoDropConfig {
     }
 
     public boolean isItemExcluded(Item item) {
-        return isItemExcluded(Registries.ITEM.getId(item).toString());
+        return isItemExcluded(BuiltInRegistries.ITEM.getKey(item).toString());
     }
 
     public void toggleItemExclusion(Item item) {
-        String id = Registries.ITEM.getId(item).toString();
+        String id = BuiltInRegistries.ITEM.getKey(item).toString();
         Set<String> set = getExcludedItems();
         if (set.contains(id)) {
             set.remove(id);

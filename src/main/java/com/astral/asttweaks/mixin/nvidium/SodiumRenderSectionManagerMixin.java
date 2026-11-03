@@ -1,4 +1,5 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.EvictedSections;
@@ -9,8 +10,8 @@ import me.cortex.nvidium.Nvidium;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkUpdateType;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,12 +20,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
+/^*
  * Nvidium に破棄されたセクションを Sodium 側で再ビルド予約する。
  *
  * 予約だけしておけば、Sodium は視界内（BFS で到達したもの）から順にビルドし、Nvidium へアップロードされる。
  * updateChunks() の先頭で処理すると、同じフレームの BFS（needsUpdate 時に実行）でキューに積まれる。
- */
+ ^/
 @Mixin(value = RenderSectionManager.class, remap = false)
 public abstract class SodiumRenderSectionManagerMixin {
     @Unique
@@ -75,7 +76,7 @@ public abstract class SodiumRenderSectionManagerMixin {
         int keepDistance = Nvidium.config.region_keep_distance;
         boolean keepLimited = keepDistance != 32 && keepDistance != 256;
         int keepLimit = keepDistance + 4 - KEEP_DISTANCE_MARGIN;
-        int cameraChunkY = MathHelper.floor(cameraY) >> 4;
+        int cameraChunkY = Mth.floor(cameraY) >> 4;
 
         boolean scheduled = false;
         LongIterator it = EvictedSections.iterator();
@@ -111,16 +112,17 @@ public abstract class SodiumRenderSectionManagerMixin {
         EvictedSections.reset();
     }
 
-    /**
+    /^*
      * Nvidium の RegionManager.withinSquare と同じく、セクションが属するリージョンの中心で判定する。
-     */
+     ^/
     @Unique
     private boolean asttweaks$isWithinKeepDistance(long sectionKey, int limit, int cameraChunkY) {
-        int regionCenterX = (ChunkSectionPos.unpackX(sectionKey) & ~7) + 4;
-        int regionCenterY = (ChunkSectionPos.unpackY(sectionKey) & ~3) + 2;
-        int regionCenterZ = (ChunkSectionPos.unpackZ(sectionKey) & ~7) + 4;
+        int regionCenterX = (SectionPos.x(sectionKey) & ~7) + 4;
+        int regionCenterY = (SectionPos.y(sectionKey) & ~3) + 2;
+        int regionCenterZ = (SectionPos.z(sectionKey) & ~7) + 4;
         return Math.abs(regionCenterX - centerChunkX) <= limit
                 && Math.abs(regionCenterY - cameraChunkY) <= limit
                 && Math.abs(regionCenterZ - centerChunkZ) <= limit;
     }
 }
+*///?}

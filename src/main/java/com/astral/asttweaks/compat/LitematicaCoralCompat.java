@@ -1,19 +1,19 @@
 package com.astral.asttweaks.compat;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import com.astral.asttweaks.ASTTweaks;
 
+import com.astral.asttweaks.util.Ids;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Litematica で死んだサンゴ系ブロックを設置する際、手持ちに死サンゴが無くても
@@ -51,7 +51,7 @@ public class LitematicaCoralCompat {
         }
         if (LOGGED_ITEMS.add(dead)) {
             ASTTweaks.LOGGER.info("LitematicaCoral: substituting {} -> {}",
-                    Registries.ITEM.getId(dead), Registries.ITEM.getId(live));
+                    BuiltInRegistries.ITEM.getKey(dead), BuiltInRegistries.ITEM.getKey(live));
         }
         return new ItemStack(live, required.getCount());
     }
@@ -62,13 +62,13 @@ public class LitematicaCoralCompat {
             return DEAD_TO_LIVE_CACHE.get(dead);
         }
         Item live = null;
-        Identifier id = Registries.ITEM.getId(dead);
+        Identifier id = BuiltInRegistries.ITEM.getKey(dead);
         if (id.getNamespace().equals("minecraft")
                 && id.getPath().startsWith("dead_")
                 && id.getPath().contains("coral")) {
-            Identifier liveId = new Identifier(id.getNamespace(), id.getPath().substring("dead_".length()));
-            if (Registries.ITEM.containsId(liveId)) {
-                live = Registries.ITEM.get(liveId);
+            Identifier liveId = Ids.of(id.getNamespace(), id.getPath().substring("dead_".length()));
+            if (BuiltInRegistries.ITEM.containsKey(liveId)) {
+                live = BuiltInRegistries.ITEM.getValue(liveId);
             }
         }
         DEAD_TO_LIVE_CACHE.put(dead, live);
@@ -76,13 +76,13 @@ public class LitematicaCoralCompat {
     }
 
     private static boolean playerHasItem(Item item) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
             return false;
         }
-        PlayerInventory inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.size(); slot++) {
-            ItemStack stack = inventory.getStack(slot);
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
             if (!stack.isEmpty() && stack.getItem() == item) {
                 return true;
             }

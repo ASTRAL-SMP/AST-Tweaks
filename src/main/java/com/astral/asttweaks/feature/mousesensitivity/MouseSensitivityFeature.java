@@ -2,7 +2,7 @@ package com.astral.asttweaks.feature.mousesensitivity;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 /**
  * マウス感度をキーバインドでトグル切替する機能。
@@ -60,23 +60,23 @@ public class MouseSensitivityFeature implements Feature {
      * @return トグル後の感度（GUI表示の%値: 0-200）
      */
     public int toggle() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.options == null) return 0;
 
         if (!toggled) {
             // 現在の感度を保存して目標感度に変更
-            savedSensitivity = client.options.getMouseSensitivity().getValue();
+            savedSensitivity = client.options.sensitivity().get();
             // Minecraft表示と一致させるため(int)キャスト（切り捨て）で%を保存
             savedSensitivityPercent = (int)(savedSensitivity * 200.0);
             double targetInternal = config.getTargetSensitivity() / 200.0;
-            client.options.getMouseSensitivity().setValue(targetInternal);
+            client.options.sensitivity().set(targetInternal);
             toggled = true;
             ASTTweaks.LOGGER.debug("Mouse sensitivity toggled ON: {}% -> {}%",
                     savedSensitivityPercent, config.getTargetSensitivity());
             return config.getTargetSensitivity();
         } else {
             // 元の感度に復元
-            client.options.getMouseSensitivity().setValue(savedSensitivity);
+            client.options.sensitivity().set(savedSensitivity);
             toggled = false;
             ASTTweaks.LOGGER.debug("Mouse sensitivity toggled OFF: restored to {}%", savedSensitivityPercent);
             return savedSensitivityPercent;

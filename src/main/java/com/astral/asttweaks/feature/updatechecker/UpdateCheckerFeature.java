@@ -2,11 +2,11 @@ package com.astral.asttweaks.feature.updatechecker;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.TitleScreen;
-
+import net.minecraft.client.gui.screens.TitleScreen;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -64,7 +64,7 @@ public class UpdateCheckerFeature implements Feature {
             }
             GitHubRelease release = cachedLatestRelease;
             String version = currentVersion;
-            client.execute(() -> client.setScreen(
+            client.execute(() -> McClient.setScreen(
                     new UpdateAvailableScreen(screen, this, release, version)
             ));
         });
@@ -212,7 +212,7 @@ public class UpdateCheckerFeature implements Feature {
     }
 
     private String cleanVersionString(String version) {
-        // Build metadata such as "+mc1.19.4" only names the Minecraft version and must not affect ordering
+        // Build metadata such as "+mc26.1.2" only names the Minecraft version and must not affect ordering
         return version.replaceFirst("^[vV]", "").replaceFirst("\\+.*$", "").trim();
     }
 

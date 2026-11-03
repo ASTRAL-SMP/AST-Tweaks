@@ -2,13 +2,20 @@ package com.astral.asttweaks.feature.lavahighlight;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+//? if >=26.1 {
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry;
+import net.minecraft.client.renderer.block.FluidModel;
+import net.minecraft.client.resources.model.sprite.Material;
+import net.minecraft.resources.Identifier;
+//?} else {
+/*import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
-import net.minecraft.fluid.Fluids;
+*///?}
+import net.minecraft.world.level.material.Fluids;
 
 /**
  * Feature to highlight lava source blocks and flowing lava.
- * Uses Fabric API's FluidRenderHandler for stable fluid color customization.
+ * Registers a lava fluid model with a tint source (works with vanilla and Sodium).
  */
 public class LavaHighlightFeature implements Feature {
     private final LavaHighlightConfig config;
@@ -29,25 +36,29 @@ public class LavaHighlightFeature implements Feature {
 
     @Override
     public void init() {
-        // Register handler after client starts (when textures are available)
+        //? if >=26.1 {
+        // Same textures as vanilla's lava model; only the tint source is added
+        FluidModel.Unbaked lavaModel = new FluidModel.Unbaked(
+                new Material(Identifier.withDefaultNamespace("block/lava_still")),
+                new Material(Identifier.withDefaultNamespace("block/lava_flow")),
+                null,
+                new LavaTintSource(config));
+        FluidRenderingRegistry.register(Fluids.LAVA, Fluids.FLOWING_LAVA, lavaModel);
+        //?} else {
+        /*// Register handler after client starts (when textures are available)
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
-            registerFluidHandler();
+            LavaFluidRenderHandler customHandler = new LavaFluidRenderHandler(config);
+            FluidRenderHandlerRegistry.INSTANCE.register(Fluids.LAVA, customHandler);
+            FluidRenderHandlerRegistry.INSTANCE.register(Fluids.FLOWING_LAVA, customHandler);
         });
+        *///?}
+
         ASTTweaks.LOGGER.info("LavaHighlight feature initialized");
-    }
-
-    private void registerFluidHandler() {
-        LavaFluidRenderHandler customHandler = new LavaFluidRenderHandler(config);
-
-        FluidRenderHandlerRegistry.INSTANCE.register(Fluids.LAVA, customHandler);
-        FluidRenderHandlerRegistry.INSTANCE.register(Fluids.FLOWING_LAVA, customHandler);
-
-        ASTTweaks.LOGGER.info("Registered custom lava render handler");
     }
 
     @Override
     public void tick() {
-        // No tick needed - rendering is handled by FluidRenderHandler
+        // No tick needed - rendering is handled by the fluid model's tint source
     }
 
     @Override

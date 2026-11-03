@@ -1,11 +1,12 @@
-package com.astral.asttweaks.feature.voidtrade;
+//? if <26.1 {
+/*package com.astral.asttweaks.feature.voidtrade;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/^*
  * 名前を付けて保存した Void Trade ワークフロー。Gson でそのまま保存される。
- */
+ ^/
 public class VoidTradePreset {
     public String name = "";
     public List<VoidTradeStep> steps = new ArrayList<>();
@@ -26,3 +27,4 @@ public class VoidTradePreset {
         return copy;
     }
 }
+*///?}

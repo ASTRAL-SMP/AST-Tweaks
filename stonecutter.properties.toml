@@ -1,0 +1,67 @@
+# 共通設定。バージョン固有の値は各 ["x.y.z"] テーブルで上書きする。
+mod.id = "asttweaks"
+mod.archives_name = "ast-tweaks"
+mod.group = "com.astral"
+mod.version = "1.3.0"
+
+deps.fabric_loader = "0.20.1"
+# Sodium / Nvidium 互換 Mixin は 1.19.4 のみ（空なら依存を追加しない）
+deps.sodium = ""
+deps.nvidium = ""
+
+["1.19.4"]
+mod.mc_compat = "~1.19.4"
+deps.loader_min = "0.14.21"
+deps.fabric_api = "0.87.0+1.19.4"
+deps.modmenu = "6.3.1"
+deps.modmenu_min = "6.0.0"
+deps.cloth_config = "10.1.105"
+deps.cloth_min = "10.0.0"
+deps.litematica = "0.14.7"
+deps.malilib = "0.15.3"
+deps.sodium = "mc1.19.4-0.4.10"
+deps.nvidium = "0.1.15-alpha"
+
+["1.20.1"]
+mod.mc_compat = "~1.20.1"
+deps.loader_min = "0.14.21"
+deps.fabric_api = "0.92.12+1.20.1"
+deps.modmenu = "7.2.2"
+deps.modmenu_min = "7.0.0"
+deps.cloth_config = "11.1.136"
+deps.cloth_min = "11.0.0"
+deps.litematica = "0.15.4"
+deps.malilib = "0.16.3"
+
+["26.1.2"]
+mod.mc_compat = "~26.1.2"
+deps.loader_min = "0.18.4"
+deps.fabric_api = "0.155.3+26.1.2"
+deps.modmenu = "18.0.2"
+deps.modmenu_min = "18.0.0"
+deps.cloth_config = "26.1.154"
+deps.cloth_min = "26.1.0"
+deps.litematica = "0.27.14"
+deps.malilib = "0.28.12"
+
+["26.2"]
+mod.mc_compat = "~26.2"
+deps.loader_min = "0.18.4"
+deps.fabric_api = "0.161.0+26.2"
+deps.modmenu = "20.0.3"
+deps.modmenu_min = "20.0.0"
+deps.cloth_config = "26.2.155"
+deps.cloth_min = "26.2.0"
+deps.litematica = "0.28.8"
+deps.malilib = "0.29.6"
+
+["26.3"]
+mod.mc_compat = "~26.3"
+deps.loader_min = "0.18.4"
+deps.fabric_api = "0.165.2+26.3"
+deps.modmenu = "21.0.0"
+deps.modmenu_min = "21.0.0"
+deps.cloth_config = "26.3.159"
+deps.cloth_min = "26.3.0"
+deps.litematica = "0.29.1"
+deps.malilib = "0.30.2"

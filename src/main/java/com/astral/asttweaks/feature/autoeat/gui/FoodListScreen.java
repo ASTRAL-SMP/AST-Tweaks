@@ -4,35 +4,41 @@ import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.autoeat.AutoEatConfig;
 import com.astral.asttweaks.feature.autoeat.AutoEatFeature;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import com.astral.asttweaks.util.Foods;
+import com.astral.asttweaks.util.ItemDisplay;
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.gui.CompatListEntry;
+import com.astral.asttweaks.util.gui.CompatScreen;
+import com.astral.asttweaks.util.gui.CompatSelectionList;
+import com.astral.asttweaks.util.gui.Gfx;
+import com.astral.asttweaks.util.gui.GuiEvents;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Screen for configuring food blacklist.
  */
-public class FoodListScreen extends Screen {
+public class FoodListScreen extends CompatScreen {
     private final Screen parent;
     private FoodListWidget foodListWidget;
     private final AutoEatConfig config;
-    private TextFieldWidget searchField;
+    private EditBox searchField;
     private String searchText = "";
     private List<Item> allFoodItems;
 
     public FoodListScreen(Screen parent) {
-        super(Text.translatable("config.asttweaks.autoeat.blacklist.title"));
+        super(Component.translatable("config.asttweaks.autoeat.blacklist.title"));
         this.parent = parent;
         AutoEatFeature feature = (AutoEatFeature) FeatureManager.getInstance().getFeature("autoeat");
         this.config = feature != null ? feature.getConfig() : null;
@@ -43,108 +49,105 @@ public class FoodListScreen extends Screen {
         super.init();
 
         // Initialize list widget first (before search field, as setText triggers listener)
-        this.foodListWidget = new FoodListWidget(this.client, this.width, this.height, 54, this.height - 32, 36);
-        this.addSelectableChild(this.foodListWidget);
+        this.foodListWidget = new FoodListWidget(this.minecraft, this.width, this.height, 54, this.height - 32, 36);
+        this.addWidget(this.foodListWidget);
 
         // Cache all food items
-        this.allFoodItems = new ArrayList<>(Registries.ITEM.stream()
-                .filter(item -> item.getFoodComponent() != null)
+        this.allFoodItems = new ArrayList<>(BuiltInRegistries.ITEM.stream()
+                .filter(item -> food(item) != null)
                 .collect(Collectors.toList()));
 
         // Search field
-        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 32, 200, 18,
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
-        this.searchField.setPlaceholder(Text.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
-        this.searchField.setChangedListener(text -> {
+        this.searchField = new EditBox(this.font, this.width / 2 - 100, 32, 200, 18,
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setHint(Component.translatable("config." + ASTTweaks.MOD_ID + ".search.placeholder"));
+        this.searchField.setResponder(text -> {
             this.searchText = text;
             rebuildList();
         });
-        this.searchField.setText(this.searchText);
-        this.addSelectableChild(this.searchField);
+        this.searchField.setValue(this.searchText);
+        this.addWidget(this.searchField);
 
         rebuildList();
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("gui.done"),
-                        button -> this.client.setScreen(parent))
-                .dimensions(this.width / 2 - 100, this.height - 27, 200, 20)
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("gui.done"),
+                        button -> McClient.setScreen(parent))
+                .bounds(this.width / 2 - 100, this.height - 27, 200, 20)
                 .build());
     }
 
+    private static FoodProperties food(Item item) {
+        return Foods.of(item);
+    }
+
     private void rebuildList() {
-        this.foodListWidget.children().clear();
+        this.foodListWidget.clearAll();
         String lowerSearch = searchText.toLowerCase();
 
         allFoodItems.stream()
                 .filter(item -> searchText.isEmpty() ||
-                        item.getName().getString().toLowerCase().contains(lowerSearch))
+                        ItemDisplay.name(item).getString().toLowerCase().contains(lowerSearch))
                 .sorted((a, b) -> {
                     boolean aBlacklisted = config != null && config.isBlacklisted(a);
                     boolean bBlacklisted = config != null && config.isBlacklisted(b);
                     if (aBlacklisted != bBlacklisted) {
                         return aBlacklisted ? -1 : 1;
                     }
-                    return a.getName().getString().compareTo(b.getName().getString());
+                    return ItemDisplay.name(a).getString().compareTo(ItemDisplay.name(b).getString());
                 })
                 .forEach(item -> foodListWidget.addEntry(new FoodEntry(item)));
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.foodListWidget.render(matrices, mouseX, mouseY, delta);
+    protected void draw(Gfx gfx, int mouseX, int mouseY, float delta) {
+        gfx.widget(this.foodListWidget, mouseX, mouseY, delta);
 
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        this.textRenderer.drawWithShadow(matrices, this.title, this.width / 2 - titleWidth / 2, 10, 16777215);
+        if (!ItemDisplay.itemDataLoaded()) {
+            gfx.centeredText(this.font, ItemDisplay.NEEDS_WORLD, this.width / 2, this.height / 2, 0xFFFFAA00);
+        }
 
-        Text helpText = Text.translatable("config.asttweaks.autoeat.blacklist.help");
-        int helpWidth = this.textRenderer.getWidth(helpText);
-        this.textRenderer.drawWithShadow(matrices, helpText, this.width / 2 - helpWidth / 2, 20, 10526880);
+        gfx.centeredText(this.font, this.title, this.width / 2, 10, 0xFFFFFFFF);
 
-        this.searchField.render(matrices, mouseX, mouseY, delta);
+        Component helpText = Component.translatable("config.asttweaks.autoeat.blacklist.help");
+        gfx.centeredText(this.font, helpText, this.width / 2, 20, 0xFFA0A0A0);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        gfx.widget(this.searchField, mouseX, mouseY, delta);
+
+        renderWidgets(gfx, mouseX, mouseY, delta);
     }
 
-    class FoodListWidget extends AlwaysSelectedEntryListWidget<FoodEntry> {
-        public FoodListWidget(MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    class FoodListWidget extends CompatSelectionList<FoodEntry> {
+        public FoodListWidget(Minecraft client, int width, int height, int top, int bottom, int itemHeight) {
             super(client, width, height, top, bottom, itemHeight);
         }
 
-        @Override
-        protected int getScrollbarPositionX() {
-            return super.getScrollbarPositionX() + 20;
-        }
 
         @Override
         public int getRowWidth() {
             return super.getRowWidth() + 50;
         }
 
-        @Override
-        public int addEntry(FoodEntry entry) {
-            return super.addEntry(entry);
-        }
     }
 
-    class FoodEntry extends AlwaysSelectedEntryListWidget.Entry<FoodEntry> {
+    class FoodEntry extends CompatListEntry<FoodEntry> {
         private final Item item;
         private final ItemStack stack;
-        private final ButtonWidget toggleButton;
+        private final Button toggleButton;
 
         public FoodEntry(Item item) {
             this.item = item;
-            this.stack = new ItemStack(item);
+            this.stack = ItemDisplay.stackOrEmpty(item);
 
-            this.toggleButton = ButtonWidget.builder(
-                            Text.literal(""),
+            this.toggleButton = Button.builder(
+                            Component.literal(""),
                             button -> {
                                 if (config != null) {
                                     config.toggleBlacklist(item);
                                     updateButtonText();
                                 }
                             })
-                    .dimensions(0, 0, 60, 20)
+                    .bounds(0, 0, 60, 20)
                     .build();
 
             updateButtonText();
@@ -153,41 +156,43 @@ public class FoodListScreen extends Screen {
         private void updateButtonText() {
             boolean blacklisted = config != null && config.isBlacklisted(item);
             this.toggleButton.setMessage(
-                    Text.translatable(blacklisted ? "config.asttweaks.autoeat.blacklisted" : "config.asttweaks.autoeat.allowed")
-                            .formatted(blacklisted ? Formatting.RED : Formatting.GREEN)
+                    Component.translatable(blacklisted ? "config.asttweaks.autoeat.blacklisted" : "config.asttweaks.autoeat.allowed")
+                            .withStyle(blacklisted ? ChatFormatting.RED : ChatFormatting.GREEN)
             );
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            MinecraftClient client = FoodListScreen.this.client;
+        protected void drawEntry(Gfx gfx, int x, int y, int entryWidth, int entryHeight,
+                                 int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            Minecraft client = FoodListScreen.this.minecraft;
 
-            client.getItemRenderer().renderInGuiWithOverrides(matrices, stack, x + 5, y + 8);
-            client.getItemRenderer().renderGuiItemOverlay(matrices, client.textRenderer, stack, x + 5, y + 8);
+            gfx.item(stack, x + 5, y + 8);
+            gfx.itemDecorations(client.font, stack, x + 5, y + 8);
 
-            Text itemName = item.getName();
-            client.textRenderer.draw(matrices, itemName, x + 30, y + 5, 16777215);
+            Component itemName = ItemDisplay.name(item);
+            gfx.text(client.font, itemName, x + 30, y + 5, 0xFFFFFFFF, false);
 
-            if (item.getFoodComponent() != null) {
-                Text foodInfo = Text.literal(String.format("Hunger: %d  Saturation: %.1f",
-                                item.getFoodComponent().getHunger(),
-                                item.getFoodComponent().getSaturationModifier()))
-                        .formatted(Formatting.GRAY);
-                client.textRenderer.draw(matrices, foodInfo, x + 30, y + 16, 10526880);
+            FoodProperties food = food(item);
+            if (food != null) {
+                Component foodInfo = Component.literal(String.format("Hunger: %d  Saturation: %.1f",
+                                Foods.nutrition(food),
+                                Foods.saturation(food)))
+                        .withStyle(ChatFormatting.GRAY);
+                gfx.text(client.font, foodInfo, x + 30, y + 16, 0xFFA0A0A0, false);
             }
 
             this.toggleButton.setPosition(x + entryWidth - 65, y + 7);
-            this.toggleButton.render(matrices, mouseX, mouseY, tickDelta);
+            gfx.widget(this.toggleButton, mouseX, mouseY, tickDelta);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return this.toggleButton.mouseClicked(mouseX, mouseY, button);
+        protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
+            return GuiEvents.click(this.toggleButton, mouseX, mouseY, button);
         }
 
         @Override
-        public Text getNarration() {
-            return Text.literal(item.getName().getString());
+        public Component getNarration() {
+            return ItemDisplay.name(item);
         }
     }
 }

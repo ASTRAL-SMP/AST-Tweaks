@@ -30,21 +30,18 @@
       "com.astral.asttweaks.config.ConfigScreen"
     ]
   },
-  "accessWidener": "asttweaks.accesswidener",
   "mixins": [
     "asttweaks.mixins.json",
-    "asttweaks.sodium.mixins.json",
-    "asttweaks.nvidium.mixins.json",
     "asttweaks.litematica.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14.21",
+    "fabricloader": ">=${loader}",
     "fabric-api": "*",
-    "minecraft": "~1.19.4",
-    "java": ">=17"
+    "minecraft": "${minecraft}",
+    "java": ">=${java}"
   },
   "recommends": {
-    "modmenu": ">=6.0.0",
-    "cloth-config": ">=10.0.0"
+    "modmenu": ">=${modmenu}",
+    "cloth-config": ">=${cloth}"
   }
 }

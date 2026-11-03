@@ -1,19 +1,20 @@
-package com.astral.asttweaks.mixin.nvidium;
+//? if <1.20 {
+/*package com.astral.asttweaks.mixin.nvidium;
 
 import com.astral.asttweaks.feature.FeatureManager;
 import com.astral.asttweaks.feature.nvidiumchunkfix.NvidiumChunkFixFeature;
 import com.astral.asttweaks.feature.nvidiumchunkfix.RegionCountFix;
 import me.cortex.nvidium.sodiumCompat.ShaderLoader;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
+/^*
  * section_raster/task.glsl のリージョンのセクション数の読み方を書き換える（{@link RegionCountFix}）。
  * シェーダーは RenderPipeline の生成時にここを通ってコンパイルされる。
- */
+ ^/
 @Mixin(value = ShaderLoader.class, remap = false)
 public abstract class ShaderLoaderMixin {
 
@@ -27,3 +28,4 @@ public abstract class ShaderLoaderMixin {
         cir.setReturnValue(RegionCountFix.patchSectionRasterTask(cir.getReturnValue(), enabled));
     }
 }
+*///?}

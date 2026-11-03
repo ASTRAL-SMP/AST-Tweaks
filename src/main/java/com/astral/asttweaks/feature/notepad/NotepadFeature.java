@@ -2,7 +2,8 @@ package com.astral.asttweaks.feature.notepad;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
-import net.minecraft.client.MinecraftClient;
+import com.astral.asttweaks.util.McClient;
+import net.minecraft.client.Minecraft;
 
 /**
  * Notepad feature that allows players to write and save notes.
@@ -61,9 +62,9 @@ public class NotepadFeature implements Feature {
         if (!isEnabled()) {
             return;
         }
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client != null && client.player != null) {
-            client.setScreen(new NotepadScreen(storage));
+            McClient.setScreen(new NotepadScreen(storage));
         }
     }
 }

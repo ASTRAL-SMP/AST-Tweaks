@@ -2,10 +2,10 @@ package com.astral.asttweaks.feature.automove;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
+import com.astral.asttweaks.util.McClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,8 +56,8 @@ public class AutoMoveFeature implements Feature {
         return config;
     }
 
-    private void onClientTick(MinecraftClient client) {
-        if (client.player == null || client.currentScreen != null) {
+    private void onClientTick(Minecraft client) {
+        if (client.player == null || McClient.screen() != null) {
             return;
         }
 
@@ -86,30 +86,30 @@ public class AutoMoveFeature implements Feature {
      * カメラエンティティがプレイヤーと異なる場合にfreecamとみなす。
      */
     public boolean isFreecamActive() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         return client.player != null && client.getCameraEntity() != client.player;
     }
 
-    private List<KeyBinding> getKeysForDirection(MinecraftClient client, MoveDirection dir) {
-        List<KeyBinding> keys = new ArrayList<>(2);
+    private List<KeyMapping> getKeysForDirection(Minecraft client, MoveDirection dir) {
+        List<KeyMapping> keys = new ArrayList<>(2);
         int fwd = dir.getForwardAxis();
         int side = dir.getSidewaysAxis();
-        if (fwd > 0) keys.add(client.options.forwardKey);
-        else if (fwd < 0) keys.add(client.options.backKey);
-        if (side > 0) keys.add(client.options.leftKey);
-        else if (side < 0) keys.add(client.options.rightKey);
+        if (fwd > 0) keys.add(client.options.keyUp);
+        else if (fwd < 0) keys.add(client.options.keyDown);
+        if (side > 0) keys.add(client.options.keyLeft);
+        else if (side < 0) keys.add(client.options.keyRight);
         return keys;
     }
 
-    private void pressKeys(MinecraftClient client, MoveDirection dir) {
-        for (KeyBinding key : getKeysForDirection(client, dir)) {
-            key.setPressed(true);
+    private void pressKeys(Minecraft client, MoveDirection dir) {
+        for (KeyMapping key : getKeysForDirection(client, dir)) {
+            key.setDown(true);
         }
     }
 
-    private void releaseKeys(MinecraftClient client, MoveDirection dir) {
-        for (KeyBinding key : getKeysForDirection(client, dir)) {
-            key.setPressed(false);
+    private void releaseKeys(Minecraft client, MoveDirection dir) {
+        for (KeyMapping key : getKeysForDirection(client, dir)) {
+            key.setDown(false);
         }
     }
 
@@ -117,7 +117,7 @@ public class AutoMoveFeature implements Feature {
      * Toggle auto-move state.
      */
     public void toggle() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (!isMoving) {
             // オンにする
             isMoving = true;
@@ -135,7 +135,7 @@ public class AutoMoveFeature implements Feature {
      * 同じ方向なら停止、別の方向なら切り替え、停止中なら開始。
      */
     public void toggleWithDirection(MoveDirection direction) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (isMoving && config.getDirection() == direction) {
             // 同じ方向 → 停止
             if (client != null) {

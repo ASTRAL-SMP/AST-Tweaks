@@ -126,6 +126,8 @@
   "config.asttweaks.entityculling.itemblacklist.button": "アイテム表示設定を開く",
   "config.asttweaks.entityculling.hideAll": "全て非表示",
   "config.asttweaks.entityculling.showAll": "全て表示",
+  "config.asttweaks.itemlist.loading": "アイテム情報を読み込み中...",
+  "config.asttweaks.itemlist.needsWorld": "アイテム情報はワールド参加後に読み込まれます。一覧はゲーム内から開いてください。",
   "config.asttweaks.search.placeholder": "検索...",
 
   "config.asttweaks.category.lavahighlight": "溶岩ハイライト",
@@ -358,7 +360,7 @@
 
   "config.asttweaks.category.villagerlink": "村人リンク表示",
   "config.asttweaks.villagerlink.enabled": "村人と職業ブロックを線で表示",
-  "config.asttweaks.villagerlink.enabled.tooltip": "範囲内の村人と、その職業に対応する最寄りの職業ブロックを線で結びます。職業ブロックの紐付けはサーバー側でしか確認できないため、表示は近接ブロックを基にした推定です。",
+  "config.asttweaks.villagerlink.enabled.tooltip": "範囲内の村人と職業ブロックを線で結びます。シングルプレイ・OP 権限時はサーバーの実データ、Tweakeroo の entityDataSync（Servux）や TweakerMore の serverDataSyncer が有効ならその同期データを使い、どれも無い場合は近くの職業ブロックからの推定になります。",
   "config.asttweaks.villagerlink.range": "検出範囲",
   "config.asttweaks.villagerlink.range.tooltip": "プレイヤー周囲のどこまでの村人を対象にするか（ブロック単位）",
   "config.asttweaks.villagerlink.lineColor": "線の色",
@@ -429,10 +431,14 @@
   "message.asttweaks.worldborderfix.restored": "ワールドボーダー描画修正: Nvidium を再有効化しました（チャンク再読み込み中）",
   "message.asttweaks.worldborderfix.restoredDeferred": "ワールドボーダー描画修正: Nvidium は次のチャンク再読み込み時（F3+A・ディメンション移動等）に復帰します",
 
+
+
+  "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
+  "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP",
+
   "config.asttweaks.category.nvidiumchunkfix": "Nvidium チャンク抜け修正",
   "config.asttweaks.nvidiumchunkfix.enabled": "Nvidium チャンク抜け修正を有効化",
   "config.asttweaks.nvidiumchunkfix.enabled.tooltip": "Nvidium（特に Bobby 併用時）で、地形が 128×64×128 ブロック単位で抜け落ちたまま戻らない問題を修正します。主な原因は Nvidium 0.1.x の不具合で、この単位のブロックが 256 セクションすべて地形で埋まると（ネザー天井の層などで起きやすい）丸ごと描画されなくなります。また VRAM の上限で破棄された地形が再描画されない問題、読み込んだばかりの近くの地形が優先的に破棄される問題、破棄候補が無いときのクラッシュも防ぎます。有効化・無効化は次のチャンク再読み込み（F3+A・再ログイン・ディメンション移動）から反映されます。処理状況は F3 画面右側の「AST Chunk Fix」行に表示されます。対象は Nvidium 0.1.12〜0.1.15 で、未導入の場合は何もしません。",
-
   "config.asttweaks.category.voidtrade": "Void Trade",
   "config.asttweaks.voidtrade.enabled": "Void Trade を有効化",
   "config.asttweaks.voidtrade.enabled.tooltip": "座標付きのステップ（移動・村人と取引を開く・アンロード待ち・取引・画面を閉じる など）を上から順に実行し、最後まで行ったら先頭に戻って繰り返します。取引画面を開いたまま村人のチャンクがアンロードされるまで離れると、その後の取引が村人に保存されない（取引回数や値上がりが残らない）ことを利用したボイドトレードの自動化用です。開始/停止は下のキー、またはワークフロー編集画面のボタンで行います。",
@@ -581,8 +587,5 @@
   "message.asttweaks.voidtrade.reason.inventoryFull": "インベントリに空きがなく 1 回も取引できませんでした",
   "message.asttweaks.voidtrade.reason.noFavorites": "この村人の取引に ItemScroller のお気に入りが付いていません（取引画面で取引を中クリックすると付けられます）",
   "message.asttweaks.voidtrade.reason.noItemScroller": "「お気に入り」を使うには ItemScroller が必要です。番号で指定してください",
-  "message.asttweaks.voidtrade.reason.dead": "プレイヤーが死亡しました",
-
-  "modmenu.asttweaks.twitter": "Twitter (X) - Sim_999_256",
-  "modmenu.asttweaks.youtube": "YouTube - ASTRAL-SMP"
+  "message.asttweaks.voidtrade.reason.dead": "プレイヤーが死亡しました"
 }

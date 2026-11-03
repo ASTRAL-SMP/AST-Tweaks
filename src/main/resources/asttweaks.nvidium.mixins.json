@@ -2,14 +2,10 @@
   "required": false,
   "minVersion": "0.8",
   "package": "com.astral.asttweaks.mixin.nvidium",
-  "compatibilityLevel": "JAVA_17",
-  "plugin": "com.astral.asttweaks.mixin.nvidium.NvidiumMixinPlugin",
+  "compatibilityLevel": "${java}",
+  ${nvidium_plugin}
   "client": [
-    "RegionManagerMixin",
-    "RegionMixin",
-    "RenderPipelineMixin",
-    "ShaderLoaderMixin",
-    "SodiumRenderSectionManagerMixin"
+    ${nvidium_mixins}
   ],
   "injectors": {
     "defaultRequire": 1

@@ -22,8 +22,13 @@ import com.astral.asttweaks.feature.inventorysort.gui.ExcludedSlotScreen;
 import com.astral.asttweaks.feature.massgrindstone.gui.GrindstoneItemListScreen;
 import com.astral.asttweaks.feature.pickprotect.gui.PickProtectSlotScreen;
 import com.astral.asttweaks.feature.updatechecker.CheckFrequency;
-import com.astral.asttweaks.feature.voidtrade.gui.VoidTradeWorkflowScreen;
+//? if <26.1 {
+/*import com.astral.asttweaks.feature.voidtrade.gui.VoidTradeWorkflowScreen;
+*///?}
 import com.astral.asttweaks.util.KeyCombo;
+import com.astral.asttweaks.util.McClient;
+import com.astral.asttweaks.util.VanillaItemData;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -31,10 +36,9 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /**
  * ModMenu integration and configuration screen using Cloth Config.
@@ -53,7 +57,7 @@ public class ConfigScreen implements ModMenuApi {
 
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.translatable("config." + ASTTweaks.MOD_ID + ".title"));
+                .setTitle(Component.translatable("config." + ASTTweaks.MOD_ID + ".title"));
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
@@ -61,23 +65,23 @@ public class ConfigScreen implements ModMenuApi {
         // 一般カテゴリ（最初のタブ）
         // ============================
         ConfigCategory general = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.general"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.general"));
 
         // --- Auto Totem サブカテゴリ ---
         SubCategoryBuilder autoTotemSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autototem"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.autototem"));
 
         autoTotemSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled"),
                         config.autoTotemEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autototem.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoTotemEnabled = value)
                 .build());
 
         autoTotemSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoTotemToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoTotemToggle"),
                 config.autoTotemToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoTotemToggleKey.copyFrom(combo)));
@@ -86,19 +90,19 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Notepad サブカテゴリ ---
         SubCategoryBuilder notepadSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.notepad"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.notepad"));
 
         notepadSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled"),
                         config.notepadEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".notepad.enabled.tooltip"))
                 .setSaveConsumer(value -> config.notepadEnabled = value)
                 .build());
 
         notepadSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.notepadOpen"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.notepadOpen"),
                 config.notepadOpenKey,
                 new KeyCombo(-1, -1),
                 combo -> config.notepadOpenKey.copyFrom(combo)));
@@ -107,78 +111,78 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Auto Move サブカテゴリ ---
         SubCategoryBuilder autoMoveSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.automove"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.automove"));
 
         autoMoveSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled"),
                         config.autoMoveEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoMoveEnabled = value)
                 .build());
 
         autoMoveSub.add(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction"),
                         MoveDirection.class,
                         config.autoMoveDirection)
                 .setDefaultValue(MoveDirection.FORWARD)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
-                .setEnumNameProvider(dir -> Text.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction.tooltip"))
+                .setEnumNameProvider(dir -> Component.translatable("config." + ASTTweaks.MOD_ID + ".automove.direction." + ((MoveDirection)dir).getId()))
                 .setSaveConsumer(value -> config.autoMoveDirection = value)
                 .build());
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveToggle"),
                 config.autoMoveToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveToggleKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForward"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForward"),
                 config.autoMoveForwardKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveForwardKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackward"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackward"),
                 config.autoMoveBackwardKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveBackwardKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveLeft"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveLeft"),
                 config.autoMoveLeftKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveLeftKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveRight"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveRight"),
                 config.autoMoveRightKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveRightKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardLeft"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardLeft"),
                 config.autoMoveForwardLeftKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveForwardLeftKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardRight"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveForwardRight"),
                 config.autoMoveForwardRightKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveForwardRightKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardLeft"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardLeft"),
                 config.autoMoveBackwardLeftKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveBackwardLeftKey.copyFrom(combo)));
 
         autoMoveSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardRight"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoMoveBackwardRight"),
                 config.autoMoveBackwardRightKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoMoveBackwardRightKey.copyFrom(combo)));
@@ -187,29 +191,29 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Mouse Sensitivity サブカテゴリ ---
         SubCategoryBuilder mouseSensSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.mousesensitivity"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.mousesensitivity"));
 
         mouseSensSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled"),
                         config.mouseSensitivityEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.enabled.tooltip"))
                 .setSaveConsumer(value -> config.mouseSensitivityEnabled = value)
                 .build());
 
         mouseSensSub.add(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue"),
                         config.mouseSensitivityTargetValue, 0, 200)
                 .setDefaultValue(10)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue.tooltip"))
-                .setTextGetter(value -> Text.literal(value + "%"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".mousesensitivity.targetValue.tooltip"))
+                .setTextGetter(value -> Component.literal(value + "%"))
                 .setSaveConsumer(value -> config.mouseSensitivityTargetValue = value)
                 .build());
 
         mouseSensSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.mouseSensitivityToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.mouseSensitivityToggle"),
                 config.mouseSensitivityToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.mouseSensitivityToggleKey.copyFrom(combo)));
@@ -218,52 +222,52 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Update Checker サブカテゴリ ---
         SubCategoryBuilder updateCheckerSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.updatechecker"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.updatechecker"));
 
         updateCheckerSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled"),
                         config.updateCheckerEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.enabled.tooltip"))
                 .setSaveConsumer(value -> config.updateCheckerEnabled = value)
                 .build());
 
         updateCheckerSub.add(entryBuilder
                 .startStrField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo"),
                         config.updateCheckerGithubRepo)
                 .setDefaultValue("ASTRAL-SMP/AST-Tweaks")
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.githubRepo.tooltip"))
                 .setSaveConsumer(value -> config.updateCheckerGithubRepo = value)
                 .build());
 
         updateCheckerSub.add(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency"),
                         CheckFrequency.class,
                         config.updateCheckerFrequency)
                 .setDefaultValue(CheckFrequency.STARTUP_ONLY)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency.tooltip"))
-                .setEnumNameProvider(freq -> Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency." + ((CheckFrequency)freq).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency.tooltip"))
+                .setEnumNameProvider(freq -> Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.frequency." + ((CheckFrequency)freq).getId()))
                 .setSaveConsumer(value -> config.updateCheckerFrequency = value)
                 .build());
 
         updateCheckerSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification"),
                         config.updateCheckerShowNotification)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showNotification.tooltip"))
                 .setSaveConsumer(value -> config.updateCheckerShowNotification = value)
                 .build());
 
         updateCheckerSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen"),
                         config.updateCheckerShowOnTitleScreen)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".updatechecker.showOnTitleScreen.tooltip"))
                 .setSaveConsumer(value -> config.updateCheckerShowOnTitleScreen = value)
                 .build());
 
@@ -271,23 +275,23 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Litematica compatibility subcategory ---
         SubCategoryBuilder litematicaSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.litematica"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.litematica"));
 
         litematicaSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled"),
                         config.litematicaSchematicDropEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".litematica.schematicDrop.enabled.tooltip"))
                 .setSaveConsumer(value -> config.litematicaSchematicDropEnabled = value)
                 .build());
 
         litematicaSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled"),
                         config.litematicaCoralSubstituteEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".litematica.coralSubstitute.enabled.tooltip"))
                 .setSaveConsumer(value -> config.litematicaCoralSubstituteEnabled = value)
                 .build());
 
@@ -295,14 +299,14 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- Portal Protect サブカテゴリ ---
         SubCategoryBuilder portalProtectSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.portalprotect"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.portalprotect"));
 
         portalProtectSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled"),
                         config.portalProtectEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".portalprotect.enabled.tooltip"))
                 .setSaveConsumer(value -> config.portalProtectEnabled = value)
                 .build());
 
@@ -310,12 +314,12 @@ public class ConfigScreen implements ModMenuApi {
 
         // --- キーバインド サブカテゴリ（一般のみ） ---
         SubCategoryBuilder keyBindSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
 
         keyBindSub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.openGeneralScreen"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.openGeneralScreen"),
                 config.openGeneralScreenKey,
-                new KeyCombo(GLFW.GLFW_KEY_L, GLFW.GLFW_KEY_K),
+                new KeyCombo(InputConstants.KEY_L, InputConstants.KEY_K),
                 combo -> config.openGeneralScreenKey.copyFrom(combo)));
 
         general.addEntry(keyBindSub.build());
@@ -324,136 +328,136 @@ public class ConfigScreen implements ModMenuApi {
         // Scoreboard category
         // ============================
         ConfigCategory scoreboard = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.scoreboard"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.scoreboard"));
 
         scoreboard.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.enabled"),
                         config.scoreboardEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.enabled.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardEnabled = value)
                 .build());
 
         scoreboard.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.paging.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.paging.enabled"),
                         config.scoreboardPagingEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.paging.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.paging.enabled.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardPagingEnabled = value)
                 .build());
 
         scoreboard.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.showRank"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.showRank"),
                         config.scoreboardShowRank)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.showRank.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.showRank.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardShowRank = value)
                 .build());
 
         scoreboard.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.maxLines"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.maxLines"),
                         config.scoreboardMaxLines, 5, 30)
                 .setDefaultValue(15)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.maxLines.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.maxLines.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardMaxLines = value)
                 .build());
 
         scoreboard.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.pageSize"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.pageSize"),
                         config.scoreboardPageSize, 3, 20)
                 .setDefaultValue(10)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.pageSize.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.pageSize.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardPageSize = value)
                 .build());
 
         // Position X slider (0-100%)
         scoreboard.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionX"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionX"),
                         config.scoreboardPositionX, 0, 100)
                 .setDefaultValue(100)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionX.tooltip"))
-                .setTextGetter(value -> Text.literal(value + "%"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionX.tooltip"))
+                .setTextGetter(value -> Component.literal(value + "%"))
                 .setSaveConsumer(value -> config.scoreboardPositionX = value)
                 .build());
 
         // Position Y slider (0-100%)
         scoreboard.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionY"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionY"),
                         config.scoreboardPositionY, 0, 100)
                 .setDefaultValue(50)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionY.tooltip"))
-                .setTextGetter(value -> Text.literal(value + "%"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.positionY.tooltip"))
+                .setTextGetter(value -> Component.literal(value + "%"))
                 .setSaveConsumer(value -> config.scoreboardPositionY = value)
                 .build());
 
         // Scale slider (percentage display)
         scoreboard.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.scale"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.scale"),
                         (int)(config.scoreboardScale * 100), 50, 200)
                 .setDefaultValue(100)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.scale.tooltip"))
-                .setTextGetter(value -> Text.literal(value + "%"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.scale.tooltip"))
+                .setTextGetter(value -> Component.literal(value + "%"))
                 .setSaveConsumer(value -> config.scoreboardScale = value / 100.0f)
                 .build());
 
         // Header color
         scoreboard.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.headerColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.headerColor"),
                         config.scoreboardHeaderColor)
                 .setDefaultValue(0x66000000)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.headerColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.headerColor.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardHeaderColor = value)
                 .build());
 
         // Body color
         scoreboard.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.bodyColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.bodyColor"),
                         config.scoreboardBodyColor)
                 .setDefaultValue(0x4D000000)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.bodyColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.bodyColor.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardBodyColor = value)
                 .build());
 
         // Text color
         scoreboard.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.textColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.textColor"),
                         config.scoreboardTextColor)
                 .setDefaultValue(0xFFFFFFFF)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.textColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".scoreboard.textColor.tooltip"))
                 .setSaveConsumer(value -> config.scoreboardTextColor = value)
                 .build());
 
         // スコアボードキーバインド
         SubCategoryBuilder scoreboardKeySub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.keybinds"));
 
         scoreboardKeySub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardToggle"),
                 config.scoreboardToggleKey,
-                new KeyCombo(GLFW.GLFW_KEY_O, -1),
+                new KeyCombo(InputConstants.KEY_O, -1),
                 combo -> config.scoreboardToggleKey.copyFrom(combo)));
 
         scoreboardKeySub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageUp"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageUp"),
                 config.scoreboardPageUpKey,
-                new KeyCombo(GLFW.GLFW_KEY_UP, -1),
+                new KeyCombo(InputConstants.KEY_UP, -1),
                 combo -> config.scoreboardPageUpKey.copyFrom(combo)));
 
         scoreboardKeySub.add(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageDown"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.scoreboardPageDown"),
                 config.scoreboardPageDownKey,
-                new KeyCombo(GLFW.GLFW_KEY_DOWN, -1),
+                new KeyCombo(InputConstants.KEY_DOWN, -1),
                 combo -> config.scoreboardPageDownKey.copyFrom(combo)));
 
         scoreboard.addEntry(scoreboardKeySub.build());
@@ -462,32 +466,32 @@ public class ConfigScreen implements ModMenuApi {
         // Auto-eat category
         // ============================
         ConfigCategory autoeat = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autoeat"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.autoeat"));
 
         autoeat.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.enabled"),
                         config.autoEatEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoEatEnabled = value)
                 .build());
 
         autoeat.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.eatWhileAction"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.eatWhileAction"),
                         config.autoEatWhileAction)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.eatWhileAction.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.eatWhileAction.tooltip"))
                 .setSaveConsumer(value -> config.autoEatWhileAction = value)
                 .build());
 
         IntegerSliderEntry hungerSlider = entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.hungerThreshold"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.hungerThreshold"),
                         config.autoEatHungerThreshold, 0, 20)
                 .setDefaultValue(6)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.hungerThreshold.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.hungerThreshold.tooltip"))
                 .setSaveConsumer(value -> config.autoEatHungerThreshold = value)
                 .build();
 
@@ -495,12 +499,12 @@ public class ConfigScreen implements ModMenuApi {
         autoeat.addEntry(hungerSlider);
 
         autoeat.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.blacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new FoodListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autoeat.blacklist.button"),
+                button -> VanillaItemData.open(FoodListScreen::new)
         ));
 
         autoeat.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoEatToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoEatToggle"),
                 config.autoEatToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoEatToggleKey.copyFrom(combo)));
@@ -509,131 +513,131 @@ public class ConfigScreen implements ModMenuApi {
         // Entity culling category
         // ============================
         ConfigCategory entityCulling = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.entityculling"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.entityculling"));
 
         entityCulling.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled"),
                         config.entityCullingEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.enabled.tooltip"))
                 .setSaveConsumer(value -> config.entityCullingEnabled = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll"),
                         config.disableAllEntityRendering)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableAll.tooltip"))
                 .setSaveConsumer(value -> config.disableAllEntityRendering = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand"),
                         config.disableArmorStandRendering)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableArmorStand.tooltip"))
                 .setSaveConsumer(value -> config.disableArmorStandRendering = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock"),
                         config.disableFallingBlockRendering)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableFallingBlock.tooltip"))
                 .setSaveConsumer(value -> config.disableFallingBlockRendering = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob"),
                         config.disableDeadMobRendering)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.disableDeadMob.tooltip"))
                 .setSaveConsumer(value -> config.disableDeadMobRendering = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit"),
                         config.itemRenderLimit, -1, 100)
                 .setDefaultValue(-1)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit.tooltip"))
-                .setTextGetter(value -> value < 0 ? Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Text.literal(String.valueOf(value)))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemLimit.tooltip"))
+                .setTextGetter(value -> value < 0 ? Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Component.literal(String.valueOf(value)))
                 .setSaveConsumer(value -> config.itemRenderLimit = value)
                 .build());
 
         entityCulling.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit"),
                         config.xpOrbRenderLimit, -1, 100)
                 .setDefaultValue(-1)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit.tooltip"))
-                .setTextGetter(value -> value < 0 ? Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Text.literal(String.valueOf(value)))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.xpOrbLimit.tooltip"))
+                .setTextGetter(value -> value < 0 ? Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.unlimited") : Component.literal(String.valueOf(value)))
                 .setSaveConsumer(value -> config.xpOrbRenderLimit = value)
                 .build());
 
         entityCulling.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.blacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new EntityListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.blacklist.button"),
+                button -> McClient.setScreen(new EntityListScreen(McClient.screen()))
         ));
 
         entityCulling.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemblacklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new ItemEntityListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".entityculling.itemblacklist.button"),
+                button -> VanillaItemData.open(ItemEntityListScreen::new)
         ));
 
         // ============================
         // Lava highlight category
         // ============================
         ConfigCategory lavaHighlight = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.lavahighlight"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.lavahighlight"));
 
         lavaHighlight.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled"),
                         config.lavaHighlightEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.enabled.tooltip"))
                 .setSaveConsumer(value -> config.lavaHighlightEnabled = value)
                 .build());
 
         lavaHighlight.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source"),
                         config.lavaHighlightSource)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.source.tooltip"))
                 .setSaveConsumer(value -> config.lavaHighlightSource = value)
                 .build());
 
         lavaHighlight.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing"),
                         config.lavaHighlightFlowing)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowing.tooltip"))
                 .setSaveConsumer(value -> config.lavaHighlightFlowing = value)
                 .build());
 
         lavaHighlight.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor"),
                         config.lavaSourceColor)
                 .setDefaultValue(0x8000FF00)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.sourceColor.tooltip"))
                 .setSaveConsumer(value -> config.lavaSourceColor = value)
                 .build());
 
         lavaHighlight.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor"),
                         config.lavaFlowingColor)
                 .setDefaultValue(0x80FF0000)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".lavahighlight.flowingColor.tooltip"))
                 .setSaveConsumer(value -> config.lavaFlowingColor = value)
                 .build());
 
@@ -641,62 +645,62 @@ public class ConfigScreen implements ModMenuApi {
         // Auto repair category
         // ============================
         ConfigCategory autoRepair = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autorepair"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.autorepair"));
 
         autoRepair.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled"),
                         config.autoRepairEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoRepairEnabled = value)
                 .build());
 
         autoRepair.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick"),
                         config.autoRepairClicksPerTick, 1, 20)
                 .setDefaultValue(10)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick.tooltip"))
-                .setTextGetter(value -> Text.literal(value + " clicks"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.clicksPerTick.tooltip"))
+                .setTextGetter(value -> Component.literal(value + " clicks"))
                 .setSaveConsumer(value -> config.autoRepairClicksPerTick = value)
                 .build());
 
         autoRepair.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode"),
                         config.autoRepairWhitelistMode)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.whitelistMode.tooltip"))
                 .setSaveConsumer(value -> config.autoRepairWhitelistMode = value)
                 .build());
 
         autoRepair.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot"),
                         config.autoRepairTargetSlot, 0, 8)
                 .setDefaultValue(0)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot.tooltip"))
-                .setTextGetter(value -> Text.literal("Slot " + (value + 1)))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.targetSlot.tooltip"))
+                .setTextGetter(value -> Component.literal("Slot " + (value + 1)))
                 .setSaveConsumer(value -> config.autoRepairTargetSlot = value)
                 .build());
 
         autoRepair.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor"),
                         config.autoRepairIncludeArmor)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.includeArmor.tooltip"))
                 .setSaveConsumer(value -> config.autoRepairIncludeArmor = value)
                 .build());
 
         autoRepair.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new RepairItemListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autorepair.itemlist.button"),
+                button -> VanillaItemData.open(RepairItemListScreen::new)
         ));
 
         autoRepair.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRepairToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRepairToggle"),
                 config.autoRepairToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoRepairToggleKey.copyFrom(combo)));
@@ -705,52 +709,52 @@ public class ConfigScreen implements ModMenuApi {
         // Mass grindstone category
         // ============================
         ConfigCategory massGrindstone = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.massgrindstone"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.massgrindstone"));
 
         massGrindstone.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled"),
                         config.massGrindstoneEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.enabled.tooltip"))
                 .setSaveConsumer(value -> config.massGrindstoneEnabled = value)
                 .build());
 
         massGrindstone.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode"),
                         config.massGrindstoneWhitelistMode)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.whitelistMode.tooltip"))
                 .setSaveConsumer(value -> config.massGrindstoneWhitelistMode = value)
                 .build());
 
         massGrindstone.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick"),
                         config.massGrindstoneOperationsPerTick, 1, 20)
                 .setDefaultValue(10)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick.tooltip"))
-                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Component.literal(value + " ops"))
                 .setSaveConsumer(value -> config.massGrindstoneOperationsPerTick = value)
                 .build());
 
         massGrindstone.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults"),
                         config.massGrindstoneDropResults)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.dropResults.tooltip"))
                 .setSaveConsumer(value -> config.massGrindstoneDropResults = value)
                 .build());
 
         massGrindstone.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new GrindstoneItemListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".massgrindstone.itemlist.button"),
+                button -> VanillaItemData.open(GrindstoneItemListScreen::new)
         ));
 
         massGrindstone.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.massGrindstoneExecute"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.massGrindstoneExecute"),
                 config.massGrindstoneExecuteKey,
                 new KeyCombo(-1, -1),
                 combo -> config.massGrindstoneExecuteKey.copyFrom(combo)));
@@ -759,61 +763,61 @@ public class ConfigScreen implements ModMenuApi {
         // Inventory sort category
         // ============================
         ConfigCategory inventorySort = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.inventorysort"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.inventorysort"));
 
         inventorySort.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled"),
                         config.inventorySortEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.enabled.tooltip"))
                 .setSaveConsumer(value -> config.inventorySortEnabled = value)
                 .build());
 
         inventorySort.addEntry(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode"),
                         SortMode.class,
                         config.inventorySortMode)
                 .setDefaultValue(SortMode.ITEM_ID)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode.tooltip"))
-                .setEnumNameProvider(mode -> Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode." + ((SortMode)mode).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode.tooltip"))
+                .setEnumNameProvider(mode -> Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.mode." + ((SortMode)mode).getId()))
                 .setSaveConsumer(value -> config.inventorySortMode = value)
                 .build());
 
         inventorySort.addEntry(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target"),
                         SortTarget.class,
                         config.inventorySortTarget)
                 .setDefaultValue(SortTarget.PLAYER_ONLY)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target.tooltip"))
-                .setEnumNameProvider(target -> Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target." + ((SortTarget)target).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target.tooltip"))
+                .setEnumNameProvider(target -> Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.target." + ((SortTarget)target).getId()))
                 .setSaveConsumer(value -> config.inventorySortTarget = value)
                 .build());
 
         inventorySort.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton"),
                         config.inventorySortShowButton)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.showButton.tooltip"))
                 .setSaveConsumer(value -> config.inventorySortShowButton = value)
                 .build());
 
         inventorySort.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.button"),
-                button -> MinecraftClient.getInstance().setScreen(new ExcludedSlotScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".inventorysort.excludedslots.button"),
+                button -> McClient.setScreen(new ExcludedSlotScreen(McClient.screen()))
         ));
 
         inventorySort.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortExecute"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortExecute"),
                 config.inventorySortExecuteKey,
-                new KeyCombo(GLFW.GLFW_KEY_R, -1),
+                new KeyCombo(InputConstants.KEY_R, -1),
                 combo -> config.inventorySortExecuteKey.copyFrom(combo)));
 
         inventorySort.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortContainerExecute"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.inventorySortContainerExecute"),
                 config.inventorySortContainerExecuteKey,
                 new KeyCombo(-1, -1),
                 combo -> config.inventorySortContainerExecuteKey.copyFrom(combo)));
@@ -822,24 +826,24 @@ public class ConfigScreen implements ModMenuApi {
         // Bone meal filter category
         // ============================
         ConfigCategory boneMealFilter = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.bonemealfilter"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.bonemealfilter"));
 
         boneMealFilter.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled"),
                         config.boneMealFilterEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.enabled.tooltip"))
                 .setSaveConsumer(value -> config.boneMealFilterEnabled = value)
                 .build());
 
         boneMealFilter.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.whitelist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new BlockListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".bonemealfilter.whitelist.button"),
+                button -> VanillaItemData.open(BlockListScreen::new)
         ));
 
         boneMealFilter.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.boneMealFilterToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.boneMealFilterToggle"),
                 config.boneMealFilterToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.boneMealFilterToggleKey.copyFrom(combo)));
@@ -848,24 +852,24 @@ public class ConfigScreen implements ModMenuApi {
         // Silk touch switch category
         // ============================
         ConfigCategory silkTouchSwitch = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.silktouchswitch"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.silktouchswitch"));
 
         silkTouchSwitch.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled"),
                         config.silkTouchSwitchEnabled)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.enabled.tooltip"))
                 .setSaveConsumer(value -> config.silkTouchSwitchEnabled = value)
                 .build());
 
         silkTouchSwitch.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.blocklist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new SilkTouchBlockListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".silktouchswitch.blocklist.button"),
+                button -> VanillaItemData.open(SilkTouchBlockListScreen::new)
         ));
 
         silkTouchSwitch.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.silkTouchSwitchToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.silkTouchSwitchToggle"),
                 config.silkTouchSwitchToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.silkTouchSwitchToggleKey.copyFrom(combo)));
@@ -874,56 +878,56 @@ public class ConfigScreen implements ModMenuApi {
         // Auto drop category
         // ============================
         ConfigCategory autoDrop = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autodrop"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.autodrop"));
 
         autoDrop.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled"),
                         config.autoDropEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoDropEnabled = value)
                 .build());
 
         autoDrop.addEntry(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode"),
                         AutoDropMode.class,
                         config.autoDropMode)
                 .setDefaultValue(AutoDropMode.EXECUTE_KEY)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode.tooltip"))
-                .setEnumNameProvider(mode -> Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode." + ((AutoDropMode)mode).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode.tooltip"))
+                .setEnumNameProvider(mode -> Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.mode." + ((AutoDropMode)mode).getId()))
                 .setSaveConsumer(value -> config.autoDropMode = value)
                 .build());
 
         autoDrop.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick"),
                         config.autoDropOperationsPerTick, 1, 64)
                 .setDefaultValue(8)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick.tooltip"))
-                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Component.literal(value + " ops"))
                 .setSaveConsumer(value -> config.autoDropOperationsPerTick = value)
                 .build());
 
         autoDrop.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.button"),
-                button -> MinecraftClient.getInstance().setScreen(new AutoDropProtectedSlotScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.protectedslots.button"),
+                button -> McClient.setScreen(new AutoDropProtectedSlotScreen(McClient.screen()))
         ));
 
         autoDrop.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new AutoDropItemListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autodrop.itemlist.button"),
+                button -> VanillaItemData.open(AutoDropItemListScreen::new)
         ));
 
         autoDrop.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropToggle"),
                 config.autoDropToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoDropToggleKey.copyFrom(combo)));
 
         autoDrop.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropExecute"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoDropExecute"),
                 config.autoDropExecuteKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoDropExecuteKey.copyFrom(combo)));
@@ -932,89 +936,89 @@ public class ConfigScreen implements ModMenuApi {
         // Auto restock category
         // ============================
         ConfigCategory autoRestock = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.autorestock"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.autorestock"));
 
         autoRestock.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled"),
                         config.autoRestockEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoRestockEnabled = value)
                 .build());
 
         autoRestock.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled"),
                         config.autoRestockFromInventory)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.inventory.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoRestockFromInventory = value)
                 .build());
 
         autoRestock.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled"),
                         config.autoRestockFromShulker)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.shulker.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoRestockFromShulker = value)
                 .build());
 
         autoRestock.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled"),
                         config.autoRestockPreferOverExternalAutoCollect)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.priorityExternalAutoCollect.enabled.tooltip"))
                 .setSaveConsumer(value -> config.autoRestockPreferOverExternalAutoCollect = value)
                 .build());
 
         autoRestock.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick"),
                         config.autoRestockOperationsPerTick, 1, 32)
                 .setDefaultValue(8)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick.tooltip"))
-                .setTextGetter(value -> Text.literal(value + " ops"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.operationsPerTick.tooltip"))
+                .setTextGetter(value -> Component.literal(value + " ops"))
                 .setSaveConsumer(value -> config.autoRestockOperationsPerTick = value)
                 .build());
 
         autoRestock.addEntry(entryBuilder
                 .startEnumSelector(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder"),
                         ContainerPickupOrder.class,
                         config.autoRestockContainerPickupOrder)
                 .setDefaultValue(ContainerPickupOrder.FIRST_SLOT)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder.tooltip"))
-                .setEnumNameProvider(order -> Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder." + ((ContainerPickupOrder) order).getId()))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder.tooltip"))
+                .setEnumNameProvider(order -> Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.containerPickupOrder." + ((ContainerPickupOrder) order).getId()))
                 .setSaveConsumer(value -> config.autoRestockContainerPickupOrder = value)
                 .build());
 
         autoRestock.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.protectedslots.button"),
-                button -> MinecraftClient.getInstance().setScreen(new AutoRestockProtectedSlotScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.protectedslots.button"),
+                button -> McClient.setScreen(new AutoRestockProtectedSlotScreen(McClient.screen()))
         ));
 
         autoRestock.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.itemlist.button"),
-                button -> MinecraftClient.getInstance().setScreen(new AutoRestockItemListScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".autorestock.itemlist.button"),
+                button -> VanillaItemData.open(AutoRestockItemListScreen::new, true)
         ));
 
         autoRestock.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockToggle"),
                 config.autoRestockToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoRestockToggleKey.copyFrom(combo)));
 
         autoRestock.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockInventoryToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockInventoryToggle"),
                 config.autoRestockInventoryToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoRestockInventoryToggleKey.copyFrom(combo)));
 
         autoRestock.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockShulkerToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.autoRestockShulkerToggle"),
                 config.autoRestockShulkerToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.autoRestockShulkerToggleKey.copyFrom(combo)));
@@ -1023,47 +1027,47 @@ public class ConfigScreen implements ModMenuApi {
         // Villager link category
         // ============================
         ConfigCategory villagerLink = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.villagerlink"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.villagerlink"));
 
         villagerLink.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled"),
                         config.villagerLinkEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.enabled.tooltip"))
                 .setSaveConsumer(value -> config.villagerLinkEnabled = value)
                 .build());
 
         villagerLink.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range"),
                         config.villagerLinkRange, 4, 128)
                 .setDefaultValue(32)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range.tooltip"))
-                .setTextGetter(value -> Text.literal(value + " blocks"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.range.tooltip"))
+                .setTextGetter(value -> Component.literal(value + " blocks"))
                 .setSaveConsumer(value -> config.villagerLinkRange = value)
                 .build());
 
         villagerLink.addEntry(entryBuilder
                 .startAlphaColorField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor"),
                         config.villagerLinkLineColor)
                 .setDefaultValue(0xFF00FFFF)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.lineColor.tooltip"))
                 .setSaveConsumer(value -> config.villagerLinkLineColor = value)
                 .build());
 
         villagerLink.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough"),
                         config.villagerLinkSeeThrough)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".villagerlink.seeThrough.tooltip"))
                 .setSaveConsumer(value -> config.villagerLinkSeeThrough = value)
                 .build());
 
         villagerLink.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.villagerLinkToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.villagerLinkToggle"),
                 config.villagerLinkToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.villagerLinkToggleKey.copyFrom(combo)));
@@ -1072,103 +1076,103 @@ public class ConfigScreen implements ModMenuApi {
         // Pick protect category
         // ============================
         ConfigCategory pickProtect = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.pickprotect"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.pickprotect"));
 
         pickProtect.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled"),
                         config.pickProtectEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.enabled.tooltip"))
                 .setSaveConsumer(value -> config.pickProtectEnabled = value)
                 .build());
 
         pickProtect.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.button"),
-                button -> MinecraftClient.getInstance().setScreen(new PickProtectSlotScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".pickprotect.slots.button"),
+                button -> McClient.setScreen(new PickProtectSlotScreen(McClient.screen()))
         ));
 
         // ============================
         // Syncer Tune category (TweakerMore serverDataSyncer 自動切替)
         // ============================
         ConfigCategory syncerTune = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.syncertune"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.syncertune"));
 
         syncerTune.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled"),
                         config.syncerTuneEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.enabled.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneEnabled = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntSlider(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius"),
                         config.syncerTuneDetectionChunkRadius, 1, 16)
                 .setDefaultValue(8)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.chunkRadius.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneDetectionChunkRadius = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval"),
                         config.syncerTuneDetectionIntervalTicks)
                 .setMin(1).setMax(1200)
                 .setDefaultValue(20)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.detectionInterval.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneDetectionIntervalTicks = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold"),
                         config.syncerTuneHighThreshold)
                 .setMin(1).setMax(100000)
                 .setDefaultValue(200)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.threshold.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneHighThreshold = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval"),
                         config.syncerTuneHighInterval)
                 .setMin(1).setMax(100)
                 .setDefaultValue(5)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highInterval.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneHighInterval = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit"),
                         config.syncerTuneHighLimit)
                 .setMin(1).setMax(8192)
                 .setDefaultValue(64)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.highLimit.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneHighLimit = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval"),
                         config.syncerTuneNormalInterval)
                 .setMin(1).setMax(100)
                 .setDefaultValue(1)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalInterval.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneNormalInterval = value)
                 .build());
 
         syncerTune.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit"),
                         config.syncerTuneNormalLimit)
                 .setMin(1).setMax(8192)
                 .setDefaultValue(512)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".syncertune.normalLimit.tooltip"))
                 .setSaveConsumer(value -> config.syncerTuneNormalLimit = value)
                 .build());
 
@@ -1176,142 +1180,146 @@ public class ConfigScreen implements ModMenuApi {
         // Render Fix category (描画バグ対策をまとめたタブ)
         // ============================
         ConfigCategory renderFix = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.renderfix"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.renderfix"));
 
         // --- World Border Fix サブカテゴリ（ボーダー付近の描画バグ対策） ---
         SubCategoryBuilder worldBorderFixSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.worldborderfix"))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.worldborderfix"))
                 .setExpanded(true);
 
         worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled"),
                         config.worldBorderFixEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.enabled.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixEnabled = value)
                 .build());
 
         worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray"),
                         config.worldBorderFixXray)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.xray.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixXray = value)
                 .build());
 
         worldBorderFixSub.add(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance"),
                         config.worldBorderFixDistance)
                 .setMin(1).setMax(10000)
                 .setDefaultValue(128)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.distance.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixDistance = value)
                 .build());
 
         worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords"),
                         config.worldBorderFixFarCoords)
                 .setDefaultValue(true)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.farCoords.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixFarCoords = value)
                 .build());
 
         worldBorderFixSub.add(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold"),
                         config.worldBorderFixCoordThreshold)
                 .setMin(1000).setMax(29999000)
                 .setDefaultValue(100000)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.coordThreshold.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixCoordThreshold = value)
                 .build());
 
         worldBorderFixSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable"),
                         config.worldBorderFixAutoReenable)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".worldborderfix.autoReenable.tooltip"))
                 .setSaveConsumer(value -> config.worldBorderFixAutoReenable = value)
                 .build());
 
         renderFix.addEntry(worldBorderFixSub.build());
 
-        // --- Nvidium Chunk Fix サブカテゴリ（Nvidium が破棄した地形の再ビルド） ---
+        //? if <1.20 {
+        /*// --- Nvidium Chunk Fix サブカテゴリ（Nvidium が破棄した地形の再ビルド、1.19.4 のみ） ---
         SubCategoryBuilder nvidiumChunkFixSub = entryBuilder.startSubCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.nvidiumchunkfix"))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.nvidiumchunkfix"))
                 .setExpanded(true);
 
         nvidiumChunkFixSub.add(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled"),
                         config.nvidiumChunkFixEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".nvidiumchunkfix.enabled.tooltip"))
                 .setSaveConsumer(value -> config.nvidiumChunkFixEnabled = value)
                 .build());
 
         renderFix.addEntry(nvidiumChunkFixSub.build());
+        *///?}
 
-        // ============================
-        // Void Trade category (座標指定ワークフローのループ実行)
+        //? if <26.1 {
+        /*// ============================
+        // Void Trade category (座標指定ワークフローのループ実行、1.20.1 以前のみ)
         // ============================
         ConfigCategory voidTrade = builder.getOrCreateCategory(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".category.voidtrade"));
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".category.voidtrade"));
 
         voidTrade.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled"),
                         config.voidTradeEnabled)
                 .setDefaultValue(false)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.enabled.tooltip"))
                 .setSaveConsumer(value -> config.voidTradeEnabled = value)
                 .build());
 
         voidTrade.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount"),
                         config.voidTradeLoopCount)
                 .setMin(0).setMax(100000)
                 .setDefaultValue(0)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.loopCount.tooltip"))
                 .setSaveConsumer(value -> config.voidTradeLoopCount = value)
                 .build());
 
         voidTrade.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout"),
                         config.voidTradeStepTimeoutSeconds)
                 .setMin(5).setMax(3600)
                 .setDefaultValue(120)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.stepTimeout.tooltip"))
                 .setSaveConsumer(value -> config.voidTradeStepTimeoutSeconds = value)
                 .build());
 
         voidTrade.addEntry(entryBuilder
                 .startIntField(
-                        Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait"),
+                        Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait"),
                         config.voidTradeExtraWaitTicks)
                 .setMin(0).setMax(1200)
                 .setDefaultValue(0)
-                .setTooltip(Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait.tooltip"))
+                .setTooltip(Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.extraWait.tooltip"))
                 .setSaveConsumer(value -> config.voidTradeExtraWaitTicks = value)
                 .build());
 
         voidTrade.addEntry(new ButtonEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.workflow.button"),
-                button -> MinecraftClient.getInstance().setScreen(new VoidTradeWorkflowScreen(MinecraftClient.getInstance().currentScreen))
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".voidtrade.workflow.button"),
+                button -> McClient.setScreen(new VoidTradeWorkflowScreen(McClient.screen()))
         ));
 
         voidTrade.addEntry(new KeyComboEntry(
-                Text.translatable("config." + ASTTweaks.MOD_ID + ".keybind.voidTradeToggle"),
+                Component.translatable("config." + ASTTweaks.MOD_ID + ".keybind.voidTradeToggle"),
                 config.voidTradeToggleKey,
                 new KeyCombo(-1, -1),
                 combo -> config.voidTradeToggleKey.copyFrom(combo)));
+        *///?}
 
         builder.setSavingRunnable(config::save);
 

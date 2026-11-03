@@ -5,13 +5,9 @@ on:
     tags:
       - 'v*'
 
-# 1.19.4 系（main）と 26.1 系（mc/26.1）のリリースが同じリポジトリに並ぶ。
-# タグは v<mod_version>（例: v1.1.30+mc1.19.4）で、jar 名の "mc1.19" でアップデートチェッカーが系統を見分ける。
-env:
-  # 1.1.29 以前の 1.19.4 版は /releases/latest の jar を無条件に取得するため、Latest は 1.19.4 系に固定する
-  MAKE_LATEST: 'true'
-  # リリースノートの差分起点にする同系統の直前タグ（見つからなければ直近の祖先タグ）
-  PREVIOUS_TAG_MATCH: 'v*+mc1.19*'
+# 1 つのタグ（例: v1.3.0）で全 Minecraft バージョンの jar をビルドし、1 つのリリースにまとめる。
+# jar 名の "+mc1.19.4" 等でアップデートチェッカーが自分の系統の jar を選ぶ。
+# 1.1.29 以前のチェッカーは最初の jar を無条件に取るので、1.19.4 の jar を先にアップロードする。
 
 jobs:
   release:
@@ -23,46 +19,43 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check tag matches mod_version
+      - name: Check tag matches mod.version
         id: version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          MOD_VERSION=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          MOD_VERSION=$(grep -E '^mod\.version\s*=' stonecutter.properties.toml | sed -E 's/.*=\s*"([^"]+)".*/\1/')
           if [ "$VERSION" != "$MOD_VERSION" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match mod_version=$MOD_VERSION in gradle.properties"
+            echo "::error::Tag $GITHUB_REF_NAME does not match mod.version=$MOD_VERSION in stonecutter.properties.toml"
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "display=${VERSION%%+*}" >> "$GITHUB_OUTPUT"
-          echo "minecraft=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
 
-      - name: Setup Java 17
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Loom がプロジェクト内に作る Access Widener 適用済み Minecraft と remap 済み mod。
-      # setup-gradle は ~/.gradle しかキャッシュしないため、これが無いと毎回作り直しになる
       - name: Cache Loom
         uses: actions/cache@v4
         with:
-          path: .gradle/loom-cache
-          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle', 'settings.gradle', 'gradle.properties', 'src/main/resources/*.accesswidener') }}
+          path: |
+            .gradle/loom-cache
+            versions/*/.gradle/loom-cache
+          key: loom-${{ runner.os }}-${{ hashFiles('build.gradle.kts', 'settings.gradle.kts', 'stonecutter.gradle.kts', 'stonecutter.properties.toml', 'gradle.properties') }}
           restore-keys: loom-${{ runner.os }}-
 
-      - name: Build
-        run: ./gradlew build
+      - name: Build all versions
+        run: ./gradlew chiseledBuild
 
       - name: Generate release notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PREVIOUS=$(git describe --tags --abbrev=0 --match "$PREVIOUS_TAG_MATCH" "$GITHUB_REF_NAME^" 2>/dev/null \
-            || git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          PREVIOUS=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
           ARGS=(-f tag_name="$GITHUB_REF_NAME")
           if [ -n "$PREVIOUS" ]; then
             ARGS+=(-f previous_tag_name="$PREVIOUS")
@@ -72,7 +65,16 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "AST-Tweaks v${{ steps.version.outputs.display }} (Minecraft ${{ steps.version.outputs.minecraft }})"
-          files: build/libs/ast-tweaks-${{ steps.version.outputs.version }}.jar
+          name: "AST-Tweaks v${{ steps.version.outputs.version }}"
+          files: build/libs/ast-tweaks-${{ steps.version.outputs.version }}+mc1.19.4.jar
           body_path: release-notes.md
-          make_latest: ${{ env.MAKE_LATEST }}
+          make_latest: true
+
+      - name: Upload jars for the other Minecraft versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for jar in build/libs/ast-tweaks-${{ steps.version.outputs.version }}+mc*.jar; do
+            case "$jar" in *+mc1.19.4.jar|*-sources.jar) continue ;; esac
+            gh release upload "$GITHUB_REF_NAME" "$jar" --clobber
+          done
