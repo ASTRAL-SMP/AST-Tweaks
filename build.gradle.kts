@@ -88,6 +88,8 @@ tasks.processResources {
         "client_mixins" to (if (legacy)
             jsonList("VillageDebugRendererAccessor", "VillageDebugRendererBrainAccessor", "VoidTradeInputMixin",
                 "MerchantScreenAccessor", "MerchantScreenHandlerAccessor")
+        else if (sc.current.parsed < "26.2")
+            jsonList("ClientInputAccessor", "ClientDebugSubscriberMixin", "EntityHitboxDebugRendererMixin")
         else jsonList("ClientInputAccessor", "ClientDebugSubscriberMixin")),
         // Sodium / Nvidium 互換 Mixin は 1.19.4 だけ。他のバージョンでは空の設定にする
         "sodium_plugin" to (if (sc.current.version == "1.19.4") "\"plugin\": \"com.astral.asttweaks.mixin.sodium.SodiumMixinPlugin\"," else ""),
