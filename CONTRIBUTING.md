@@ -90,6 +90,7 @@ newApiCall();
 
 タグを push すると `.github/workflows/release.yml` が全バージョンの jar をビルドして 1 つのリリースにまとめます。
 リリースノートの先頭には CHANGELOG.md の該当バージョンの内容が入り、その下に GitHub が自動生成する PR 一覧が続きます。
+あわせて Minecraft バージョンごとの Modrinth のバージョン（`1.3.1+mc26.2` など）も同じノートで公開されます（トークンは `modrinth` 環境のシークレット `MODRINTH_TOKEN`）。
 タグと `mod.version` が一致しないとリリースは失敗します。
 
 ## ブランチ戦略

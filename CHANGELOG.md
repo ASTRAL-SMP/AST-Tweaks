@@ -11,6 +11,12 @@ AST-Tweaks の各バージョンで何が変わったかをまとめています
 
 <!-- 次のリリースに入る変更をここに書く。リリース時に見出しを ## [x.y.z] - YYYY-MM-DD に変える -->
 
+## [1.3.1] - 2026-11-19
+
+### 修正
+
+- Minecraft 26.1.2 で、Entity Culling で非表示にしたアイテムやエンティティのヒットボックスが F3+B で表示されたままになり、数が多いと描画が重くなる問題を修正
+
 ## [1.3.0] - 2026-11-03
 
 **1 つのバージョンで Minecraft 1.19.4 / 1.20.1 / 26.1.2 / 26.2 / 26.3 に対応しました。**
@@ -314,7 +320,8 @@ Minecraft **26.1.2** 向けの最初のリリースです（26.1.2 専用。1.19
 - Scoreboard Helper / Auto Eat / Auto Move / Auto Totem / Auto Repair / Entity Culling / Lava Highlight / Inventory Sort / Mass Grindstone / Bone Meal Filter / Notepad / Update Checker
 - **Silk Touch Switch**: 指定したブロックを壊すとき、Tweakeroo のツール切り替えをシルクタッチ付きのツールに置き換える
 
-[Unreleased]: https://github.com/ASTRAL-SMP/AST-Tweaks/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/ASTRAL-SMP/AST-Tweaks/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/ASTRAL-SMP/AST-Tweaks/releases/tag/v1.3.1
 [1.3.0]: https://github.com/ASTRAL-SMP/AST-Tweaks/releases/tag/v1.3.0
 [1.2.0+mc26.1.2]: https://github.com/ASTRAL-SMP/AST-Tweaks/releases/tag/v1.2.0%2Bmc26.1.2
 [1.1.29]: https://github.com/ASTRAL-SMP/AST-Tweaks/releases/tag/v1.1.29
