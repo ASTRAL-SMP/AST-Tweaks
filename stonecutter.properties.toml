@@ -2,7 +2,7 @@
 mod.id = "asttweaks"
 mod.archives_name = "ast-tweaks"
 mod.group = "com.astral"
-mod.version = "1.3.0"
+mod.version = "1.3.1"
 
 deps.fabric_loader = "0.20.1"
 # Sodium / Nvidium 互換 Mixin は 1.19.4 のみ（空なら依存を追加しない）

@@ -2,6 +2,12 @@ package com.astral.asttweaks.feature.entityculling;
 
 import com.astral.asttweaks.ASTTweaks;
 import com.astral.asttweaks.feature.Feature;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Entity culling feature that disables rendering of certain entities.
@@ -51,6 +57,27 @@ public class EntityCullingFeature implements Feature {
 
     public EntityCullingConfig getConfig() {
         return config;
+    }
+
+    /**
+     * Whether a configured rule hides this entity. Render limits are not included
+     * because they depend on how many entities were already drawn this tick.
+     */
+    public boolean isHidden(Entity entity) {
+        boolean isPlayer = entity instanceof Player;
+        if (!isPlayer && (config.isDisableAllEntities() || config.isEntityBlacklisted(entity.getType()))) {
+            return true;
+        }
+        if (entity instanceof ArmorStand && config.isDisableArmorStands()) {
+            return true;
+        }
+        if (entity instanceof FallingBlockEntity && config.isDisableFallingBlocks()) {
+            return true;
+        }
+        if (entity instanceof LivingEntity livingEntity && config.isDisableDeadMobs() && livingEntity.getHealth() <= 0f) {
+            return true;
+        }
+        return entity instanceof ItemEntity itemEntity && config.isItemBlacklisted(itemEntity.getItem().getItem());
     }
 
     /**
