@@ -12,6 +12,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # MODRINTH_TOKEN は modrinth 環境のシークレット
+    environment: modrinth
     permissions:
       contents: write
     steps:
