@@ -94,3 +94,40 @@ jobs:
             case "$jar" in *+mc1.19.4.jar|*-sources.jar) continue ;; esac
             gh release upload "$GITHUB_REF_NAME" "$jar" --clobber
           done
+
+      # Minecraft バージョンごとに 1 つずつ Modrinth のバージョンを作る（例: 1.3.1+mc26.2）。
+      # 既にある version_number は飛ばすので、失敗したときはジョブを再実行すればよい。
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT: iMPIAgGk
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$MODRINTH_TOKEN" ]; then
+            echo "::error::MODRINTH_TOKEN secret is not set"
+            exit 1
+          fi
+          UA="ASTRAL-SMP/AST-Tweaks release workflow"
+          EXISTING=$(curl -sS --fail-with-body -A "$UA" "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT/version" | jq -r '.[].version_number')
+          for jar in build/libs/ast-tweaks-"$VERSION"+mc*.jar; do
+            case "$jar" in *-sources.jar) continue ;; esac
+            MC="${jar##*+mc}"
+            MC="${MC%.jar}"
+            NUMBER="$VERSION+mc$MC"
+            if grep -qxF "$NUMBER" <<< "$EXISTING"; then
+              echo "$NUMBER is already on Modrinth, skipping"
+              continue
+            fi
+            jq -n --arg number "$NUMBER" --arg mc "$MC" --arg project "$MODRINTH_PROJECT" --rawfile changelog release-notes.md \
+              '{name: "AST-Tweaks \($number)", version_number: $number, changelog: $changelog, dependencies: [],
+                game_versions: [$mc], version_type: "release", loaders: ["fabric"], featured: false, status: "listed",
+                project_id: $project, file_parts: ["file"], primary_file: "file"}' > modrinth-data.json
+            if ! curl -sS --fail-with-body -o modrinth-response.json -A "$UA" -H "Authorization: $MODRINTH_TOKEN" \
+              -F "data=<modrinth-data.json;type=application/json" \
+              -F "file=@$jar;type=application/java-archive" \
+              https://api.modrinth.com/v2/version; then
+              cat modrinth-response.json
+              exit 1
+            fi
+            echo "Published $NUMBER to Modrinth"
+          done
